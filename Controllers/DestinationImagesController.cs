@@ -44,6 +44,7 @@ namespace Roma.Controllers
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Destination>()));
             ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", destinationId);
+            ViewData["PreselectedDestinationId"] = destinationId;
             return View();
         }
 

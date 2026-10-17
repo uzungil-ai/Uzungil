@@ -13,9 +13,22 @@
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
+    @{
+        var pre = ViewData["PreselectedDestinationId"] as int?;
+        var items = ViewBag.DestinationId as System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    }
     <div class="form-group">
         <label asp-for="DestinationId">Destination</label>
-        <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
+        @if (pre != null && pre > 0)
+        {
+            <input type="hidden" asp-for="DestinationId" value="@pre" />
+            var selectedName = items?.FirstOrDefault(i => i.Value == pre.ToString())?.Text ?? "";
+            <input class="form-control" value="@selectedName" readonly />
+        }
+        else
+        {
+            <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
+        }
         <span asp-validation-for="DestinationId" class="text-danger"></span>
     </div>
 
