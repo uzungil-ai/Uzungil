@@ -39,10 +39,10 @@ namespace Roma.Controllers
         }
 
         // GET: Meals/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name");
+            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", destinationId);
             return View();
         }
 
