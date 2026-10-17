@@ -15,6 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHttpContextAccessor();
+// In-memory cache used by upload rate-limiting and other features
+builder.Services.AddMemoryCache();
 // Session for tracking anonymous users' first-download free rule
 builder.Services.AddSession(options =>
 {

@@ -12,7 +12,6 @@ using System.Collections.Generic;
 
 namespace Roma.Pages.Destinations
 {
-    [Authorize(Roles = "Admin")]
     public class ManagePhotosModel : PageModel
     {
         private const long MaxFileSize = 5L * 1024 * 1024; // 5 MB
