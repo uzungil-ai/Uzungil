@@ -13,6 +13,7 @@
 
 <div class="mb-3">
     <form id="uploadForm" asp-area="Admin" asp-controller="Uploads" asp-action="Upload" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <div class="mb-2">
             <input id="fileInput" type="file" name="files" multiple accept="image/*" />
         </div>
@@ -58,6 +59,13 @@
             // request JSON response and mark as AJAX
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Accept', 'application/json');
+            // include antiforgery token header when available (some servers expect header in AJAX requests)
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            if(tokenInput && tokenInput.value){
+                try{
+                    xhr.setRequestHeader('RequestVerificationToken', tokenInput.value);
+                }catch(e){ /* ignore if header cannot be set */ }
+            }
 
             xhr.upload.addEventListener('progress', function(evt){
                 if(evt.lengthComputable){
