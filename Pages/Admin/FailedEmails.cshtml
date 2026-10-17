@@ -1,0 +1,26 @@
+@page
+@model Roma.Pages.Admin.FailedEmailsModel
+
+<h2>Failed Emails</h2>
+<form method="post">
+    <table>
+        <thead>
+            <tr><th></th><th>To</th><th>Subject</th><th>Attempts</th><th>CreatedAt</th></tr>
+        </thead>
+        <tbody>
+        @foreach(var f in Model.Items)
+        {
+            <tr>
+                <td><input type="checkbox" name="ids" value="@f.Id" /></td>
+                <td>@f.To</td>
+                <td>@f.Subject</td>
+                <td>@f.Attempts</td>
+                <td>@f.CreatedAt</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <button type="submit">Delete selected</button>
+</form>
+
+<p>Total: @Model.Items.Count()</p>

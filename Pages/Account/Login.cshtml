@@ -1,0 +1,23 @@
+@page
+@model Roma.Pages.Account.LoginModel
+
+<h2>Giriş</h2>
+<form method="post">
+    <div>
+        <label for="Email">E-posta</label>
+        <input id="Email" name="Input.Email" />
+    </div>
+    <div>
+        <label for="Password">Şifre</label>
+        <input id="Password" name="Input.Password" type="password" />
+    </div>
+    <div>
+        <label><input type="checkbox" asp-for="Input.RememberMe" /> Beni hatırla</label>
+    </div>
+    <button type="submit">Giriş yap</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="text-danger">@Model.ErrorMessage</div>
+}

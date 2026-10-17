@@ -1,0 +1,93 @@
+@page "{id:int}"
+@model Roma.Pages.Admin.Destinations.DetailsModel
+
+<h2>Destinasyon Detayları</h2>
+
+<div>
+    <h3>@Model.Destination?.Name</h3>
+    <p><strong>Ülke:</strong> @Model.Destination?.Country</p>
+    <p><strong>Açıklama:</strong> @Model.Destination?.Description</p>
+    <p><strong>Giriş Ücreti:</strong> @Model.Destination?.EntranceFee</p>
+    <p><strong>Koordinatlar:</strong> @Model.Destination?.Latitude, @Model.Destination?.Longitude</p>
+    <p><a asp-page="~/Destinations/ManagePhotos" asp-route-id="@Model.Destination?.Id">Fotoğrafları Yönet</a></p>
+</div>
+
+@if (Model.Destination?.Images?.Any() == true)
+{
+    <section>
+        <h4>Görseller</h4>
+        <div>
+            @foreach (var img in Model.Destination.Images)
+            {
+                <div style="display:inline-block;margin:6px;text-align:center">
+                    <img src="@img.Url" alt="" style="max-width:150px;max-height:100px;display:block" />
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@if (Model.Destination?.Meals?.Any() == true)
+{
+    <section>
+        <h4>Yemek / Restoran Önerileri</h4>
+        <ul>
+        @foreach (var m in Model.Destination.Meals)
+        {
+            <li>@m.Name @if(!string.IsNullOrEmpty(m.Address)){<text>- @m.Address</text>} @if(m.Price!=null){<text> (Fiyat: @m.Price)</text>}</li>
+        }
+        </ul>
+    </section>
+}
+
+@if (Model.Destination?.Hotels?.Any() == true)
+{
+    <section>
+        <h4>Oteller</h4>
+        <ul>
+        @foreach (var h in Model.Destination.Hotels)
+        {
+            <li>@h.Name @if(h.PriceFrom!=null){<text>- @h.PriceFrom</text>}</li>
+        }
+        </ul>
+    </section>
+}
+
+@if (Model.Destination?.Parkings?.Any() == true)
+{
+    <section>
+        <h4>Otoparklar</h4>
+        <ul>
+        @foreach (var p in Model.Destination.Parkings)
+        {
+            <li>@p.Name @if(p.Fee!=null){<text>- Ücret: @p.Fee</text>}</li>
+        }
+        </ul>
+    </section>
+}
+
+@if (Model.Destination?.Recommendations?.Any() == true)
+{
+    <section>
+        <h4>Öneriler</h4>
+        <ul>
+        @foreach (var r in Model.Destination.Recommendations)
+        {
+            <li>@r.Title @if(!string.IsNullOrEmpty(r.Url)){<text>- <a href="@r.Url" target="_blank">Link</a></text>}</li>
+        }
+        </ul>
+    </section>
+}
+
+@if (Model.Destination?.Attractions?.Any() == true)
+{
+    <section>
+        <h4>Gezilecek Noktalar</h4>
+        <ul>
+        @foreach (var a in Model.Destination.Attractions)
+        {
+            <li>@a.Name</li>
+        }
+        </ul>
+    </section>
+}

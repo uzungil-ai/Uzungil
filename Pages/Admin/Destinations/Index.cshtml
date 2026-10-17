@@ -1,0 +1,28 @@
+@page
+@model Roma.Pages.Admin.Destinations.IndexModel
+
+<h2>Destinations</h2>
+
+<p><a asp-page="Create">Yeni Destinasyon Ekle</a></p>
+
+<table>
+    <thead>
+        <tr><th>Id</th><th>Name</th><th>Country</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    @foreach(var d in Model.Items)
+    {
+        <tr>
+            <td>@d.Id</td>
+            <td>@d.Name</td>
+            <td>@d.Country</td>
+            <td>
+                <a asp-page="Details" asp-route-id="@d.Id">Details</a> |
+                <a asp-page="Edit" asp-route-id="@d.Id">Edit</a> |
+                <a asp-page="Delete" asp-route-id="@d.Id">Delete</a> |
+                <a asp-page="~/Destinations/ManagePhotos" asp-route-id="@d.Id">Manage Photos</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

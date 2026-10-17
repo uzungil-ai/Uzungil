@@ -1,0 +1,12 @@
+@page
+@model Roma.Pages.SubscribeConfirmModel
+
+<h2>Abonelik Onayı</h2>
+@if (Model.Success)
+{
+    <p>Aboneliğiniz onaylandı. Teşekkürler.</p>
+}
+else
+{
+    <p>Onay başarısız veya zaten onaylı.</p>
+}

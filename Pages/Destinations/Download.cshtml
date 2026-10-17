@@ -1,0 +1,13 @@
+@page
+@model Roma.Pages.Destinations.DownloadModel
+
+<h2>İndirme</h2>
+@if (TempData["PaymentRequired"] != null)
+{
+    <p>@TempData["PaymentRequired"]</p>
+    <p>Ödeme entegrasyonunu yapılandırmanız gerekir.</p>
+}
+else
+{
+    <p>Dosya indiriliyor...</p>
+}

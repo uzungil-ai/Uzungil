@@ -1,0 +1,20 @@
+@page
+@model Roma.Pages.FeedbackModel
+
+<h2>Geribildirim</h2>
+<form method="post">
+  <div>
+    <label for="Email">E-posta (isteğe bağlı)</label>
+    <input id="Email" name="Email" />
+  </div>
+  <div>
+    <label for="Message">Mesaj</label>
+    <textarea id="Message" name="Message"></textarea>
+  </div>
+  <button type="submit">Gönder</button>
+</form>
+
+@if (Model.Success)
+{
+  <p>Teşekkürler, geribildiriminiz alındı.</p>
+}

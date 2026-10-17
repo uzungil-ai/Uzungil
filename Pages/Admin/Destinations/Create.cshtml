@@ -1,0 +1,35 @@
+@page
+@model Roma.Pages.Admin.Destinations.CreateModel
+
+<h2>Yeni Destinasyon</h2>
+
+<form method="post">
+    <div>
+        <label for="Name">Name</label>
+        <input id="Name" asp-for="Destination.Name" />
+    </div>
+    <div>
+        <label for="Country">Country</label>
+        <input id="Country" asp-for="Destination.Country" />
+    </div>
+    <div>
+        <label for="Description">Description</label>
+        <textarea id="Description" asp-for="Destination.Description"></textarea>
+    </div>
+    <div>
+        <label for="EntranceFee">Entrance Fee</label>
+        <input id="EntranceFee" asp-for="Destination.EntranceFee" type="number" step="0.01" />
+    </div>
+    <div>
+        <label for="Latitude">Latitude</label>
+        <input id="Latitude" asp-for="Destination.Latitude" type="number" step="0.000001" />
+    </div>
+    <div>
+        <label for="Longitude">Longitude</label>
+        <input id="Longitude" asp-for="Destination.Longitude" type="number" step="0.000001" />
+    </div>
+    <div>
+        <button type="submit">Kaydet</button>
+        <a asp-page="Index">İptal</a>
+    </div>
+</form>

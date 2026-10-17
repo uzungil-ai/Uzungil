@@ -1,0 +1,17 @@
+@page
+@model Roma.Pages.UnsubscribeModel
+
+<h2>Abonelikten Çık</h2>
+@if (Model.Success)
+{
+    <p>Aboneliğiniz iptal edildi.</p>
+}
+else
+{
+    <form method="post">
+        <input type="hidden" name="Email" value="@Model.Email" />
+        <input type="hidden" name="Token" value="@Model.Token" />
+        <p>E-posta: @Model.Email</p>
+        <button type="submit">Abonelikten Çık</button>
+    </form>
+}

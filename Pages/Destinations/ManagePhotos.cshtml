@@ -1,0 +1,212 @@
+@page "{id:int}"
+@model Roma.Pages.Destinations.ManagePhotosModel
+@{
+    ViewData["Title"] = "Manage Photos";
+}
+
+<h2>Fotoğrafları Yönet - @Model.Destination?.Name</h2>
+
+<form id="uploadForm" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="file" id="fileInput" name="Uploads" multiple />
+    <button type="button" id="btnUpload">Yükle (Taşıyarak)</button>
+    <a asp-page="~/Admin/Destinations/Index">Geri</a>
+</form>
+
+<div id="previews" style="margin-top:12px"></div>
+
+<h3>Mevcut Görseller</h3>
+<div>
+    @if (Model.Images?.Any() ?? false)
+    {
+        <div style="display:flex;gap:10px;flex-wrap:wrap;" id="imagesContainer">
+            @foreach (var img in Model.Images.OrderBy(i => i.Order))
+            {
+                <div class="image-item" data-image-id="@img.Id" style="width:150px;">
+                    <img src="@img.Url" style="width:100%;height:auto;border:1px solid #ccc;" />
+                    <div style="margin-top:6px;display:flex;gap:6px;">
+                        <form method="post" class="delete-form" data-image-id="@img.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="imageId" value="@img.Id" />
+                            <button type="submit">Sil</button>
+                        </form>
+                        <form method="get" action="/Destinations/Download" target="_blank">
+                            <input type="hidden" name="destinationId" value="@Model.Destination?.Id" />
+                            <input type="hidden" name="imageId" value="@img.Id" />
+                            <button type="submit">İndir</button>
+                        </form>
+                        <button type="button" class="btn-move-left" data-image-id="@img.Id">◀</button>
+                        <button type="button" class="btn-move-right" data-image-id="@img.Id">▶</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+<script>
+    (function(){
+        var fileInput = document.getElementById('fileInput');
+        var previews = document.getElementById('previews');
+                if(fileInput && previews){
+            fileInput.addEventListener('change', function(e){
+                previews.innerHTML = '';
+                Array.from(fileInput.files).forEach(function(f){
+                    // client-side checks: type and size
+                    if(f.size > (5 * 1024 * 1024)){
+                        var p = document.createElement('div'); p.textContent = f.name + ' - Dosya çok büyük (max 5MB)'; p.style.color = 'red'; previews.appendChild(p); return;
+                    }
+                    if(!f.type || !f.type.startsWith('image/')){
+                        var p2 = document.createElement('div'); p2.textContent = f.name + ' - Geçersiz dosya türü'; p2.style.color = 'red'; previews.appendChild(p2); return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function(ev){
+                        var img = document.createElement('img');
+                        img.src = ev.target.result;
+                        img.style.maxWidth = '150px';
+                        img.style.marginRight = '8px';
+                        previews.appendChild(img);
+                    };
+                    reader.readAsDataURL(f);
+                });
+            });
+        }
+
+        // enhance delete forms to confirm
+        document.querySelectorAll('.delete-form').forEach(function(form){
+            form.addEventListener('submit', function(e){
+                if(!confirm('Bu görseli silmek istediğinize emin misiniz?')){
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // move left/right handlers (basic DOM reorder; server update not implemented here)
+        document.querySelectorAll('.btn-move-left').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var id = this.getAttribute('data-image-id');
+                var item = document.querySelector('.image-item[data-image-id="'+id+'"]');
+                if(item && item.previousElementSibling){
+                    item.parentNode.insertBefore(item, item.previousElementSibling);
+                }
+            });
+        });
+        document.querySelectorAll('.btn-move-right').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var id = this.getAttribute('data-image-id');
+                var item = document.querySelector('.image-item[data-image-id="'+id+'"]');
+                if(item && item.nextElementSibling){
+                    item.parentNode.insertBefore(item.nextElementSibling, item);
+                }
+            });
+        });
+
+        // AJAX upload (move) handler
+        var btnUpload = document.getElementById('btnUpload');
+        var uploadForm = document.getElementById('uploadForm');
+        if(btnUpload && uploadForm){
+            btnUpload.addEventListener('click', function(){
+                var files = fileInput.files;
+                if(!files || files.length===0){
+                    alert('Lütfen yüklemek için dosya seçin.');
+                    return;
+                }
+
+                var formData = new FormData();
+                Array.from(files).forEach(function(f){ formData.append('Uploads', f); });
+
+                // antiforgery token
+                var tokenInput = uploadForm.querySelector('input[name="__RequestVerificationToken"]');
+                if(tokenInput) formData.append('__RequestVerificationToken', tokenInput.value);
+
+                btnUpload.disabled = true;
+                btnUpload.textContent = 'Yükleniyor...';
+
+                fetch(window.location.pathname + '?handler=Upload&id=@Model.Destination?.Id', {
+                    method: 'POST',
+                    body: formData
+                }).then(function(resp){
+                    return resp.json();
+                }).then(function(json){
+                    if(json && json.success){
+                        // append uploaded thumbnails and delete forms
+                        if(json.images && json.images.length){
+                            json.images.forEach(function(it){
+                                var wrapper = document.createElement('div'); wrapper.style.width='150px'; wrapper.style.display='inline-block'; wrapper.style.marginRight='8px';
+                                var im = document.createElement('img'); im.src = it.url; im.style.width='100%'; im.style.height='auto'; im.style.border='1px solid #ccc';
+                                wrapper.appendChild(im);
+                                // create delete form
+                                var form = document.createElement('form'); form.method='post'; form.className='delete-form';
+                                var token = document.createElement('input'); token.type='hidden'; token.name='__RequestVerificationToken'; token.value = tokenInput ? tokenInput.value : '';
+                                var hid = document.createElement('input'); hid.type='hidden'; hid.name='imageId'; hid.value = it.id;
+                                form.appendChild(token); form.appendChild(hid);
+                                var btn = document.createElement('button'); btn.type='submit'; btn.textContent='Sil';
+                                form.appendChild(btn);
+                                wrapper.appendChild(form);
+                                // move buttons
+                                var btnLeft = document.createElement('button'); btnLeft.type='button'; btnLeft.textContent='◀'; btnLeft.className='btn-move-left'; btnLeft.dataset.imageId = it.id;
+                                var btnRight = document.createElement('button'); btnRight.type='button'; btnRight.textContent='▶'; btnRight.className='btn-move-right'; btnRight.dataset.imageId = it.id;
+                                wrapper.appendChild(btnLeft); wrapper.appendChild(btnRight);
+                                previews.appendChild(wrapper);
+
+                                form.addEventListener('submit', function(e){
+                                    if(!confirm('Bu görseli silmek istediğinize emin misiniz?')){ e.preventDefault(); }
+                                });
+                                btnLeft.addEventListener('click', function(){
+                                    // perform move left via POST
+                                    fetch(window.location.pathname + '?handler=Move&id=@Model.Destination?.Id&imageId=' + it.id + '&left=true', { method: 'POST', headers: { 'RequestVerificationToken': token.value } })
+                                        .then(function(){ location.reload(); });
+                                });
+                                btnRight.addEventListener('click', function(){
+                                    fetch(window.location.pathname + '?handler=Move&id=@Model.Destination?.Id&imageId=' + it.id + '&left=false', { method: 'POST', headers: { 'RequestVerificationToken': token.value } })
+                                        .then(function(){ location.reload(); });
+                                });
+                            });
+                        }
+                    } else {
+                        alert('Yükleme başarısız');
+                    }
+                }).catch(function(){
+                    alert('Yükleme sırasında hata oluştu');
+                }).finally(function(){
+                    btnUpload.disabled = false; btnUpload.textContent = 'Yükle (Taşıyarak)';
+                    fileInput.value = '';
+                });
+            });
+        }
+
+        // Drag-and-drop ordering using HTML5 Drag API
+        var container = document.getElementById('imagesContainer');
+        if(container){
+            let dragged = null;
+            container.querySelectorAll('.image-item').forEach(function(item){
+                item.draggable = true;
+                item.addEventListener('dragstart', function(e){ dragged = item; item.style.opacity = '0.5'; });
+                item.addEventListener('dragend', function(e){ dragged = null; item.style.opacity = ''; });
+                item.addEventListener('dragover', function(e){ e.preventDefault(); });
+                item.addEventListener('drop', function(e){
+                    e.preventDefault();
+                    if(dragged && dragged !== item){
+                        // insert dragged before this item
+                        container.insertBefore(dragged, item);
+                        // persist new order
+                        persistOrder();
+                    }
+                });
+            });
+        }
+
+        function persistOrder(){
+            var ids = Array.from(document.querySelectorAll('.image-item')).map(function(el){ return parseInt(el.dataset.imageId); });
+            fetch(window.location.pathname + '?handler=Reorder&id=@Model.Destination?.Id', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ids)
+            }).then(function(){ /* no-op */ });
+        }
+    })();
+</script>
+    }
+    else
+    {
+        <p>Henüz görsel yok.</p>
+    }
+</div>

@@ -1,0 +1,18 @@
+@page
+@model Roma.Pages.Account.Verify2faModel
+
+<h2>Doğrulama Kodu</h2>
+<form method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="RememberMe" />
+    <div>
+        <label for="Code">Kod</label>
+        <input id="Code" name="Code" />
+    </div>
+    <button type="submit">Doğrula ve Giriş Yap</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="text-danger">@Model.ErrorMessage</div>
+}

@@ -1,0 +1,8 @@
+@page
+@model dynamic
+
+<h2>Ödeme (Demo)</h2>
+<p>@TempData["PaymentRequired"]</p>
+<form method="post" asp-page-handler="Complete">
+    <button type="submit">Ödeme Simülasyonu: Tamamla</button>
+</form>

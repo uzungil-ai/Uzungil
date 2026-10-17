@@ -1,0 +1,22 @@
+@page
+@model Roma.Pages.Account.EnableAuthenticatorModel
+
+<h2>Authenticator'ı Etkinleştir</h2>
+
+<p>QR kodunu Authenticator uygulamanıza ekleyin veya manuel anahtarı kullanın.</p>
+
+<div>
+    <img src="@Model.QrCodeUrl" alt="QR Code" />
+</div>
+
+<p>Manuel anahtar: <strong>@Model.SharedKey</strong></p>
+
+<form method="post">
+    <label for="Code">Doğrulama Kodu</label>
+    <input id="Code" name="Code" />
+    <button type="submit">Doğrula ve Etkinleştir</button>
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="text-danger">@Model.ErrorMessage</div>
+    }
+</form>

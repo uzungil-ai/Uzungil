@@ -1,0 +1,221 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Roma.Data;
+using Roma.Models;
+
+namespace Roma.Pages.Destinations
+{
+    [Authorize(Roles = "Admin")]
+    public class ManagePhotosModel : PageModel
+    {
+        private const long MaxFileSize = 5L * 1024 * 1024; // 5 MB
+        private readonly ApplicationDbContext _db;
+        private readonly IWebHostEnvironment _env;
+
+        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env)
+        {
+            _db = db;
+            _env = env;
+        }
+
+        public async Task<IActionResult> OnPostReorderAsync(int id)
+        {
+            // read JSON array of image ids from body
+            string body;
+            using (var sr = new StreamReader(Request.Body))
+            {
+                body = await sr.ReadToEndAsync();
+            }
+
+            if (string.IsNullOrWhiteSpace(body)) return BadRequest();
+
+            List<int>? ids;
+            try
+            {
+                ids = System.Text.Json.JsonSerializer.Deserialize<List<int>>(body);
+            }
+            catch
+            {
+                return BadRequest();
+            }
+
+            if (ids == null || ids.Count == 0) return BadRequest();
+
+            var images = await _db.DestinationImages!.Where(di => di.DestinationId == id && ids.Contains(di.Id)).ToListAsync();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var img = images.FirstOrDefault(x => x.Id == ids[i]);
+                if (img != null) img.Order = i;
+            }
+
+            _db.DestinationImages.UpdateRange(images);
+            await _db.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        [BindProperty]
+        public IFormFile[]? Uploads { get; set; }
+
+        public Destination? Destination { get; set; }
+        public List<DestinationImage>? Images { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int id)
+        {
+            Destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id);
+            if (Destination == null) return NotFound();
+            Images = Destination.Images;
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync(int id)
+        {
+            Destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id);
+            if (Destination == null) return NotFound();
+
+            if (Uploads != null && Uploads.Length > 0)
+            {
+                var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "destinations", id.ToString());
+                Directory.CreateDirectory(uploadDir);
+
+                foreach (var file in Uploads)
+                {
+                    if (file.Length > 0)
+                    {
+                        var ext = Path.GetExtension(file.FileName);
+                        var fileName = Guid.NewGuid().ToString("N") + ext;
+                        var filePath = Path.Combine(uploadDir, fileName);
+                        using (var stream = System.IO.File.Create(filePath))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        var relativeUrl = $"/uploads/destinations/{id}/{fileName}";
+                var image = new DestinationImage { Url = relativeUrl, DestinationId = id, Destination = Destination, Order = Destination.Images.Count };
+                        _db.DestinationImages!.Add(image);
+                        Destination.Images.Add(image);
+                    }
+                }
+
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToPage(new { id });
+        }
+
+        private readonly Roma.Services.ImageProcessingService? _imgSvc;
+
+        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env, Roma.Services.ImageProcessingService? imgSvc = null)
+        {
+            _db = db;
+            _env = env;
+            _imgSvc = imgSvc;
+        }
+
+        public async Task<IActionResult> OnPostUploadAsync(int id)
+        {
+            Destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id);
+            if (Destination == null) return NotFound();
+            var files = Request.Form.Files;
+            if (files == null || files.Count == 0) return new JsonResult(new { success = false, uploaded = 0 });
+
+            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "destinations", id.ToString());
+            Directory.CreateDirectory(uploadDir);
+
+            int addedCount = 0;
+            int skippedCount = 0;
+
+            foreach (var file in files)
+            {
+                if (file.Length <= 0) { skippedCount++; continue; }
+                if (file.Length > MaxFileSize) { skippedCount++; continue; }
+                if (string.IsNullOrEmpty(file.ContentType) || !file.ContentType.StartsWith("image/")) { skippedCount++; continue; }
+
+                var ext = Path.GetExtension(file.FileName);
+                var fileName = Guid.NewGuid().ToString("N") + ext;
+                var filePath = Path.Combine(uploadDir, fileName);
+                using (var stream = System.IO.File.Create(filePath))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                string relativeUrl = $"/uploads/destinations/{id}/{fileName}";
+                // if image service available, create webp resized variants
+                if (_imgSvc != null)
+                {
+                    using (var fs = System.IO.File.OpenRead(filePath))
+                    {
+                        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                        var outPath = await _imgSvc.SaveResizedAsync(fs, uploadDir, fileNameWithoutExt);
+                        // convert absolute to relative
+                        var rel = outPath.Replace(_env.WebRootPath, "").Replace('\\', '/').TrimStart('/');
+                        relativeUrl = "/" + rel;
+                    }
+                }
+
+                var image = new DestinationImage { Url = relativeUrl, DestinationId = id, Destination = Destination, Order = Destination.Images.Count };
+                _db.DestinationImages!.Add(image);
+                Destination.Images.Add(image);
+                addedCount++;
+            }
+
+            await _db.SaveChangesAsync();
+
+            // after save, include real ids
+            var result = Destination.Images.Select(i => new { id = i.Id, url = i.Url }).ToList();
+            return new JsonResult(new { success = true, uploaded = addedCount, skipped = skippedCount, images = result });
+        }
+
+        public async Task<IActionResult> OnPostDeleteAsync(int id, int imageId)
+        {
+            // id = destination id
+            var img = await _db.DestinationImages!.FirstOrDefaultAsync(di => di.Id == imageId && di.DestinationId == id);
+            if (img == null) return NotFound();
+
+            // remove file from disk if exists
+            try
+            {
+                if (!string.IsNullOrEmpty(img.Url))
+                {
+                    var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    // img.Url is expected like /uploads/destinations/{id}/{file}
+                    var rel = img.Url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                    var full = Path.Combine(webRoot, rel);
+                    if (System.IO.File.Exists(full)) System.IO.File.Delete(full);
+                }
+            }
+            catch
+            {
+                // ignore file delete failures, still remove DB record
+            }
+
+            _db.DestinationImages!.Remove(img);
+            await _db.SaveChangesAsync();
+
+            return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostMoveAsync(int id, int imageId, bool left)
+        {
+            var images = await _db.DestinationImages!.Where(di => di.DestinationId == id).OrderBy(di => di.Order).ToListAsync();
+            var idx = images.FindIndex(i => i.Id == imageId);
+            if (idx < 0) return NotFound();
+
+            int swapWith = left ? idx - 1 : idx + 1;
+            if (swapWith < 0 || swapWith >= images.Count) return RedirectToPage(new { id });
+
+            var current = images[idx];
+            var other = images[swapWith];
+            var tmp = current.Order;
+            current.Order = other.Order;
+            other.Order = tmp;
+
+            _db.DestinationImages!.UpdateRange(current, other);
+            await _db.SaveChangesAsync();
+
+            return RedirectToPage(new { id });
+        }
+    }
+}

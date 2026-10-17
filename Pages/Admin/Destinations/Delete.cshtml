@@ -1,0 +1,13 @@
+@page "{id:int}"
+@model Roma.Pages.Admin.Destinations.DeleteModel
+
+<h2>Destinasyonu Sil</h2>
+
+<div>
+    <p>Silmek istediğinizden emin misiniz: <strong>@Model.Destination?.Name</strong> ?</p>
+    <form method="post">
+        <input type="hidden" asp-for="Destination.Id" />
+        <button type="submit">Evet, Sil</button>
+        <a asp-page="Index">İptal</a>
+    </form>
+</div>

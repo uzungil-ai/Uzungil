@@ -1,0 +1,15 @@
+@page
+@model Roma.Pages.Account.VerifyAuthenticatorSignInModel
+
+<h2>Authenticator Kodu ile Giriş</h2>
+<form method="post">
+    <label for="Code">Kod</label>
+    <input id="Code" name="Code" />
+    <input type="hidden" asp-for="RememberMe" />
+    <button type="submit">Giriş Yap</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="text-danger">@Model.ErrorMessage</div>
+}
