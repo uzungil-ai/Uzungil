@@ -1,0 +1,52 @@
+@model IEnumerable<Roma.Models.Destination>
+
+@{
+    ViewData["Title"] = "Destinations";
+}
+
+<h1>Destinations</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Country</th>
+            <th>Images</th>
+            <th>Attractions</th>
+            <th>Entrance Fee</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Country</td>
+            <td>@(item.Images?.Count ?? 0)</td>
+            <td>@(item.Attractions?.Count ?? 0)</td>
+            <td>@(item.EntranceFee.HasValue ? item.EntranceFee.Value.ToString("C") : "-")</td>
+            <td>
+                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/Destinations/ManagePhotos?id=@item.Id">Photos</a>
+                @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                {
+                    <a class="btn btn-sm btn-outline-warning" href="/Admin/Uploads/Index?id=@item.Id" title="Upload images">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.498.498 0 0 0-.697.007l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V11.5A.5.5 0 0 0 8 12z"/>
+                            <path d="M2.5 14a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        <span class="visually-hidden">Upload</span>
+                    </a>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

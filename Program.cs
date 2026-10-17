@@ -38,6 +38,14 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(opts => opts.Level 
 builder.Services.Configure<GzipCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);
 // Image processing service
 builder.Services.AddSingleton<Roma.Services.ImageProcessingService>();
+// AI services (demo implementations)
+builder.Services.AddSingleton<Roma.Services.IAiService, Roma.Services.DemoAiService>();
+builder.Services.AddSingleton<Roma.Services.IVisionService, Roma.Services.DemoVisionService>();
+builder.Services.AddSingleton<Roma.Services.IChatService, Roma.Services.DemoChatService>();
+builder.Services.AddSingleton<Roma.Services.IEmailComposer, Roma.Services.DemoEmailComposer>();
+// AI job channel + background processor
+builder.Services.AddSingleton(Channel.CreateUnbounded<Roma.Services.AiJob>());
+builder.Services.AddHostedService<Roma.Services.BackgroundAiProcessor>();
 // Payment service (demo)
 builder.Services.AddSingleton<Roma.Services.IPaymentService, Roma.Services.DemoPaymentService>();
 // Email infrastructure: channel, queue and background sender
@@ -46,6 +54,7 @@ builder.Services.AddSingleton<Roma.Services.IEmailQueue, Roma.Services.EmailQueu
 builder.Services.AddSingleton<Roma.Services.IEmailSenderService, Roma.Services.EmailSenderService>();
 builder.Services.AddHostedService<Roma.Services.BackgroundEmailSender>();
 builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
@@ -87,6 +96,7 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Session middleware (after app is built and before endpoints)
@@ -103,44 +113,71 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 // Seed roles and optional admin user from configuration (App:AdminEmail, App:AdminPassword)
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = services.GetRequiredService<UserManager<User>>();
-        var configuration = services.GetRequiredService<IConfiguration>();
-
-        var adminRole = "Admin";
-        if (!roleManager.RoleExistsAsync(adminRole).GetAwaiter().GetResult())
+        var services = scope.ServiceProvider;
+        try
         {
-            roleManager.CreateAsync(new IdentityRole(adminRole)).GetAwaiter().GetResult();
-        }
+            // RoleManager may not be registered when AddDefaultIdentity was used without roles.
+            var roleManager = services.GetService<RoleManager<IdentityRole>>();
+            var userManager = services.GetRequiredService<UserManager<User>>();
+            var configuration = services.GetRequiredService<IConfiguration>();
 
-        var adminEmail = configuration["App:AdminEmail"];
-        var adminPassword = configuration["App:AdminPassword"];
-        if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
-        {
-            var adminUser = userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
-            if (adminUser == null)
+            var adminRole = "Admin";
+            var editorRole = "Editor";
+            if (roleManager != null)
             {
-                adminUser = new User { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
-                var createResult = userManager.CreateAsync(adminUser, adminPassword).GetAwaiter().GetResult();
-                // ignore failures here; they will be logged
+                if (!roleManager.RoleExistsAsync(adminRole).GetAwaiter().GetResult())
+                {
+                    roleManager.CreateAsync(new IdentityRole(adminRole)).GetAwaiter().GetResult();
+                }
+                if (!roleManager.RoleExistsAsync(editorRole).GetAwaiter().GetResult())
+                {
+                    roleManager.CreateAsync(new IdentityRole(editorRole)).GetAwaiter().GetResult();
+                }
             }
 
-            if (adminUser != null && !userManager.IsInRoleAsync(adminUser, adminRole).GetAwaiter().GetResult())
+            var adminEmail = configuration["App:AdminEmail"];
+            var adminPassword = configuration["App:AdminPassword"];
+            if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
             {
-                userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                var adminUser = userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
+                if (adminUser == null)
+                {
+                    adminUser = new User { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+                    var createResult = userManager.CreateAsync(adminUser, adminPassword).GetAwaiter().GetResult();
+                    // ignore failures here; they will be logged
+                }
+
+                if (adminUser != null && roleManager != null && !userManager.IsInRoleAsync(adminUser, adminRole).GetAwaiter().GetResult())
+                {
+                    userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                }
+            }
+
+            // Optionally seed an Editor user if configured
+            var editorEmail = configuration["App:EditorEmail"];
+            var editorPassword = configuration["App:EditorPassword"];
+            if (!string.IsNullOrEmpty(editorEmail) && !string.IsNullOrEmpty(editorPassword))
+            {
+                var editorUser = userManager.FindByEmailAsync(editorEmail).GetAwaiter().GetResult();
+                if (editorUser == null)
+                {
+                    editorUser = new User { UserName = editorEmail, Email = editorEmail, EmailConfirmed = true };
+                    var createResult = userManager.CreateAsync(editorUser, editorPassword).GetAwaiter().GetResult();
+                }
+
+                if (editorUser != null && roleManager != null && !userManager.IsInRoleAsync(editorUser, editorRole).GetAwaiter().GetResult())
+                {
+                    userManager.AddToRoleAsync(editorUser, editorRole).GetAwaiter().GetResult();
+                }
             }
         }
+        catch (Exception ex)
+        {
+            var logger = services.GetService<ILogger<Program>>();
+            logger?.LogError(ex, "Error while seeding roles or admin user");
+        }
     }
-    catch (Exception ex)
-    {
-        var logger = services.GetService<ILogger<Program>>();
-        logger?.LogError(ex, "Error while seeding roles or admin user");
-    }
-}
 
 app.Run();

@@ -1,0 +1,149 @@
+@model Roma.Models.Destination
+
+@{
+    ViewData["Title"] = "Upload Photos";
+}
+
+<h1>Upload Photos for @Model.Name</h1>
+
+@if(TempData["UploadMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["UploadMessage"]</div>
+}
+
+<div class="mb-3">
+    <form id="uploadForm" asp-area="Admin" asp-controller="Uploads" asp-action="Upload" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        <div class="mb-2">
+            <input id="fileInput" type="file" name="files" multiple accept="image/*" />
+        </div>
+        <div id="progressWrap" class="mb-2" style="display:none">
+            <div class="progress">
+                <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%">0%</div>
+            </div>
+        </div>
+        <button id="uploadBtn" type="submit" class="btn btn-primary">Upload</button>
+        <a asp-area="Admin" asp-controller="DestinationImages" asp-action="Index" class="btn btn-secondary ms-2">Manage Images</a>
+    </form>
+</div>
+
+<script>
+    (function(){
+        var form = document.getElementById('uploadForm');
+        if(!form) return;
+        var fileInput = document.getElementById('fileInput');
+        var uploadBtn = document.getElementById('uploadBtn');
+        var progressWrap = document.getElementById('progressWrap');
+        var progressBar = document.getElementById('progressBar');
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            var files = fileInput.files;
+            if(!files || files.length === 0){
+                alert('Lütfen yüklemek için en az bir görsel seçin.');
+                return;
+            }
+
+            var fd = new FormData(form);
+            // ensure files appended (FormData(form) already contains them, but being explicit helps some browsers)
+            // remove existing files entries and re-add to control ordering
+            // (not strictly necessary)
+
+            uploadBtn.disabled = true;
+            progressWrap.style.display = '';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action);
+            // request JSON response and mark as AJAX
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.upload.addEventListener('progress', function(evt){
+                if(evt.lengthComputable){
+                    var percent = Math.round((evt.loaded / evt.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressBar.textContent = percent + '%';
+                    progressBar.setAttribute('aria-valuenow', percent);
+                }
+            });
+
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState === 4){
+                    uploadBtn.disabled = false;
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+                    try {
+                        if(xhr.status >= 200 && xhr.status < 400){
+                            var ct = xhr.getResponseHeader('Content-Type') || '';
+                            if(ct.indexOf('application/json') !== -1){
+                                var data = JSON.parse(xhr.responseText);
+                                if(data && data.success && Array.isArray(data.added)){
+                                    appendNewImages(data.added);
+                                    // hide progress after short delay
+                                    setTimeout(function(){ progressWrap.style.display = 'none'; progressBar.style.width = '0%'; progressBar.textContent = '0%'; }, 800);
+                                    return;
+                                }
+                            }
+                            // fallback: reload
+                            window.location.reload();
+                        } else {
+                            alert('Yükleme sırasında hata oluştu.');
+                            console.error('Upload failed', xhr.status, xhr.responseText);
+                        }
+                    } catch(err){
+                        console.error('Error processing upload response', err);
+                        window.location.reload();
+                    } finally {
+                        uploadBtn.disabled = false;
+                    }
+                }
+            };
+
+            xhr.send(fd);
+
+            function appendNewImages(items){
+                var container = document.getElementById('existingImages');
+                if(!container) return;
+                items.forEach(function(it){
+                    try {
+                        var wrap = document.createElement('div');
+                        wrap.className = 'p-2 text-center';
+                        wrap.style.width = '200px';
+
+                        var img = document.createElement('img');
+                        img.src = it.url;
+                        img.alt = it.alt || '';
+                        img.style.maxWidth = '180px';
+                        img.style.maxHeight = '120px';
+                        img.style.objectFit = 'cover';
+                        img.style.border = '1px solid #ddd';
+                        img.style.padding = '3px';
+
+                        var caption = document.createElement('div');
+                        caption.className = 'small text-muted mt-1';
+                        caption.textContent = it.alt || '';
+
+                        wrap.appendChild(img);
+                        wrap.appendChild(caption);
+                        container.insertBefore(wrap, container.firstChild);
+                    } catch(e){ console.error('appendNewImages error', e); }
+                });
+            }
+        });
+    })();
+</script>
+
+@if (Model.Images != null && Model.Images.Count > 0)
+{
+    <h4>Existing Images</h4>
+            <div id="existingImages" class="d-flex flex-wrap">
+        @foreach(var img in Model.Images.OrderBy(i => i.Order))
+        {
+            <div class="p-2 text-center" style="width:200px;">
+                <img src="@img.Url" alt="@img.AltText" style="max-width:180px;max-height:120px;object-fit:cover;border:1px solid #ddd;padding:3px;" />
+                <div class="small text-muted mt-1">@img.AltText</div>
+            </div>
+        }
+    </div>
+}

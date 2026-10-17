@@ -9,11 +9,13 @@ namespace Roma.Data
     {
         private readonly Services.IEmailQueue? _emailQueue;
         private readonly IConfiguration? _configuration;
+        private readonly Services.IEmailComposer? _emailComposer;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, Services.IEmailQueue? emailQueue = null, IConfiguration? configuration = null) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, Services.IEmailQueue? emailQueue = null, IConfiguration? configuration = null, Services.IEmailComposer? emailComposer = null) : base(options)
         {
             _emailQueue = emailQueue;
             _configuration = configuration;
+            _emailComposer = emailComposer;
         }
 
         public DbSet<Destination>? Destinations { get; set; }
@@ -44,6 +46,7 @@ namespace Roma.Data
             modelBuilder.Entity<Hotel>().Property(h => h.PriceTo).HasPrecision(18, 2);
             modelBuilder.Entity<Parking>().Property(p => p.Fee).HasPrecision(18, 2);
             modelBuilder.Entity<Parking>().Property(p => p.HourlyRate).HasPrecision(18, 2);
+            modelBuilder.Entity<DownloadRecord>().Property(d => d.Amount).HasPrecision(18, 2);
 
             // Subscriber: unique email
             modelBuilder.Entity<Subscriber>().HasIndex(s => s.Email).IsUnique();
@@ -124,32 +127,47 @@ namespace Roma.Data
                                 ? $"/Destinations/Details/{dest.Id}"
                                 : $"{baseUrl}/Destinations/Details/{dest.Id}";
 
-                            // try to use HTML template if available
-                            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
-                            string body;
-                            if (File.Exists(templatePath))
+                            // Compose email: prefer IEmailComposer when available, otherwise use template or fallback HTML/plain text
+                            string body = null;
+                            if (_emailComposer != null)
                             {
                                 try
                                 {
-                                    var tpl = File.ReadAllText(templatePath);
-                                    var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
-                                    var replaced = tpl.Replace("{{LogoUrl}}", logoUrl)
-                                                      .Replace("{{DestName}}", System.Net.WebUtility.HtmlEncode(dest.Name))
-                                                      .Replace("{{DestDesc}}", System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty))
-                                                      .Replace("{{DestLink}}", destLink)
-                                                      .Replace("{{UnsubscribeLink}}", unsubscribeLink)
-                                                      .Replace("{{FeedbackLink}}", string.IsNullOrEmpty(baseUrl) ? "/Feedback" : $"{baseUrl}/Feedback");
-                                    body = replaced;
+                                    body = await _emailComposer.ComposeNewDestinationHtmlAsync(dest.Name, dest.Description ?? string.Empty, destLink);
                                 }
                                 catch
                                 {
-                                    body = $"<p>Yeni destinasyon: {System.Net.WebUtility.HtmlEncode(dest.Name)}</p><p>{System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty)}</p><p><a href='{destLink}'>İncele</a></p><p>Abonelikten çıkmak için: <a href='{unsubscribeLink}'>tıklayın</a></p>";
+                                    // fall through to template/fallback if composer fails
+                                    body = null;
                                 }
                             }
-                            else
+
+                            if (string.IsNullOrEmpty(body))
                             {
-                                var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
-                                body = $@"<html><body style='font-family:Segoe UI,sans-serif'>
+                                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
+                                if (File.Exists(templatePath))
+                                {
+                                    try
+                                    {
+                                        var tpl = File.ReadAllText(templatePath);
+                                        var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
+                                        var replaced = tpl.Replace("{{LogoUrl}}", logoUrl)
+                                                          .Replace("{{DestName}}", System.Net.WebUtility.HtmlEncode(dest.Name))
+                                                          .Replace("{{DestDesc}}", System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty))
+                                                          .Replace("{{DestLink}}", destLink)
+                                                          .Replace("{{UnsubscribeLink}}", unsubscribeLink)
+                                                          .Replace("{{FeedbackLink}}", string.IsNullOrEmpty(baseUrl) ? "/Feedback" : $"{baseUrl}/Feedback");
+                                        body = replaced;
+                                    }
+                                    catch
+                                    {
+                                        body = $"<p>Yeni destinasyon: {System.Net.WebUtility.HtmlEncode(dest.Name)}</p><p>{System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty)}</p><p><a href='{destLink}'>İncele</a></p><p>Abonelikten çıkmak için: <a href='{unsubscribeLink}'>tıklayın</a></p>";
+                                    }
+                                }
+                                else
+                                {
+                                    var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
+                                    body = $@"<html><body style='font-family:Segoe UI,sans-serif'>
 <div style='max-width:600px;margin:0 auto'>
   <div style='text-align:center;padding:10px 0'><img src='{logoUrl}' alt='Logo' style='max-height:60px' /></div>
   <h2>Yeni destinasyon eklendi: {System.Net.WebUtility.HtmlEncode(dest.Name)}</h2>
@@ -159,6 +177,7 @@ namespace Roma.Data
   <p style='font-size:12px;color:#666'>Bu e‑postayı almak istemiyorsanız <a href='{unsubscribeLink}'>abonelikten çıkın</a>.</p>
 </div>
 </body></html>";
+                                }
                             }
 
                             if (_emailQueue != null)

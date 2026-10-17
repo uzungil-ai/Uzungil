@@ -1,0 +1,37 @@
+@page
+@model Roma.Pages.Chat.IndexModel
+@{
+    Layout = "_Layout";
+}
+<h2>Chatbot</h2>
+<div id="chatbox" style="max-width:600px;">
+    <div id="messages" style="border:1px solid #ccc;padding:10px;height:300px;overflow:auto;background:#f9f9f9;"></div>
+    <div class="input-group mt-2">
+        <input id="userInput" class="form-control" />
+        <button id="sendBtn" class="btn btn-primary">Gönder</button>
+    </div>
+</div>
+@section Scripts{
+    <script>
+        document.getElementById('sendBtn').addEventListener('click', async function(){
+            var input = document.getElementById('userInput');
+            var text = input.value.trim();
+            if(!text) return;
+            appendMessage('You', text);
+            input.value = '';
+            var res = await fetch('?handler=Send', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: text }) });
+            if(res.ok){
+                var j = await res.json();
+                appendMessage('Bot', j.reply);
+            } else {
+                appendMessage('Bot', 'Hata: sunucuya ulaşılamadı');
+            }
+        });
+        function appendMessage(who, text){
+            var m = document.createElement('div');
+            m.innerHTML = '<strong>'+who+':</strong> '+text;
+            document.getElementById('messages').appendChild(m);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+    </script>
+}

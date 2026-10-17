@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Roma")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9c61191cb10518b153e4191c710aae9d1a1b283b")]
 [assembly: System.Reflection.AssemblyProductAttribute("Roma")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Roma")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,44 @@
+@model IEnumerable<Roma.Models.DestinationImage>
+
+@{
+    ViewData["Title"] = "Destination Images (Admin)";
+}
+
+<h1>Destination Images (Admin)</h1>
+
+<p>
+    <a class="btn btn-primary" asp-area="Admin" asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Url</th>
+            <th>Destination</th>
+            <th>Order</th>
+            <th>Alt Text</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @if (!string.IsNullOrEmpty(item.Url))
+                {
+                    <img src="@item.Url" alt="" style="max-height:60px; max-width:120px;" />
+                }
+            </td>
+            <td>@item.Destination?.Name</td>
+            <td>@item.Order</td>
+            <td>@item.AltText</td>
+            <td>
+                <a class="btn btn-sm btn-info" asp-area="Admin" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                <a class="btn btn-sm btn-secondary" asp-area="Admin" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <a class="btn btn-sm btn-danger" asp-area="Admin" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

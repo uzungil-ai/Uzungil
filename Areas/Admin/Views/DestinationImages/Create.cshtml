@@ -1,0 +1,38 @@
+@model Roma.Models.DestinationImage
+
+@{
+    ViewData["Title"] = "Create Destination Image (Admin)";
+}
+
+<h1>Create Destination Image</h1>
+
+<form asp-area="Admin" asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Url"></label>
+        <input asp-for="Url" class="form-control" />
+        <span asp-validation-for="Url" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DestinationId">Destination</label>
+        <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
+        <span asp-validation-for="DestinationId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Order"></label>
+        <input asp-for="Order" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="AltText"></label>
+        <input asp-for="AltText" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-area="Admin" asp-action="Index" class="btn btn-secondary">Back to List</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

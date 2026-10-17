@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Roma.Data;
 using Roma.Models;
+using System;
+using System.Threading.Channels;
 
 namespace Roma.Pages.Destinations
 {
@@ -13,11 +15,15 @@ namespace Roma.Pages.Destinations
         private const long MaxFileSize = 5L * 1024 * 1024; // 5 MB
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly Channel<Roma.Services.AiJob>? _aiChannel;
+        private readonly Roma.Services.ImageProcessingService? _imgSvc;
 
-        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env)
+        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env, Channel<Roma.Services.AiJob>? aiChannel = null, Roma.Services.ImageProcessingService? imgSvc = null)
         {
             _db = db;
             _env = env;
+            _aiChannel = aiChannel;
+            _imgSvc = imgSvc;
         }
 
         public async Task<IActionResult> OnPostReorderAsync(int id)
@@ -105,14 +111,7 @@ namespace Roma.Pages.Destinations
             return RedirectToPage(new { id });
         }
 
-        private readonly Roma.Services.ImageProcessingService? _imgSvc;
 
-        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env, Roma.Services.ImageProcessingService? imgSvc = null)
-        {
-            _db = db;
-            _env = env;
-            _imgSvc = imgSvc;
-        }
 
         public async Task<IActionResult> OnPostUploadAsync(int id)
         {
@@ -158,6 +157,23 @@ namespace Roma.Pages.Destinations
                 var image = new DestinationImage { Url = relativeUrl, DestinationId = id, Destination = Destination, Order = Destination.Images.Count };
                 _db.DestinationImages!.Add(image);
                 Destination.Images.Add(image);
+                // save now so image.Id is populated before enqueueing AI job
+                await _db.SaveChangesAsync();
+
+                // enqueue vision job to generate alt-text
+                try
+                {
+                    if (_aiChannel != null)
+                    {
+                        var job = new Roma.Services.AiJob { DestinationId = id, ImageId = image.Id, JobType = "AltText" };
+                        await _aiChannel.Writer.WriteAsync(job);
+                    }
+                }
+                catch
+                {
+                    // ignore enqueue failures
+                }
+
                 addedCount++;
             }
 

@@ -1,0 +1,35 @@
+@model Roma.Models.Hotel
+
+@{
+    ViewData["Title"] = "Hotel Details";
+}
+
+<h1>Hotel Details</h1>
+
+<div>
+    <h4>@Model.Name</h4>
+    <dl class="row">
+        <dt class="col-sm-2">Destination</dt>
+        <dd class="col-sm-10">@Model.Destination?.Name</dd>
+
+        <dt class="col-sm-2">Address</dt>
+        <dd class="col-sm-10">@Model.Address</dd>
+
+        <dt class="col-sm-2">Phone</dt>
+        <dd class="col-sm-10">@Model.Phone</dd>
+
+        <dt class="col-sm-2">Website</dt>
+        <dd class="col-sm-10">@Model.Website</dd>
+
+        <dt class="col-sm-2">Price From</dt>
+        <dd class="col-sm-10">@Model.PriceFrom</dd>
+
+        <dt class="col-sm-2">Price To</dt>
+        <dd class="col-sm-10">@Model.PriceTo</dd>
+    </dl>
+</div>
+
+<p>
+    <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn btn-primary" asp-action="Index">Back to List</a>
+</p>

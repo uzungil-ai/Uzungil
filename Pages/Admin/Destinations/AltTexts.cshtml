@@ -1,0 +1,133 @@
+@page
+@model Roma.Pages.Admin.Destinations.AltTextsModel
+@{
+    Layout = "_AdminLayout";
+}
+@Html.AntiForgeryToken()
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Alt-Text Düzenle</h3>
+            <p class="text-muted">Destinasyon: <strong>@Model.Destination?.Name</strong></p>
+            <div class="mb-3">
+                <label class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll" />
+                    <span class="form-check-label">Tümünü seç</span>
+                </label>
+            </div>
+
+            @if (Model.Images != null && Model.Images.Count > 0)
+            {
+                <div class="row g-3">
+                    @foreach (var img in Model.Images)
+                    {
+                        <div class="col-12">
+                            <div class="d-flex align-items-start">
+                                <img src="@img.Url" alt="" class="img-thumbnail me-3" style="max-width:150px;max-height:120px;" />
+                                <div class="flex-grow-1">
+                                    <label for="alt_@img.Id" class="form-label">Alt-Text (Id: @img.Id)</label>
+                                    <textarea id="alt_@img.Id" class="form-control mb-2" rows="2">@img.AltText</textarea>
+                                    <div class="d-flex align-items-center">
+                                        <button class="btn btn-sm btn-primary save-alt me-2" data-id="@img.Id">
+                                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="display:none"></span>
+                                            Kaydet
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary bulk-check" data-id="@img.Id">Seç</button>
+                                        <span class="ms-2 text-success small save-ok" id="ok_@img.Id" style="display:none">Kaydedildi ✓</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">Görsel bulunamadı.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+            function getToken(){
+                var el = document.querySelector('input[name="__RequestVerificationToken"]');
+                return el ? el.value : '';
+            }
+
+            var selected = new Set();
+
+            document.querySelectorAll('.save-alt').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var id = btn.dataset.id;
+                    saveSingle(id, btn);
+                });
+            });
+
+            document.querySelectorAll('.bulk-check').forEach(function(b){
+                b.addEventListener('click', function(){
+                    var id = b.dataset.id;
+                    if(selected.has(id)){
+                        selected.delete(id); b.classList.remove('btn-success'); b.classList.add('btn-outline-secondary'); b.textContent = 'Seç';
+                    } else { selected.add(id); b.classList.remove('btn-outline-secondary'); b.classList.add('btn-success'); b.textContent = 'Seçildi'; }
+                    // keep selectAll checkbox in sync
+                    var allBoxes = document.querySelectorAll('.bulk-check');
+                    var allSelected = Array.from(allBoxes).every(function(x){ return x.classList.contains('btn-success'); });
+                    var selAll = document.getElementById('selectAll'); if(selAll) selAll.checked = allSelected;
+                });
+            });
+
+            var bulkBtn = document.createElement('button');
+            bulkBtn.className = 'btn btn-sm btn-primary mt-3';
+            bulkBtn.textContent = 'Toplu Kaydet';
+            bulkBtn.addEventListener('click', function(){
+                var items = Array.from(selected).map(function(id){
+                    var ta = document.getElementById('alt_' + id);
+                    return { imageId: parseInt(id), altText: ta ? ta.value.trim() : '' };
+                });
+                if(items.length === 0){ alert('Lütfen önce en az bir öğe seçin.'); return; }
+                bulkBtn.disabled = true; bulkBtn.textContent = 'Kaydediliyor...';
+                fetch('?handler=BulkUpdate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() },
+                    body: JSON.stringify(items)
+                }).then(function(res){ if(!res.ok) throw new Error('Network'); return res.json(); })
+                .then(function(j){ if(j.success){ alert('Toplu kaydetme başarılı ('+ (j.updated || 0) +')'); selected.forEach(function(id){ var ok = document.getElementById('ok_' + id); if(ok){ ok.style.display = 'inline'; setTimeout(function(){ ok.style.display = 'none'; }, 2500); } }); } else { alert('Toplu kaydetme başarısız'); } })
+                .catch(function(){ alert('Sunucu hatası'); })
+                .finally(function(){ bulkBtn.disabled = false; bulkBtn.textContent = 'Toplu Kaydet'; });
+            });
+
+            // insert bulk button after the card
+            var card = document.querySelector('.card-body');
+            if(card) card.appendChild(bulkBtn);
+
+            // selectAll checkbox behaviour
+            var selectAll = document.getElementById('selectAll');
+            if(selectAll){
+                selectAll.addEventListener('change', function(){
+                    var checked = selectAll.checked;
+                    document.querySelectorAll('.bulk-check').forEach(function(b){
+                        var id = b.dataset.id;
+                        if(checked){ selected.add(id); b.classList.remove('btn-outline-secondary'); b.classList.add('btn-success'); b.textContent = 'Seçildi'; }
+                        else { selected.delete(id); b.classList.remove('btn-success'); b.classList.add('btn-outline-secondary'); b.textContent = 'Seç'; }
+                    });
+                });
+            }
+
+            function saveSingle(id, btn){
+                var ta = document.getElementById('alt_' + id);
+                var val = ta ? ta.value.trim() : '';
+                var spinner = btn.querySelector('.spinner-border');
+                var ok = document.getElementById('ok_' + id);
+                btn.disabled = true; if(spinner) spinner.style.display = 'inline-block';
+                fetch('?handler=Update', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() }, body: JSON.stringify({ imageId: parseInt(id), altText: val }) })
+                .then(function(res){ if(!res.ok) throw new Error('Network'); return res.json(); })
+                .then(function(j){ if(j.success){ if(ok){ ok.style.display = 'inline'; setTimeout(function(){ ok.style.display = 'none'; }, 2500); } } else { alert('Kaydetme başarısız'); } })
+                .catch(function(){ alert('Sunucu hatası'); })
+                .finally(function(){ btn.disabled = false; if(spinner) spinner.style.display = 'none'; });
+            }
+        })();
+    </script>
+}

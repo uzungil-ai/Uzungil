@@ -1,15 +1,77 @@
 @page "{id:int}"
 @model Roma.Pages.Admin.Destinations.DetailsModel
 
+@{
+    var firstImage = Model.Destination?.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
+    var pageUrl = Url.PageLink("/Admin/Destinations/Details", values: new { id = Model.Destination?.Id });
+    var imageUrlAbsolute = firstImage != null && (firstImage.StartsWith("http://") || firstImage.StartsWith("https://"))
+        ? firstImage
+        : ($"{Request.Scheme}://{Request.Host}{firstImage}");
+}
+
+            // Text-to-Speech: use Web Speech API
+            var ttsBtn = document.getElementById('ttsDescBtn');
+            if (ttsBtn && window.speechSynthesis) {
+                ttsBtn.addEventListener('click', function() {
+                    var text = '@(System.Net.WebUtility.HtmlEncode(Model.Destination?.Description ?? ""))';
+                    speak(text);
+                });
+            }
+
+            document.querySelectorAll('.btn-tts').forEach(function(b){
+                b.addEventListener('click', function(){
+                    var txt = b.dataset.text || '';
+                    speak(decodeHtml(txt));
+                });
+            });
+
+            function speak(text){
+                if(!text) return;
+                if(window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+                var utter = new SpeechSynthesisUtterance(decodeHtml(text));
+                utter.lang = 'tr-TR';
+                window.speechSynthesis.speak(utter);
+            }
+
+            function decodeHtml(html){
+                var txt = document.createElement('textarea'); txt.innerHTML = html; return txt.value;
+            }
+
+@section Head {
+    <meta property="og:title" content="@Model.Destination?.Name - Roma" />
+    <meta property="og:description" content="@Model.Destination?.Description" />
+    <meta property="og:image" content="@imageUrlAbsolute" />
+    <meta property="og:url" content="@pageUrl" />
+    <meta name="twitter:card" content="summary_large_image" />
+}
+
 <h2>Destinasyon Detayları</h2>
 
 <div>
     <h3>@Model.Destination?.Name</h3>
     <p><strong>Ülke:</strong> @Model.Destination?.Country</p>
     <p><strong>Açıklama:</strong> @Model.Destination?.Description</p>
+    <p>
+        <button id="ttsDescBtn" class="btn btn-sm btn-outline-secondary">Sesli Oku</button>
+    </p>
     <p><strong>Giriş Ücreti:</strong> @Model.Destination?.EntranceFee</p>
     <p><strong>Koordinatlar:</strong> @Model.Destination?.Latitude, @Model.Destination?.Longitude</p>
     <p><a asp-page="~/Destinations/ManagePhotos" asp-route-id="@Model.Destination?.Id">Fotoğrafları Yönet</a></p>
+    <p><a asp-page="/Admin/Destinations/AltTexts" asp-route-id="@Model.Destination?.Id" class="btn btn-sm btn-outline-secondary">Alt-Textleri Gör</a></p>
+    <p>
+        <button id="shareBtn" class="btn btn-outline-secondary">Paylaş</button>
+        <div class="btn-group ms-2" role="group">
+            <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=@System.Net.WebUtility.UrlEncode(pageUrl)">Facebook</a>
+            <a class="btn btn-sm btn-outline-info" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=@System.Net.WebUtility.UrlEncode(Model.Destination?.Name ?? "")&url=@System.Net.WebUtility.UrlEncode(pageUrl)">Twitter</a>
+            <a class="btn btn-sm btn-outline-success" target="_blank" rel="noopener" href="https://api.whatsapp.com/send?text=@System.Net.WebUtility.UrlEncode((Model.Destination?.Name ?? "") + " " + pageUrl)">WhatsApp</a>
+            <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" href="https://t.me/share/url?url=@System.Net.WebUtility.UrlEncode(pageUrl)&text=@System.Net.WebUtility.UrlEncode(Model.Destination?.Name ?? "")">Telegram</a>
+            <a class="btn btn-sm btn-outline-warning" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/button/?url=@System.Net.WebUtility.UrlEncode(pageUrl)&media=@System.Net.WebUtility.UrlEncode(imageUrlAbsolute)&description=@System.Net.WebUtility.UrlEncode(Model.Destination?.Description ?? "")">Pinterest</a>
+        </div>
+    </p>
+    <p class="mt-3">
+        <button id="aiDescBtn" class="btn btn-sm btn-primary">AI ile Açıklama Üret</button>
+        <span id="aiDescStatus" class="ms-2 text-muted"></span>
+    </p>
 </div>
 
 @if (Model.Destination?.Images?.Any() == true)
@@ -21,8 +83,58 @@
             {
                 <div style="display:inline-block;margin:6px;text-align:center">
                     <img src="@img.Url" alt="" style="max-width:150px;max-height:100px;display:block" />
+                    @if(!string.IsNullOrEmpty(img.AltText))
+                    {
+                        <div class="small text-muted mt-1">AltText: @img.AltText</div>
+                    }
+                    <div><button class="btn-share-image btn btn-sm btn-link" data-url="@img.Url">Paylaş</button></div>
                 </div>
             }
+
+@section Scripts {
+    <script>
+        (function(){
+            var shareBtn = document.getElementById('shareBtn');
+            if(shareBtn){
+                shareBtn.addEventListener('click', function(){
+                    if(navigator.share){
+                        navigator.share({
+                            title: document.title,
+                            text: 'Bu destinasyonu inceleyin: ' + document.title,
+                            url: window.location.href
+                        }).catch(function(){});
+                    } else {
+                        // fallback: copy link
+                        navigator.clipboard.writeText(window.location.href).then(function(){ alert('Link kopyalandı'); });
+                    }
+                });
+            }
+
+            document.querySelectorAll('.btn-share-image').forEach(function(b){
+                b.addEventListener('click', function(){
+                    var url = b.dataset.url;
+                    if(navigator.share){
+                        navigator.share({ title: 'Görsel paylaşımı', url: new URL(url, window.location.origin).href }).catch(function(){});
+                    } else {
+                        navigator.clipboard.writeText(new URL(url, window.location.origin).href).then(function(){ alert('Görsel linki kopyalandı'); });
+                    }
+                });
+            });
+
+            var aiBtn = document.getElementById('aiDescBtn');
+            var aiStatus = document.getElementById('aiDescStatus');
+            if(aiBtn){
+                aiBtn.addEventListener('click', function(){
+                    aiBtn.disabled = true; aiStatus.textContent = 'İsteğiniz kuyruğa eklendi...';
+                    fetch('?handler=GenerateDescription&id=@Model.Destination?.Id', { method: 'POST', headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' } })
+                        .then(r => r.json()).then(j => { if(j.success) aiStatus.textContent = 'Üretim başlatıldı.'; else aiStatus.textContent = 'Başarısız.'; })
+                        .catch(()=> aiStatus.textContent = 'Hata')
+                        .finally(()=> aiBtn.disabled = false);
+                });
+            }
+        })();
+    </script>
+}
         </div>
     </section>
 }

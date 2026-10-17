@@ -145,6 +145,8 @@
         public required Destination Destination { get; set; }
         // Order for display/sorting in UI
         public int Order { get; set; }
+        // Generated alternative text (AI/alt-text)
+        public string? AltText { get; set; }
     }
 
     /// <summary>
