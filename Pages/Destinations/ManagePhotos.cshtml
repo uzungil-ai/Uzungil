@@ -126,16 +126,45 @@
                 }).then(function(resp){
                     return resp.json();
                 }).then(function(json){
-                    if(json && json.success){
-                        // append uploaded thumbnails and delete forms
-                        if(json.images && json.images.length){
-                            json.images.forEach(function(it){
-                                var wrapper = document.createElement('div'); wrapper.style.width='150px'; wrapper.style.display='inline-block'; wrapper.style.marginRight='8px';
-                                var im = document.createElement('img'); im.src = it.url; im.style.width='100%'; im.style.height='auto'; im.style.border='1px solid #ccc';
-                                wrapper.appendChild(im);
-                                // create delete form
-                                var form = document.createElement('form'); form.method='post'; form.className='delete-form';
-                                var token = document.createElement('input'); token.type='hidden'; token.name='__RequestVerificationToken'; token.value = tokenInput ? tokenInput.value : '';
+                    console.log('upload response', json);
+                    if(!json){
+                        alert('Sunucudan geçersiz yanıt alındı. Konsolu kontrol edin.');
+                        btnUpload.disabled = false;
+                        btnUpload.textContent = 'Yükle (Taşıyarak)';
+                        return;
+                    }
+                    if(!json.success){
+                        var msg = json.message || ('Yükleme başarısız. Uploaded: ' + (json.uploaded||0) + ', skipped: ' + (json.skipped||0));
+                        if(json.errors && json.errors.length) msg += '\n' + json.errors.join('\n');
+                        alert(msg);
+                        btnUpload.disabled = false;
+                        btnUpload.textContent = 'Yükle (Taşıyarak)';
+                        return;
+                    }
+                    // append uploaded thumbnails and delete forms
+                    if(json.images && json.images.length){
+                        json.images.forEach(function(it){
+                            var wrapper = document.createElement('div'); wrapper.style.width='150px'; wrapper.style.display='inline-block'; wrapper.style.marginRight='8px';
+                            var im = document.createElement('img'); im.src = it.url; im.style.width='100%'; im.style.height='auto'; im.style.border='1px solid #ccc';
+                            wrapper.appendChild(im);
+                            // create delete form
+                            var form = document.createElement('form'); form.method='post'; form.className='delete-form';
+                            var token = document.createElement('input'); token.type='hidden'; token.name='__RequestVerificationToken'; token.value = uploadForm.querySelector('input[name="__RequestVerificationToken"]').value;
+                            form.appendChild(token);
+                            var hid = document.createElement('input'); hid.type='hidden'; hid.name='imageId'; hid.value = it.id; form.appendChild(hid);
+                            var btn = document.createElement('button'); btn.type='submit'; btn.textContent='Sil'; form.appendChild(btn);
+                            wrapper.appendChild(form);
+                            previews.appendChild(wrapper);
+                        });
+                    }
+                    btnUpload.disabled = false;
+                    btnUpload.textContent = 'Yükle (Taşıyarak)';
+                }).catch(function(err){
+                    console.error('Fetch upload error', err);
+                    alert('Yükleme sırasında hata oluştu. Konsolu kontrol edin.');
+                    btnUpload.disabled = false;
+                    btnUpload.textContent = 'Yükle (Taşıyarak)';
+                });
                                 var hid = document.createElement('input'); hid.type='hidden'; hid.name='imageId'; hid.value = it.id;
                                 form.appendChild(token); form.appendChild(hid);
                                 var btn = document.createElement('button'); btn.type='submit'; btn.textContent='Sil';
