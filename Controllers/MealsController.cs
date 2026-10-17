@@ -136,5 +136,12 @@ namespace Roma.Controllers
         {
             return _context.Meals!.Any(e => e.Id == id);
         }
+
+        // Debug endpoint: /Meals/Debug
+        public async Task<IActionResult> Debug()
+        {
+            var total = await _context.Meals!.CountAsync();
+            return Content($"Meals count: {total}");
+        }
     }
 }

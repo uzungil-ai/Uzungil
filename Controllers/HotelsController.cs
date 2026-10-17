@@ -136,5 +136,12 @@ namespace Roma.Controllers
         {
             return _context.Hotels!.Any(e => e.Id == id);
         }
+
+        // Debug endpoint: /Hotels/Debug
+        public async Task<IActionResult> Debug()
+        {
+            var total = await _context.Hotels!.CountAsync();
+            return Content($"Hotels count: {total}");
+        }
     }
 }

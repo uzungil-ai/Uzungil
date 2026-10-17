@@ -137,5 +137,12 @@ namespace Roma.Controllers
         {
             return _context.DestinationImages!.Any(e => e.Id == id);
         }
+
+        // Debug endpoint: /DestinationImages/Debug
+        public async Task<IActionResult> Debug()
+        {
+            var total = await _context.DestinationImages!.CountAsync();
+            return Content($"DestinationImages count: {total}");
+        }
     }
 }
