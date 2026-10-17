@@ -56,6 +56,10 @@ namespace Roma.Controllers
             {
                 _context.Add(destinationImage);
                 await _context.SaveChangesAsync();
+                if (destinationImage.DestinationId > 0)
+                {
+                    return RedirectToAction("Details", "Destinations", new { id = destinationImage.DestinationId });
+                }
                 return RedirectToAction(nameof(Index));
             }
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Destination>()));

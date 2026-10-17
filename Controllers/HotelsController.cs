@@ -55,6 +55,10 @@ namespace Roma.Controllers
             {
                 _context.Add(hotel);
                 await _context.SaveChangesAsync();
+                if (hotel.DestinationId > 0)
+                {
+                    return RedirectToAction("Details", "Destinations", new { id = hotel.DestinationId });
+                }
                 return RedirectToAction(nameof(Index));
             }
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
