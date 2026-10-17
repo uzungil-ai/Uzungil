@@ -18,10 +18,12 @@ namespace Roma.Controllers
         // GET: Destinations
         public async Task<IActionResult> Index()
         {
-            // include related Images and Attractions to display counts in the view
+            // include related Images, Attractions, Hotels and Meals to display counts in the view
             var list = await _context.Destinations!
                 .Include(d => d.Images)
                 .Include(d => d.Attractions)
+                .Include(d => d.Hotels)
+                .Include(d => d.Meals)
                 .ToListAsync();
             return View(list);
         }
@@ -30,10 +32,12 @@ namespace Roma.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            // eager load related images and attractions for details page
+            // eager load related images, attractions, hotels and meals for details page
             var destination = await _context.Destinations!
                 .Include(d => d.Images)
                 .Include(d => d.Attractions)
+                .Include(d => d.Hotels)
+                .Include(d => d.Meals)
                 .FirstOrDefaultAsync(m => m.Id == id.Value);
             if (destination == null) return NotFound();
 

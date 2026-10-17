@@ -4,6 +4,60 @@
     ViewData["Title"] = "Details";
 }
 
+@if (Model.Hotels != null && Model.Hotels.Count > 0)
+{
+    <h4>Hotels (@Model.Hotels.Count)</h4>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Price From</th>
+                <th>Price To</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var h in Model.Hotels)
+        {
+            <tr>
+                <td>@h.Name</td>
+                <td>@h.Address</td>
+                <td>@h.Phone</td>
+                <td>@(h.PriceFrom.HasValue ? h.PriceFrom.Value.ToString("C") : "-")</td>
+                <td>@(h.PriceTo.HasValue ? h.PriceTo.Value.ToString("C") : "-")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@if (Model.Meals != null && Model.Meals.Count > 0)
+{
+    <h4>Meals (@Model.Meals.Count)</h4>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var m in Model.Meals)
+        {
+            <tr>
+                <td>@m.Name</td>
+                <td>@m.Address</td>
+                <td>@m.Phone</td>
+                <td>@(m.Price.HasValue ? m.Price.Value.ToString("C") : "-")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
 <h1>Details</h1>
 
 <div>
