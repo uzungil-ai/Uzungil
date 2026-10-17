@@ -52,6 +52,9 @@ namespace Roma.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Address,Phone,Website,PriceFrom,PriceTo,DestinationId")] Hotel hotel)
         {
+            // Navigation properties are not bound in the form; remove their ModelState entries to avoid "required" validation failures
+            ModelState.Remove("Destination");
+
             if (ModelState.IsValid)
             {
                 _context.Add(hotel);

@@ -52,6 +52,8 @@ namespace Roma.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Address,Phone,Price,DestinationId")] Meal meal)
         {
+            ModelState.Remove("Destination");
+
             if (ModelState.IsValid)
             {
                 _context.Add(meal);

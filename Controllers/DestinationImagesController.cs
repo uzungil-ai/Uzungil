@@ -53,6 +53,8 @@ namespace Roma.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Url,DestinationId,Order,AltText")] DestinationImage destinationImage)
         {
+            ModelState.Remove("Destination");
+
             if (ModelState.IsValid)
             {
                 _context.Add(destinationImage);
