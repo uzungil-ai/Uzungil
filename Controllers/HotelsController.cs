@@ -62,6 +62,14 @@ namespace Roma.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            // collect model state errors for easier debugging in the view
+            var errors = ModelState.Values.SelectMany(v => v.Errors)
+                .Select(e => string.IsNullOrEmpty(e.ErrorMessage) ? (e.Exception?.Message ?? "") : e.ErrorMessage)
+                .Where(s => !string.IsNullOrEmpty(s));
+            if (errors.Any())
+            {
+                TempData["ModelErrors"] = string.Join("; ", errors);
+            }
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
             ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", hotel.DestinationId);
             return View(hotel);
