@@ -4,12 +4,12 @@
     ViewData["Title"] = "Details";
 }
 
+<div class="d-flex justify-content-between align-items-center">
+    <h4>Hotels (@(Model.Hotels?.Count ?? 0))</h4>
+    <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
+</div>
 @if (Model.Hotels != null && Model.Hotels.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center">
-        <h4>Hotels (@Model.Hotels.Count)</h4>
-        <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
-    </div>
     <table class="table table-sm">
         <thead>
             <tr>
@@ -38,13 +38,17 @@
         </tbody>
     </table>
 }
+else
+{
+    <div class="text-muted mb-3">(No hotels yet)</div>
+}
 
+<div class="d-flex justify-content-between align-items-center">
+    <h4>Meals (@(Model.Meals?.Count ?? 0))</h4>
+    <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
+</div>
 @if (Model.Meals != null && Model.Meals.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center">
-        <h4>Meals (@Model.Meals.Count)</h4>
-        <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
-    </div>
     <table class="table table-sm">
         <thead>
             <tr>
@@ -70,6 +74,10 @@
         }
         </tbody>
     </table>
+}
+else
+{
+    <div class="text-muted mb-3">(No meals yet)</div>
 }
 
 <h1>Details</h1>
@@ -114,12 +122,12 @@
     }
 </div>
 
+<div class="d-flex justify-content-between align-items-center">
+    <h4>Images (@(Model.Images?.Count ?? 0))</h4>
+    <a class="btn btn-sm btn-primary" asp-controller="DestinationImages" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
+</div>
 @if (Model.Images != null && Model.Images.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center">
-        <h4>Images</h4>
-        <a class="btn btn-sm btn-primary" asp-controller="DestinationImages" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
-    </div>
     <div class="d-flex flex-wrap mb-4">
         @foreach(var img in Model.Images.OrderBy(i => i.Order))
         {
@@ -131,6 +139,10 @@
             </div>
         }
     </div>
+}
+else
+{
+    <div class="text-muted mb-3">(No images yet)</div>
 }
 
 @if (Model.Attractions != null && Model.Attractions.Count > 0)
