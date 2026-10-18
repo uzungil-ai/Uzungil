@@ -8,7 +8,7 @@ using System.Threading.Channels;
 namespace Roma.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UploadsController : Controller
     {
         private const long MaxFileSize = 5L * 1024 * 1024; // 5 MB
