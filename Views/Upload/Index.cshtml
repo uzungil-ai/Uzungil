@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "Upload Images";
+}
+
+<h2>Upload Images</h2>
+
+<form id="uploadForm" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label for="destinationId">Destination Id</label>
+        <input type="number" id="destinationId" name="destinationId" class="form-control" value="1" required />
+    </div>
+    <div class="form-group">
+        <label for="files">Images</label>
+        <input type="file" id="files" name="files" multiple accept="image/*" class="form-control" />
+    </div>
+    <button class="btn btn-primary" type="submit">Upload</button>
+</form>
+
+<div id="result" style="margin-top:1rem;"></div>
+
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const id = document.getElementById('destinationId').value;
+    const input = document.getElementById('files');
+    if (!input.files.length) {
+        alert('Lütfen en az bir dosya seçin.');
+        return;
+    }
+
+    const fd = new FormData();
+    for (const f of input.files) {
+        fd.append('files', f, f.name);
+    }
+
+    // Eğer antiforgery token eklendiyse ekleyelim (API controller antiforgery istemeyebilir)
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (tokenInput) {
+        fd.append('__RequestVerificationToken', tokenInput.value);
+    }
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.textContent = 'Yükleniyor...';
+
+    try {
+        const resp = await fetch(`/api/TestUpload/${encodeURIComponent(id)}`, {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin'
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            return;
+        }
+
+        // Başarılı sonuçları göster
+        const uploadedHtml = [];
+        if (data.images && data.images.length) {
+            for (const img of data.images) {
+                uploadedHtml.push(`<div><img src="${img.url}" alt="${img.originalName}" style="max-width:200px;display:block;margin-bottom:4px;" /><small>${img.originalName} (${img.size} bytes)</small></div>`);
+            }
+        }
+
+        resultDiv.innerHTML = `Yüklendi: ${data.uploaded} / ${data.total}<div>${uploadedHtml.join('')}</div><pre>${JSON.stringify(data.errors || {}, null, 2)}</pre>`;
+    } catch (err) {
+        resultDiv.textContent = err?.message || String(err);
+    }
+});
+</script>
