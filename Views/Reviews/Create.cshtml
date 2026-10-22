@@ -1,0 +1,62 @@
+@model Roma.Models.Review
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<form asp-action="Create" method="post">
+    <input type="hidden" name="returnToAttraction" value="@((ViewBag.ReturnToAttraction == true).ToString().ToLowerInvariant())" />
+    @if (ViewBag.UserLocked == true)
+    {
+        <input type="hidden" asp-for="UserId" value="@ViewBag.CurrentUserId" />
+    }
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Comment" class="control-label"></label>
+        <input asp-for="Comment" class="form-control" />
+        <span asp-validation-for="Comment" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Rating" class="control-label"></label>
+        <input asp-for="Rating" class="form-control" type="number" min="1" max="5" step="1" />
+        <small class="form-text text-muted">1 - 5 arası giriniz.</small>
+        <span asp-validation-for="Rating" class="text-danger"></span>
+    </div>
+    @if (ViewBag.UserLocked != true)
+    {
+        <div class="form-group">
+            <label asp-for="UserId" class="control-label"></label>
+            <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+            <span asp-validation-for="UserId" class="text-danger"></span>
+        </div>
+    }
+    @if (ViewBag.ReturnToAttraction == true && ViewBag.AttractionId != null)
+    {
+        <input type="hidden" asp-for="AttractionId" value="@ViewBag.AttractionId" />
+    }
+    else
+    {
+        <div class="form-group">
+            <label asp-for="AttractionId" class="control-label"></label>
+            <select asp-for="AttractionId" class="form-control" asp-items="ViewBag.AttractionId"></select>
+            <span asp-validation-for="AttractionId" class="text-danger"></span>
+        </div>
+    }
+    <div class="form-group mt-3">
+        <input type="submit" value="Create" class="btn btn-primary" />
+        @if (ViewBag.ReturnToAttraction == true && ViewBag.AttractionId != null)
+        {
+            <a class="btn btn-secondary" asp-controller="Attractions" asp-action="Details" asp-route-id="@ViewBag.AttractionId">Geri Dön</a>
+        }
+        else
+        {
+            <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

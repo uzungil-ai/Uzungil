@@ -31,7 +31,10 @@ namespace Roma.Controllers
             if (id == null) return NotFound();
 
             var attraction = await _context.Attractions!
+                .AsNoTracking()
                 .Include(a => a.Destination)
+                .Include(a => a.Reviews.Where(r => r.IsApproved))
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id.Value);
             if (attraction == null) return NotFound();
 
@@ -39,26 +42,44 @@ namespace Roma.Controllers
         }
 
         // GET: Attractions/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name");
+            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", destinationId);
+            ViewBag.ReturnToDestination = destinationId.HasValue;
             return View();
         }
 
         // POST: Attractions/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Category,Address,AverageRating,DestinationId")] Attraction attraction)
+        public async Task<IActionResult> Create([Bind("Id,Name,Category,Address,AverageRating,DestinationId")] Attraction attraction, bool returnToDestination = false)
         {
+            ModelState.Remove(nameof(Attraction.Destination));
+
+            if (attraction.AverageRating < 1 || attraction.AverageRating > 5)
+            {
+                ModelState.AddModelError(nameof(Attraction.AverageRating), "Puan 1 ile 5 arasında olmalıdır.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(attraction);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Cazibe noktası başarıyla kaydedildi.";
+
+                if (returnToDestination)
+                {
+                    return RedirectToAction("Details", "Destinations", new { id = attraction.DestinationId });
+                }
+
                 return RedirectToAction(nameof(Index));
             }
+
+            TempData["ErrorMessage"] = "Kayıt yapılamadı. Lütfen zorunlu alanları kontrol edin.";
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
             ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", attraction.DestinationId);
+            ViewBag.ReturnToDestination = returnToDestination;
             return View(attraction);
         }
 
@@ -80,6 +101,13 @@ namespace Roma.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Category,Address,AverageRating,DestinationId")] Attraction attraction)
         {
             if (id != attraction.Id) return NotFound();
+
+            ModelState.Remove(nameof(Attraction.Destination));
+
+            if (attraction.AverageRating < 1 || attraction.AverageRating > 5)
+            {
+                ModelState.AddModelError(nameof(Attraction.AverageRating), "Puan 1 ile 5 arasında olmalıdır.");
+            }
 
             if (ModelState.IsValid)
             {

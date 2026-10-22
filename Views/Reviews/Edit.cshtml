@@ -1,0 +1,52 @@
+@model Roma.Models.Review
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="Comment" class="control-label"></label>
+        <input asp-for="Comment" class="form-control" />
+        <span asp-validation-for="Comment" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Rating" class="control-label"></label>
+        <input asp-for="Rating" class="form-control" type="number" min="1" max="5" step="1" />
+        <small class="form-text text-muted">1 - 5 arası giriniz.</small>
+        <span asp-validation-for="Rating" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="CreatedAt" class="control-label"></label>
+        <input asp-for="CreatedAt" class="form-control" />
+        <span asp-validation-for="CreatedAt" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="UserId" class="control-label"></label>
+        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+        <span asp-validation-for="UserId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="AttractionId" class="control-label"></label>
+        <select asp-for="AttractionId" class="form-control" asp-items="ViewBag.AttractionId"></select>
+        <span asp-validation-for="AttractionId" class="text-danger"></span>
+    </div>
+    @if (ViewBag.IsAdmin == true)
+    {
+        <div class="form-check mt-3">
+            <input asp-for="IsApproved" class="form-check-input" />
+            <label asp-for="IsApproved" class="form-check-label">Yorum Onaylı</label>
+        </div>
+    }
+    <div class="form-group mt-3">
+        <input type="submit" value="Save" class="btn btn-primary" />
+        <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

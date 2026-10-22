@@ -2,9 +2,28 @@
 
 @{
     ViewData["Title"] = "Details";
+    var visibleReviews = (Model.Reviews ?? new List<Roma.Models.Review>())
+        .Where(r => r.IsApproved)
+        .OrderByDescending(r => r.CreatedAt)
+        .ToList();
+
+    string ShortEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) return "e-posta yok";
+        var parts = email.Split('@');
+        var local = parts[0];
+        var domain = parts[1];
+        var prefixLength = Math.Min(3, local.Length);
+        return $"{local[..prefixLength]}***@{domain}";
+    }
 }
 
 <h1>Details</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
 
 <div>
     <h4>Attraction</h4>
@@ -23,35 +42,51 @@
         <dd class="col-sm-10">@Model.Destination?.Name</dd>
 
         <dt class="col-sm-2">Average Rating</dt>
-        <dd class="col-sm-10">@Model.AverageRating</dd>
+        <dd class="col-sm-10">
+            @Html.RatingBadge(Model.AverageRating)
+        </dd>
     </dl>
 </div>
 
-<div class="mb-4">
+<div class="mb-4 d-flex gap-2">
     <a class="btn btn-secondary" asp-action="Index">Back to List</a>
     <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn btn-success" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@Model.Id">Review Ekle</a>
 </div>
 
-@if (Model.Reviews != null && Model.Reviews.Count > 0)
+@if (visibleReviews.Count > 0)
 {
-    <h4>Reviews (@Model.Reviews.Count)</h4>
+    <h4>Reviews (@visibleReviews.Count)</h4>
     <table class="table table-sm">
         <thead>
             <tr>
                 <th>Comment</th>
                 <th>Rating</th>
                 <th>Created</th>
+                <th>Kullanıcı</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-        @foreach(var r in Model.Reviews)
+        @foreach (var r in visibleReviews)
         {
             <tr>
                 <td>@r.Comment</td>
-                <td>@r.Rating</td>
+                <td>
+                    @Html.RatingBadge(r.Rating)
+                </td>
                 <td>@r.CreatedAt</td>
+                <td>@r.User?.UserName (@ShortEmail(r.User?.Email))</td>
+                <td>
+                    <a class="btn btn-sm btn-secondary" asp-controller="Reviews" asp-action="Edit" asp-route-id="@r.Id">Düzenle</a>
+                    <a class="btn btn-sm btn-danger" asp-controller="Reviews" asp-action="Delete" asp-route-id="@r.Id" asp-route-returnToAttraction="true">Sil</a>
+                </td>
             </tr>
         }
         </tbody>
     </table>
+}
+else
+{
+    <div class="alert alert-light border">Henüz yorum yok. İlk yorumu ekleyebilirsiniz.</div>
 }

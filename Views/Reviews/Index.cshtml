@@ -1,0 +1,59 @@
+@model IEnumerable<Roma.Models.Review>
+
+@{
+    ViewData["Title"] = "Reviews";
+}
+
+<h1>Reviews</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Comment</th>
+            <th>Rating</th>
+            <th>Created At</th>
+            <th>User</th>
+            <th>Attraction</th>
+            <th>Onay</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Comment</td>
+            <td>
+                @Html.RatingBadge(item.Rating)
+            </td>
+            <td>@item.CreatedAt</td>
+            <td>@item.User?.UserName</td>
+            <td>@item.Attraction?.Name</td>
+            <td>
+                @if (item.IsApproved)
+                {
+                    <span class="badge bg-success">Onaylı</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark">Bekliyor</span>
+                }
+            </td>
+            <td>
+                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
