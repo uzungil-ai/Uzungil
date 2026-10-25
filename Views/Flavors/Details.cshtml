@@ -1,0 +1,21 @@
+@model Roma.Models.Flavor
+
+@{
+    ViewData["Title"] = "Flavor Details";
+}
+
+<h1>Flavor Details</h1>
+
+<div>
+    <h4>@Model.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Destination</dt>
+        <dd class="col-sm-10">@Model.Destination?.Name</dd>
+    </dl>
+</div>
+
+<p>
+    <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn btn-primary" asp-action="Index">Back to List</a>
+</p>

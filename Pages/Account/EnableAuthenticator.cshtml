@@ -3,20 +3,39 @@
 
 <h2>Authenticator'ı Etkinleştir</h2>
 
-<p>QR kodunu Authenticator uygulamanıza ekleyin veya manuel anahtarı kullanın.</p>
+<p>QR kodunu Authenticator uygulamanıza ekleyin veya manuel anahtarı uygulamaya tanımlayın.</p>
 
 <div>
-    <img src="@Model.QrCodeUrl" alt="QR Code" />
+    <img src="@Model.QrCodeUrl" alt="QR Code" width="200" height="200"
+         onerror="this.style.display='none';document.getElementById('qrFallback').style.display='block';" />
+    <div id="qrFallback" class="text-danger" style="display:none;">
+        QR kod yüklenemedi. Lütfen manuel anahtarı uygulamaya girin.
+    </div>
 </div>
 
-<p>Manuel anahtar: <strong>@Model.SharedKey</strong></p>
+<p>Manuel anahtar (sadece uygulamaya eklemek için): <strong>@Model.SharedKey</strong></p>
 
 <form method="post">
-    <label for="Code">Doğrulama Kodu</label>
-    <input id="Code" name="Code" />
+    @Html.AntiForgeryToken()
+    <label for="Code">Doğrulama Kodu (6 hane)</label>
+    <input id="Code" name="Code" type="tel" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" />
+    <small class="text-muted d-block">Manuel anahtarı değil, Authenticator uygulamasında görünen anlık 6 haneli kodu girin.</small>
     <button type="submit">Doğrula ve Etkinleştir</button>
     @if (Model.ErrorMessage != null)
     {
         <div class="text-danger">@Model.ErrorMessage</div>
     }
 </form>
+
+@section Scripts {
+    <script>
+        (function () {
+            var codeInput = document.getElementById('Code');
+            if (!codeInput) return;
+
+            codeInput.addEventListener('input', function () {
+                codeInput.value = (codeInput.value || '').replace(/\D/g, '').slice(0, 6);
+            });
+        })();
+    </script>
+}

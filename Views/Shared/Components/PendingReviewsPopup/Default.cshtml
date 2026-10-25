@@ -1,0 +1,66 @@
+@model Roma.ViewComponents.PendingReviewsPopupViewModel
+
+<div class="modal fade" id="pendingReviewsModal" tabindex="-1" aria-labelledby="pendingReviewsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pendingReviewsModalLabel">Onay bekleyen yorumlar (@Model.PendingReviews.Count)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı</th>
+                                <th>Yer</th>
+                                <th>Yorum</th>
+                                <th>Puan</th>
+                                <th>Tarih</th>
+                                <th class="text-end">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var review in Model.PendingReviews)
+                            {
+                                <tr>
+                                    <td>@review.User?.UserName</td>
+                                    <td>@review.Attraction?.Name</td>
+                                    <td>@review.Comment</td>
+                                    <td>@review.Rating</td>
+                                    <td>@review.CreatedAt.ToString("g")</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-2">
+                                            <form asp-controller="Reviews" asp-action="Approve" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@review.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Model.CurrentPathAndQuery" />
+                                                <button type="submit" class="btn btn-sm btn-success">Onayla</button>
+                                            </form>
+                                            <form asp-controller="Reviews" asp-action="Reject" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@review.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Model.CurrentPathAndQuery" />
+                                                <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var modalElement = document.getElementById("pendingReviewsModal");
+        if (!modalElement) {
+            return;
+        }
+
+        var modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    });
+</script>

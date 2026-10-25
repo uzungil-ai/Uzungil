@@ -1,56 +1,76 @@
 @model Roma.Models.Destination
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Destinasyon Düzenle";
 }
 
-<h1>Edit</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Destinasyon Düzenle</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">Listeye Dön</a>
+</div>
 
-<h4>Destination</h4>
-<hr />
 <div class="row">
-    <div class="col-md-8">
-        <form asp-action="Edit" method="post">
-            <input type="hidden" asp-for="Id" />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="col-12 col-lg-9 col-xl-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Name" class="form-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Name" class="form-label">Destinasyon Adı</label>
+                            <input asp-for="Name" class="form-control" placeholder="Örn: Roma" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Country" class="form-label">Ülke</label>
+                            <input asp-for="Country" class="form-control" placeholder="Örn: İtalya" />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label">Açıklama</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Destinasyonu kısa ve anlaşılır şekilde açıklayın"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="EntranceFee" class="form-label">Giriş Ücreti</label>
+                            <input asp-for="EntranceFee" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                            <span asp-validation-for="EntranceFee" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label asp-for="Latitude" class="form-label">Enlem</label>
+                            <input asp-for="Latitude" class="form-control" type="number" step="0.000001" placeholder="41.902782" />
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label asp-for="Longitude" class="form-label">Boylam</label>
+                            <input asp-for="Longitude" class="form-control" type="number" step="0.000001" placeholder="12.496366" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="InstagramUrl" class="form-label">Instagram URL</label>
+                            <input asp-for="InstagramUrl" class="form-control" placeholder="https://..." />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="FacebookUrl" class="form-label">Facebook URL</label>
+                            <input asp-for="FacebookUrl" class="form-control" placeholder="https://..." />
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                        <a class="btn btn-secondary" asp-action="Details" asp-route-id="@Model.Id">Detaya Dön</a>
+                        <a class="btn btn-outline-secondary" href="/Destinations/ManagePhotos?id=@Model.Id">Fotoğrafları Yönet</a>
+                    </div>
+                </form>
             </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Country" class="form-label"></label>
-                <input asp-for="Country" class="form-control" />
-                <span asp-validation-for="Country" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="EntranceFee" class="form-label"></label>
-                <input asp-for="EntranceFee" class="form-control" />
-                <span asp-validation-for="EntranceFee" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="InstagramUrl" class="form-label"></label>
-                <input asp-for="InstagramUrl" class="form-control" />
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="FacebookUrl" class="form-label"></label>
-                <input asp-for="FacebookUrl" class="form-control" />
-            </div>
-
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="btn btn-secondary" asp-action="Index">Back to List</a>
-        </form>
+        </div>
     </div>
 </div>
 

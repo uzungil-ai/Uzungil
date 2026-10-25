@@ -1,0 +1,43 @@
+@model Roma.Models.Flavor
+
+@{
+    ViewData["Title"] = "Create Flavor";
+}
+
+<h1>Create Flavor</h1>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    @{
+        var pre = ViewData["PreselectedDestinationId"] as int?;
+        var items = ViewData["DestinationId"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+        var listItems = items?.Items as System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    }
+    <div class="form-group">
+        <label asp-for="DestinationId">Destination</label>
+        @if (pre != null && pre > 0)
+        {
+            <input type="hidden" asp-for="DestinationId" value="@pre" />
+            var selectedName = listItems?.FirstOrDefault(i => i.Value == pre.ToString())?.Text ?? "";
+            <input class="form-control" value="@selectedName" readonly />
+        }
+        else
+        {
+            <select asp-for="DestinationId" asp-items="@(ViewData["DestinationId"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList)" class="form-control"></select>
+        }
+        <span asp-validation-for="DestinationId" class="text-danger"></span>
+    </div>
+    <div class="form-group mt-2">
+        <input type="submit" value="Create" class="btn btn-primary" />
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

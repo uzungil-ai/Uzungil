@@ -39,7 +39,11 @@
             <td>@item.User?.UserName</td>
             <td>@item.Attraction?.Name</td>
             <td>
-                @if (item.IsApproved)
+                @if (item.IsRejected)
+                {
+                    <span class="badge bg-danger">Reddedildi</span>
+                }
+                else if (item.IsApproved)
                 {
                     <span class="badge bg-success">Onaylı</span>
                 }

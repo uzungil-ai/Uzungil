@@ -1,4 +1,13 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var showPendingReviewsPopup = User?.Identity?.IsAuthenticated == true
+        && User.IsInRole("Admin")
+        && string.Equals(TempData["ShowPendingReviewsPopup"]?.ToString(), "1", StringComparison.Ordinal);
+
+    var currentPathAndQuery = Context.Request.Path + Context.Request.QueryString;
+    var layoutSearch = Context.Request.Query["search"].ToString();
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,10 +20,10 @@
     <link rel="stylesheet" href="~/Roma.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Roma</a>
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Fotografia.com.tr</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -26,15 +35,18 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>                    
+                        </li>
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Yönetim</a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                                     <li><a class="dropdown-item" asp-page="/Admin/Destinations/Index">Destinasyonlar</a></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Index">Resim Yönetimi</a></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Create">Yeni Resim Ekle</a></li>
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Index">Fotograf Yönetimi</a></li>
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Create">Yeni Fotograf Ekle</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Subscribers" asp-action="Index">Aboneler</a></li>
+                                     <li><a class="dropdown-item" asp-area="" asp-controller="BackgroundEmailSenders" asp-action="Index">Background Email Senders</a></li>
+                                     <li><a class="dropdown-item" asp-area="" asp-controller="DemoChatServices" asp-action="Index">Demo Chat Services</a></li>
                                 </ul>
                             </li>
                         }
@@ -43,12 +55,35 @@
                 </div>
             </div>
         </nav>
+
+        <div class="border-bottom bg-light py-2">
+            <div class="container">
+                <form asp-area="" asp-controller="Home" asp-action="Index" method="get" class="row g-2 align-items-center">
+                    <div class="col-12 col-md-10">
+                        <input
+                            type="text"
+                            name="search"
+                            value="@layoutSearch"
+                            class="form-control"
+                            placeholder="Destinasyon adında ilk 3 harf ile ara" />
+                    </div>
+                    <div class="col-12 col-md-2 d-grid">
+                        <button type="submit" class="btn btn-primary">Ara</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </header>
-    <div class="container">
+    <div class="container layout-main-container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
+
+    @if (showPendingReviewsPopup)
+    {
+        @await Component.InvokeAsync("PendingReviewsPopup", new { currentPathAndQuery })
+    }
 
     <footer class="border-top footer text-muted">
         <div class="container">

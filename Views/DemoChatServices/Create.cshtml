@@ -1,0 +1,45 @@
+@model Roma.Services.DemoChatService
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Demo Chat Service</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Input" class="control-label"></label>
+                <input asp-for="Input" class="form-control" />
+                <span asp-validation-for="Input" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SessionId" class="control-label"></label>
+                <input asp-for="SessionId" class="form-control" />
+                <span asp-validation-for="SessionId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Reply" class="control-label"></label>
+                <textarea asp-for="Reply" class="form-control"></textarea>
+                <span asp-validation-for="Reply" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

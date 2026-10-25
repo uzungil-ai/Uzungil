@@ -4,56 +4,206 @@
     ViewData["Title"] = "Roma - Keşfet";
 }
 
-<div class="hero text-center py-5" style="background:#f5f5f5;">
+<section class="home-hero py-5 py-lg-6">
     <div class="container">
-        <h1 class="display-5">Roma ile keşfetmeye hazır mısın?</h1>
-        <p class="lead">En güzel destinasyonları gör, yerel lezzetleri keşfet ve seyahat planlarını oluştur.</p>
-        <form id="subscribeForm" method="post" asp-page="Subscribe" class="d-flex justify-content-center mt-3">
-            @Html.AntiForgeryToken()
-            <input type="email" id="subEmail" name="Email" placeholder="E-posta adresiniz" class="form-control w-50" />
-            <label class="visually-hidden" for="subConsent">Consent</label>
-            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input ms-2" />
-            <button type="button" id="subBtn" class="btn btn-primary ms-2">Abone Ol</button>
-        </form>
-        <div id="subMessage" class="mt-2 text-center"></div>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="badge rounded-pill text-bg-light mb-3">Seyahat planlama • Yapay zeka destekli</span>
+                <h1 class="display-5 fw-bold mb-3">Roma ile daha hızlı, daha net seyahat planı oluşturun</h1>
+                <p class="lead mb-4">Öne çıkan destinasyonları karşılaştırın, sohbet botundan rota önerisi alın ve güncellemeleri tek ekrandan takip edin.</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <a class="btn btn-light btn-lg" href="#explore">Destinasyonları Gör</a>
+                    <a class="btn btn-outline-light btn-lg" href="/Chat">Sohbet Botu</a>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="hero-pill">Hızlı keşif</span>
+                    <span class="hero-pill">Mobil uyumlu</span>
+                    <span class="hero-pill">Canlı güncelleme</span>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="subscribe-card shadow-sm">
+                    <h2 class="h5 mb-3">Yeni önerileri kaçırmayın</h2>
+                    <p class="text-muted small mb-3">Bültene abone olun, yeni destinasyon ve içerik güncellemelerini e-posta ile alın.</p>
+                    <form id="subscribeForm" method="post" asp-page="Subscribe">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <label for="subEmail" class="form-label">E-posta</label>
+                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" />
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" />
+                            <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
+                        </div>
+                        <button type="button" id="subBtn" class="btn btn-primary w-100">Abone Ol</button>
+                    </form>
+                    <div id="subMessage" class="mt-2 small"></div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<div class="container my-5">
-    <h2 class="mb-4">Öne çıkan destinasyonlar</h2>
-    <div class="mb-4">
-        <a class="btn btn-outline-primary" href="/Chat">Sohbet Botu</a>
+<section class="container my-4">
+    <div class="row g-3">
+        <div class="col-sm-6 col-lg-3">
+            <div class="quick-stat-box">
+                <div class="small text-muted">Öne çıkan</div>
+                <div class="h4 mb-0">@Model.Featured.Count</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="quick-stat-box">
+                <div class="small text-muted">En yeni</div>
+                <div class="h4 mb-0">@Model.Latest.Count</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="quick-stat-box">
+                <div class="small text-muted">Yardım aracı</div>
+                <div class="h6 mb-0">Sohbet Botu hazır</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="quick-stat-box">
+                <div class="small text-muted">Hızlı işlem</div>
+                <a href="/Chat" class="fw-semibold text-decoration-none">Hemen soru sor →</a>
+            </div>
+        </div>
     </div>
-    <div class="row">
-        @foreach(var d in Model.Featured)
-        {
-            var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
-            var srcset = Model.BuildSrcSet(img);
-            <div class="col-12 col-sm-6 col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <picture>
-                        @if(!string.IsNullOrEmpty(srcset)){
-                            <source srcset="@srcset" type="image/webp" />
-                        }
-                        <img class="card-img-top" src="@img" loading="lazy" alt="@d.Name" />
-                    </picture>
-                    <div class="card-body">
-                        <h5 class="card-title">@d.Name</h5>
-                        <p class="card-text">@d.Country</p>
-                        <p class="small text-muted">@((d.Description?.Length>120)?d.Description.Substring(0,120)+"...":d.Description)</p>
-                        <a asp-page="/Admin/Destinations/Details" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Detay</a>
+</section>
+
+<section id="explore" class="container my-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h2 class="mb-0">Destinasyonları keşfedin</h2>
+        <span class="text-muted small">Öne çıkan: @Model.Featured.Count • Yeni: @Model.Latest.Count</span>
+    </div>
+    <div class="home-tabs mb-4" role="tablist" aria-label="Destinasyon sekmeleri">
+        <button type="button" class="home-tab-btn active" data-target="featured-list" aria-selected="true">Öne Çıkanlar</button>
+        <button type="button" class="home-tab-btn" data-target="latest-list" aria-selected="false">En Yeniler</button>
+    </div>
+
+    <div id="featured-list" class="home-tab-panel">
+        <div class="row">
+            @for (var i = 0; i < Model.Featured.Count; i++)
+            {
+                var d = Model.Featured[i];
+                var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                var srcset = Model.BuildSrcSet(img);
+                var hiddenClass = i >= 9 ? "d-none" : string.Empty;
+                <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
+                    <div class="card h-100 shadow-sm destination-card border-0">
+                        <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
+                            <picture>
+                                @if(!string.IsNullOrEmpty(srcset)){
+                                    <source srcset="@srcset" type="image/webp" />
+                                }
+                                <img class="card-img-top destination-image" src="@img" loading="lazy" alt="@d.Name" />
+                            </picture>
+                        </a>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h5 class="card-title mb-1">@d.Name</h5>
+                                <span class="badge text-bg-light">@d.Country</span>
+                            </div>
+                            <p class="small text-muted mb-3">@((d.Description?.Length>120)?d.Description.Substring(0,120)+"...":d.Description)</p>
+                            <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Detayları Gör</a>
+                        </div>
                     </div>
                 </div>
+            }
+            @if(!Model.Featured.Any())
+            {
+                <div class="col-12">
+                    <div class="alert alert-light border">Henüz öne çıkan destinasyon bulunmuyor.</div>
+                </div>
+            }
+        </div>
+        @if (Model.Featured.Count > 9)
+        {
+            <div class="text-center mb-3">
+                <button type="button"
+                        class="btn btn-outline-primary js-load-more"
+                        data-panel-id="featured-list"
+                        data-step="9">
+                    Daha Fazla Göster
+                </button>
             </div>
         }
     </div>
-</div>
 
-<footer class="border-top py-4">
-    <div class="container text-center">
-        <p class="mb-0">© 2026 Roma</p>
+    <div id="latest-list" class="home-tab-panel d-none">
+        <div class="row">
+            @for (var i = 0; i < Model.Latest.Count; i++)
+            {
+                var d = Model.Latest[i];
+                var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                var srcset = Model.BuildSrcSet(img);
+                var hiddenClass = i >= 9 ? "d-none" : string.Empty;
+                <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
+                    <div class="card h-100 shadow-sm destination-card border-0">
+                        <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
+                            <picture>
+                                @if(!string.IsNullOrEmpty(srcset)){
+                                    <source srcset="@srcset" type="image/webp" />
+                                }
+                                <img class="card-img-top destination-image" src="@img" loading="lazy" alt="@d.Name" />
+                            </picture>
+                        </a>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h5 class="card-title mb-1">@d.Name</h5>
+                                <span class="badge text-bg-light">@d.Country</span>
+                            </div>
+                            <p class="small text-muted mb-3">@((d.Description?.Length>120)?d.Description.Substring(0,120)+"...":d.Description)</p>
+                            <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Detayları Gör</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if(!Model.Latest.Any())
+            {
+                <div class="col-12">
+                    <div class="alert alert-light border">Henüz yeni destinasyon bulunmuyor.</div>
+                </div>
+            }
+        </div>
+        @if (Model.Latest.Count > 9)
+        {
+            <div class="text-center mb-3">
+                <button type="button"
+                        class="btn btn-outline-primary js-load-more"
+                        data-panel-id="latest-list"
+                        data-step="9">
+                    Daha Fazla Göster
+                </button>
+            </div>
+        }
     </div>
-</footer>
+</section>
+
+<section class="container pb-5">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="feature-box h-100">
+                <h3 class="h6">1. Keşfet</h3>
+                <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box h-100">
+                <h3 class="h6">2. Planla</h3>
+                <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box h-100">
+                <h3 class="h6">3. Takip Et</h3>
+                <p class="mb-0 text-muted">Bülten ile yeni destinasyonları ve güncellemeleri öğren.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 @section Scripts {
     <script>
@@ -63,6 +213,60 @@
             var consent = document.getElementById('subConsent');
             var msg = document.getElementById('subMessage');
             var form = document.getElementById('subscribeForm');
+            var tabButtons = document.querySelectorAll('.home-tab-btn');
+            var loadMoreButtons = document.querySelectorAll('.js-load-more');
+
+            function updateLoadMoreButton(button) {
+                var panelId = button.getAttribute('data-panel-id');
+                var panel = panelId ? document.getElementById(panelId) : null;
+                if (!panel) return;
+
+                var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
+                if (hiddenItems.length === 0) {
+                    button.classList.add('d-none');
+                }
+            }
+
+            loadMoreButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var panelId = button.getAttribute('data-panel-id');
+                    var panel = panelId ? document.getElementById(panelId) : null;
+                    if (!panel) return;
+
+                    var step = parseInt(button.getAttribute('data-step') || '9', 10);
+                    var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
+                    for (var i = 0; i < Math.min(step, hiddenItems.length); i++) {
+                        hiddenItems[i].classList.remove('d-none');
+                    }
+
+                    updateLoadMoreButton(button);
+                });
+
+                updateLoadMoreButton(button);
+            });
+
+            tabButtons.forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    tabButtons.forEach(function (x) {
+                        x.classList.remove('active');
+                        x.setAttribute('aria-selected', 'false');
+                    });
+
+                    document.querySelectorAll('.home-tab-panel').forEach(function (panel) {
+                        panel.classList.add('d-none');
+                    });
+
+                    tab.classList.add('active');
+                    tab.setAttribute('aria-selected', 'true');
+
+                    var targetId = tab.getAttribute('data-target');
+                    var target = document.getElementById(targetId);
+                    if (target) {
+                        target.classList.remove('d-none');
+                    }
+                });
+            });
+
             btn?.addEventListener('click', function(){
                 msg.textContent = '';
                 if(!email.value){ msg.textContent = 'E-posta giriniz.'; return; }
@@ -77,11 +281,23 @@
 
                 btn.disabled = true; btn.textContent = 'Gönderiliyor...';
 
-                fetch(form.action, { method: 'POST', body: data }).then(function(resp){
-                    if(resp.redirected){ window.location = resp.url; return; }
-                    return resp.text();
-                }).then(function(text){
-                    msg.textContent = 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.';
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: data
+                }).then(async function(resp){
+                    var payload = null;
+                    try { payload = await resp.json(); } catch {}
+
+                    if(!resp.ok){
+                        msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik işlemi başarısız oldu.';
+                        return;
+                    }
+
+                    msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.';
                 }).catch(function(){ msg.textContent = 'Hata oluştu.'; })
                 .finally(function(){ btn.disabled = false; btn.textContent = 'Abone Ol'; });
             });

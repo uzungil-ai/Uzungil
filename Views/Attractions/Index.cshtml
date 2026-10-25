@@ -6,36 +6,51 @@
 
 <h1>Attractions</h1>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
 <p>
     <a class="btn btn-primary" asp-action="Create">Create New</a>
 </p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Destination</th>
-            <th>Address</th>
-            <th>Rating</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>@item.Name</td>
-            <td>@item.Category</td>
-            <td>@item.Destination?.Name</td>
-            <td>@item.Address</td>
-            <td>@item.AverageRating</td>
-            <td>
-                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+@if (Model.Any())
+{
+    <div class="row g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">@item.Name</h5>
+                        <div class="small text-muted mb-1">Kategori: @item.Category</div>
+                        <div class="small text-muted mb-1">Destinasyon: @(item.Destination?.Name ?? "-")</div>
+                        <div>@Html.RatingBadge(item.AverageRating)</div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0 d-flex gap-2 flex-wrap">
+                        @if (!string.IsNullOrWhiteSpace(item.Address))
+                        {
+                            var addressUrl = item.Address.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                             item.Address.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                                ? item.Address
+                                : $"https://{item.Address}";
+
+                            <a class="btn btn-sm btn-info" href="@addressUrl" target="_blank" rel="noopener noreferrer">Detay</a>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-info" disabled>Detay</button>
+                        }
+                        <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-muted">Henüz kayıtlı attraction yok.</div>
+}

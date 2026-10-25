@@ -1,0 +1,45 @@
+@model Roma.Models.Review
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Review</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Comment</dt>
+        <dd class="col-sm-10">@Model.Comment</dd>
+
+        <dt class="col-sm-2">Rating</dt>
+        <dd class="col-sm-10">
+            @Html.RatingBadge(Model.Rating)
+        </dd>
+
+        <dt class="col-sm-2">Created At</dt>
+        <dd class="col-sm-10">@Model.CreatedAt</dd>
+
+        <dt class="col-sm-2">User</dt>
+        <dd class="col-sm-10">@Model.User?.UserName</dd>
+
+        <dt class="col-sm-2">Attraction</dt>
+        <dd class="col-sm-10">@Model.Attraction?.Name</dd>
+    </dl>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" name="returnToAttraction" value="@((ViewBag.ReturnToAttraction == true).ToString().ToLowerInvariant())" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+        @if (ViewBag.ReturnToAttraction == true)
+        {
+            <a class="btn btn-secondary" asp-controller="Attractions" asp-action="Details" asp-route-id="@ViewBag.AttractionId">Attraction Detayına Dön</a>
+        }
+        else
+        {
+            <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        }
+    </form>
+</div>

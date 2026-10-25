@@ -3,7 +3,7 @@
 
 <h2>Destinasyon Düzenle</h2>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Destination.Id" />
     <div>
         <label for="Name">Name</label>
@@ -32,5 +32,10 @@
     <div>
         <button type="submit">Kaydet</button>
         <a asp-page="Index">İptal</a>
+    </div>
+
+    <div style="margin-top:1rem;">
+        <label for="files">Resimler ekle (isteğe bağlı)</label>
+        <input id="files" name="files" type="file" multiple accept="image/*" />
     </div>
 </form>

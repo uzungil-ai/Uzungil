@@ -178,6 +178,19 @@
     </section>
 }
 
+@if (Model.Destination?.Flavors?.Any() == true)
+{
+    <section>
+        <h4>Lezzetler</h4>
+        <ul>
+        @foreach (var f in Model.Destination.Flavors)
+        {
+            <li>@f.Name</li>
+        }
+        </ul>
+    </section>
+}
+
 @if (Model.Destination?.Recommendations?.Any() == true)
 {
     <section>

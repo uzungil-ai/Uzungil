@@ -3,6 +3,7 @@ using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using System;
 
 namespace Roma.Services
 {
@@ -15,6 +16,7 @@ namespace Roma.Services
         private readonly string? _user;
         private readonly string? _pass;
         private readonly string _from;
+        private readonly bool _useSsl;
 
         public EmailSenderService(IConfiguration config, ILogger<EmailSenderService> logger)
         {
@@ -25,12 +27,18 @@ namespace Roma.Services
             _user = _config["Smtp:User"];
             _pass = _config["Smtp:Pass"];
             _from = _config["Smtp:From"] ?? _user ?? "noreply@example.com";
+            _useSsl = bool.TryParse(_config["Smtp:UseSsl"], out var ssl) ? ssl : !string.IsNullOrEmpty(_user);
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(_host))
+                {
+                    throw new InvalidOperationException("SMTP host yapılandırılmamış. appsettings içinde Smtp:Host değerini ayarlayın.");
+                }
+
                 using var msg = new MailMessage();
                 msg.From = new MailAddress(_from);
                 msg.To.Add(new MailAddress(to));
@@ -42,8 +50,8 @@ namespace Roma.Services
                 if (!string.IsNullOrEmpty(_user))
                 {
                     client.Credentials = new NetworkCredential(_user, _pass);
-                    client.EnableSsl = true;
                 }
+                client.EnableSsl = _useSsl;
 
                 await client.SendMailAsync(msg);
                 _logger.LogInformation("Email sent to {Email}", to);

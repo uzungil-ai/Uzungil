@@ -1,33 +1,127 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<Roma.Models.Destination>
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
+    var countryFilter = ViewBag.CountryFilter as string;
+    var categoryFilter = ViewBag.CategoryFilter as string;
+    var categoryOptions = ViewBag.CategoryOptions as List<string> ?? new List<string>();
 }
 
-<!--
-  Geliştirici notları (view-source ile görünür):
-  - Admin alanı (MVC): /Admin/DestinationImages
-  - Admin Razor Pages: /Admin/Destinations
-  - Fotoğrafları yönet: /Destinations/ManagePhotos?id={destinationId}
-  - Yüklenen dosyalar fiziksel olarak: wwwroot/uploads/destinations/{id}/
-  - Görseller detay sayfasında veya Views/Destinations/Details.cshtml içinde otomatik olarak gösterilir.
--->
-
-<div class="text-center">
-    <h1 class="display-4">Roma</h1>
-    <p class="lead">Hızlı linkler ve geliştirme notları aşağıda.</p>
-
-    <div class="mt-4">
-        <a class="btn btn-primary me-2" asp-controller="Destinations" asp-action="Index">Destinations</a>
-        <a class="btn btn-secondary me-2" asp-controller="Hotels" asp-action="Index">Hotels</a>
-        <a class="btn btn-info me-2" asp-controller="DestinationImages" asp-action="Index">All Images</a>
-        <a class="btn btn-outline-primary" href="/Destinations/ManagePhotos">Manage Photos</a>
+<section class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
+    <div class="container-fluid py-2">
+        <h1 class="display-5 fw-bold mb-2">Keşfe Başlayın</h1>
+        <p class="col-md-10 fs-5 text-muted mb-0">
+            Destinasyonları ülkeye ve kategoriye göre filtreleyin, size uygun rotayı hızlıca bulun.
+        </p>
     </div>
+</section>
 
-    <div class="mt-4 text-start mx-auto" style="max-width:760px">
-        <h5>Kısa Açıklamalar</h5>
-        <ul>
-            <li>Fotoğraflar <code>/uploads/destinations/{id}/</code> altında saklanır.</li>
-            <li>Admin yetkisi ile giriş yaparsanız <em>Yönetim</em> menüsünden resimleri yönetebilirsiniz.</li>
-            <li>Bir destinasyonun fotoğraflarını görüntülemek için Destinations detay sayfasını kullanın.</li>
-        </ul>
+<section class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Arama</h5>
+
+        <form asp-controller="Home" asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-lg-4">
+                <label for="search" class="form-label">Genel Arama</label>
+                <input id="search" name="search" value="@ViewBag.SearchFilter" class="form-control" placeholder="Destinasyon adında ilk 3 harf" />
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label for="country" class="form-label">Ülke Adı</label>
+                <input id="country" name="country" value="@countryFilter" class="form-control" placeholder="Örn: Türkiye" />
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label for="category" class="form-label">Kategori</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="">Tüm kategoriler</option>
+                    @foreach (var option in categoryOptions)
+                    {
+                        if (string.Equals(option, categoryFilter, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@option" selected>@option</option>
+                        }
+                        else
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-2 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Ara</button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Temizle</a>
+            </div>
+        </form>
     </div>
+</section>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Destinasyonlar</h2>
+    <small class="text-muted">Toplam: @(Model?.Count() ?? 0)</small>
 </div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">Arama kriterlerine uygun destinasyon bulunamadı.</div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            var coverImage = item.Images?
+                .OrderBy(i => i.Order)
+                .ThenBy(i => i.Id)
+                .FirstOrDefault();
+
+            var categories = item.Attractions?
+                .Select(a => a.Category)
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Distinct()
+                .Take(3)
+                .ToList() ?? new List<string>();
+
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm border-0">
+                    @if (coverImage != null && !string.IsNullOrWhiteSpace(coverImage.Url))
+                    {
+                        var imageUrl = coverImage.Url.StartsWith("/") ? coverImage.Url : "/" + coverImage.Url;
+                        <img src="@Url.Content(imageUrl)" alt="@item.Name" style="height:220px;object-fit:cover;width:100%;" />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-light text-muted" style="height:220px;">
+                            Görsel yok
+                        </div>
+                    }
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-1">@item.Name</h5>
+                        <div class="text-muted mb-3">@item.Country</div>
+
+                        @if (categories.Any())
+                        {
+                            <div class="mb-3 d-flex flex-wrap gap-1">
+                                @foreach (var category in categories)
+                                {
+                                    <span class="badge text-bg-light border">@category</span>
+                                }
+                            </div>
+                        }
+
+                        <div class="small text-muted mb-3">
+                            Cazibe noktası: @(item.Attractions?.Count ?? 0)
+                        </div>
+
+                        <div class="mt-auto d-flex gap-2 flex-wrap">
+                            <a class="btn btn-sm btn-primary" asp-controller="Destinations" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Destinations" asp-action="Index">Tüm Destinasyonlar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

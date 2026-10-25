@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -101,6 +102,7 @@ namespace Roma.Controllers
             {
                 review.CreatedAt = DateTime.Now;
                 review.IsApproved = false;
+                review.IsRejected = false;
                 _context.Add(review);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Yorumunuz alındı. Yönetici onayından sonra yayınlanacaktır.";
@@ -154,7 +156,7 @@ namespace Roma.Controllers
         // POST: Reviews/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Comment,Rating,CreatedAt,UserId,AttractionId,IsApproved")] Review review)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Comment,Rating,CreatedAt,UserId,AttractionId,IsApproved,IsRejected")] Review review)
         {
             if (id != review.Id) return NotFound();
 
@@ -182,6 +184,7 @@ namespace Roma.Controllers
                     if (User.IsInRole("Admin"))
                     {
                         existingReview.IsApproved = review.IsApproved;
+                        existingReview.IsRejected = review.IsRejected;
                     }
 
                     await _context.SaveChangesAsync();
@@ -237,6 +240,54 @@ namespace Roma.Controllers
             if (returnToAttraction && attractionId.HasValue)
             {
                 return RedirectToAction("Details", "Attractions", new { id = attractionId.Value });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Approve(int id, string? returnUrl = null)
+        {
+            var review = await _context.Reviews!.FirstOrDefaultAsync(r => r.Id == id);
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            review.IsApproved = true;
+            review.IsRejected = false;
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Yorum onaylandı.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reject(int id, string? returnUrl = null)
+        {
+            var review = await _context.Reviews!.FirstOrDefaultAsync(r => r.Id == id);
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            review.IsApproved = false;
+            review.IsRejected = true;
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Yorum reddedildi.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
             }
 
             return RedirectToAction(nameof(Index));

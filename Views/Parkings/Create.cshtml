@@ -1,0 +1,65 @@
+@model Roma.Models.Parking
+
+@{
+    ViewData["Title"] = "Create Parking";
+}
+
+<h1>Create Parking</h1>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    @{
+        var pre = ViewData["PreselectedDestinationId"] as int?;
+        var items = ViewBag.DestinationId as System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    }
+    <div class="form-group">
+        <label asp-for="DestinationId">Destination</label>
+        @if (pre != null && pre > 0)
+        {
+            <input type="hidden" asp-for="DestinationId" value="@pre" />
+            var selectedName = items?.FirstOrDefault(i => i.Value == pre.ToString())?.Text ?? "";
+            <input class="form-control" value="@selectedName" readonly />
+        }
+        else
+        {
+            <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
+        }
+        <span asp-validation-for="DestinationId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Capacity"></label>
+        <input asp-for="Capacity" class="form-control" />
+        <span asp-validation-for="Capacity" class="text-danger"></span>
+    </div>
+
+    <div class="form-group form-check">
+        <input asp-for="IsPaid" class="form-check-input" />
+        <label asp-for="IsPaid" class="form-check-label"></label>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Fee"></label>
+        <input asp-for="Fee" class="form-control" />
+        <span asp-validation-for="Fee" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="HourlyRate"></label>
+        <input asp-for="HourlyRate" class="form-control" />
+        <span asp-validation-for="HourlyRate" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

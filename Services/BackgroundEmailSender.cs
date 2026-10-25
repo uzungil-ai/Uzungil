@@ -27,6 +27,7 @@ namespace Roma.Services
             {
                 var attempt = 0;
                 var success = false;
+                string? lastError = null;
                 while (attempt < 3 && !success && !stoppingToken.IsCancellationRequested)
                 {
                     try
@@ -37,6 +38,7 @@ namespace Roma.Services
                     catch (System.Exception ex)
                     {
                         attempt++;
+                        lastError = ex.Message;
                         _logger.LogWarning(ex, "Failed to send email to {Email} on attempt {Attempt}", msg.To, attempt);
                         // exponential backoff
                         await Task.Delay(500 * (int)System.Math.Pow(2, attempt), stoppingToken).ContinueWith(_ => { });
@@ -57,7 +59,7 @@ namespace Roma.Services
                             Subject = msg.Subject,
                             Body = msg.Body,
                             Attempts = attempt,
-                            LastError = "Delivery failed after retries",
+                            LastError = string.IsNullOrWhiteSpace(lastError) ? "Delivery failed after retries" : lastError,
                             CreatedAt = System.DateTime.UtcNow
                         };
                         db.FailedEmails!.Add(failed);

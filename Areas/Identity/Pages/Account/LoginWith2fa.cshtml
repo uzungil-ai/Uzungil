@@ -1,0 +1,38 @@
+@page
+@model Roma.Areas.Identity.Pages.Account.LoginWith2faModel
+@{
+    ViewData["Title"] = "İki Adımlı Doğrulama";
+}
+
+<h2>İki Adımlı Doğrulama</h2>
+<p>Bu sayfada QR kod da gösterilir. Authenticator uygulamasıyla tarayabilir veya mevcut kurulumunuzdan 6 haneli kodu girebilirsiniz.</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.QrCodeUrl))
+{
+    <div class="mb-3">
+        <img src="@Model.QrCodeUrl" alt="Authenticator QR" width="200" height="200" />
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.SharedKey))
+{
+    <p>Manuel anahtar: <strong>@Model.SharedKey</strong></p>
+}
+
+<form method="post" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-2">
+        <label asp-for="Input.TwoFactorCode"></label>
+        <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="one-time-code" inputmode="numeric" maxlength="7" />
+        <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="Input.RememberMachine" class="form-check-input" />
+        <label asp-for="Input.RememberMachine" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Doğrula</button>
+</form>

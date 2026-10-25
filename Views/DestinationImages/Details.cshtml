@@ -10,8 +10,18 @@
     <h4>DestinationImage</h4>
     <hr />
     <dl class="row">
-        <dt class="col-sm-2">Url</dt>
-        <dd class="col-sm-10">@Model.Url</dd>
+        <dt class="col-sm-2">Fotoğraf</dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrWhiteSpace(Model.Url))
+            {
+                <img src="@Model.Url" alt="@(Model.AltText ?? "Destination image")" class="img-fluid rounded" style="max-width: 480px;" />
+                <div class="small text-muted mt-2">@Model.Url</div>
+            }
+            else
+            {
+                <span class="text-muted">Fotoğraf URL'si bulunamadı.</span>
+            }
+        </dd>
 
         <dt class="col-sm-2">Destination</dt>
         <dd class="col-sm-10">@Model.Destination?.Name</dd>

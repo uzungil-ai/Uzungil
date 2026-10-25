@@ -1,0 +1,59 @@
+@model Roma.Models.Subscriber
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Subscriber</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConsentGiven" class="control-label"></label>
+                <input asp-for="ConsentGiven" class="form-check-input ms-2" />
+            </div>
+            <div class="form-group">
+                <label asp-for="IsConfirmed" class="control-label"></label>
+                <input asp-for="IsConfirmed" class="form-check-input ms-2" />
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmationToken" class="control-label"></label>
+                <input asp-for="ConfirmationToken" class="form-control" />
+                <span asp-validation-for="ConfirmationToken" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmationExpiresAt" class="control-label"></label>
+                <input asp-for="ConfirmationExpiresAt" class="form-control" />
+                <span asp-validation-for="ConfirmationExpiresAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UnsubscribeToken" class="control-label"></label>
+                <input asp-for="UnsubscribeToken" class="form-control" />
+                <span asp-validation-for="UnsubscribeToken" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

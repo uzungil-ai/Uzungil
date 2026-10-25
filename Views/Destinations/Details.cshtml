@@ -1,130 +1,83 @@
 @model Roma.Models.Destination
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Destinasyon Detayı";
+    var canManage = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+    var canAdd = User?.Identity?.IsAuthenticated == true;
 }
 
-<div class="d-flex justify-content-between align-items-center">
-    <h4>Hotels (@(Model.Hotels?.Count ?? 0))</h4>
-    <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
-</div>
-@if (Model.Hotels != null && Model.Hotels.Count > 0)
-{
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Address</th>
-                <th>Phone</th>
-                <th>Price From</th>
-                <th>Price To</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach(var h in Model.Hotels)
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h2 class="mb-0">@Model.Name</h2>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-secondary" asp-action="Index">Listeye Dön</a>
+        @if (canManage)
         {
-            <tr>
-                <td>@h.Name</td>
-                <td>@h.Address</td>
-                <td>@h.Phone</td>
-                <td>@(h.PriceFrom.HasValue ? h.PriceFrom.Value.ToString("C") : "-")</td>
-                <td>@(h.PriceTo.HasValue ? h.PriceTo.Value.ToString("C") : "-")</td>
-                <td>
-                    <a class="btn btn-sm btn-info" asp-controller="Hotels" asp-action="Details" asp-route-id="@h.Id">Detay</a>
-                </td>
-            </tr>
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Düzenle</a>
+            <a class="btn btn-outline-secondary" href="/Destinations/ManagePhotos?id=@Model.Id">Fotoğrafları Yönet</a>
+            <a class="btn btn-outline-warning" href="/Admin/Uploads/Index?id=@Model.Id" title="Upload images">Hızlı Yükle</a>
         }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="text-muted mb-3">(No hotels yet)</div>
-}
-
-<div class="d-flex justify-content-between align-items-center">
-    <h4>Meals (@(Model.Meals?.Count ?? 0))</h4>
-    <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
-</div>
-@if (Model.Meals != null && Model.Meals.Count > 0)
-{
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Address</th>
-                <th>Phone</th>
-                <th>Price</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach(var m in Model.Meals)
-        {
-            <tr>
-                <td>@m.Name</td>
-                <td>@m.Address</td>
-                <td>@m.Phone</td>
-                <td>@(m.Price.HasValue ? m.Price.Value.ToString("C") : "-")</td>
-                <td>
-                    <a class="btn btn-sm btn-info" asp-controller="Meals" asp-action="Details" asp-route-id="@m.Id">Detay</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="text-muted mb-3">(No meals yet)</div>
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>Destination</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">Name</dt>
-        <dd class="col-sm-10">@Model.Name</dd>
-
-        <dt class="col-sm-2">Country</dt>
-        <dd class="col-sm-10">@Model.Country</dd>
-
-        <dt class="col-sm-2">Description</dt>
-        <dd class="col-sm-10">@Model.Description</dd>
-
-        <dt class="col-sm-2">Entrance Fee</dt>
-        <dd class="col-sm-10">@(Model.EntranceFee.HasValue ? Model.EntranceFee.Value.ToString("C") : "-")</dd>
-
-        <dt class="col-sm-2">Instagram</dt>
-        <dd class="col-sm-10">@Model.InstagramUrl</dd>
-
-        <dt class="col-sm-2">Facebook</dt>
-        <dd class="col-sm-10">@Model.FacebookUrl</dd>
-    </dl>
+    </div>
 </div>
 
-<div class="mb-4">
-    <a class="btn btn-secondary" asp-action="Index">Back to List</a>
-    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
-    <a class="btn btn-outline-secondary" href="/Destinations/ManagePhotos?id=@Model.Id">Manage Photos</a>
-    @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Destinasyon Bilgisi</strong></div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Ülke</dt>
+            <dd class="col-sm-9">@Model.Country</dd>
+
+            <dt class="col-sm-3">Açıklama</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+
+            <dt class="col-sm-3">Giriş Ücreti</dt>
+            <dd class="col-sm-9">@(Model.EntranceFee.HasValue ? Model.EntranceFee.Value.ToString("C") : "-")</dd>
+
+            <dt class="col-sm-3">Sosyal Medya</dt>
+            <dd class="col-sm-9 d-flex align-items-center gap-3">
+                @if (!string.IsNullOrWhiteSpace(Model.InstagramUrl))
+                {
+                    <a href="@Model.InstagramUrl" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.087 3.269.222 2.76.42a4.9 4.9 0 0 0-1.772 1.153A4.9 4.9 0 0 0 .42 3.345C.222 3.854.087 4.435.048 5.288.01 6.141 0 6.414 0 8.585c0 2.17.01 2.444.048 3.297.039.853.174 1.434.372 1.943.24.616.598 1.14 1.153 1.695a4.9 4.9 0 0 0 1.695 1.153c.509.198 1.09.333 1.943.372.853.038 1.126.048 3.297.048 2.17 0 2.444-.01 3.297-.048.853-.039 1.434-.174 1.943-.372a4.9 4.9 0 0 0 1.695-1.153 4.9 4.9 0 0 0 1.153-1.695c.198-.509.333-1.09.372-1.943.038-.853.048-1.126.048-3.297 0-2.17-.01-2.444-.048-3.297-.039-.853-.174-1.434-.372-1.943a4.9 4.9 0 0 0-1.153-1.695A4.9 4.9 0 0 0 13.24.42c-.509-.198-1.09-.333-1.943-.372C10.444.01 10.171 0 8 0m0 1.441c2.133 0 2.386.008 3.232.046.782.036 1.206.166 1.487.275.373.145.64.318.92.598.28.28.453.547.598.92.109.281.239.705.275 1.487.038.846.046 1.099.046 3.232s-.008 2.386-.046 3.232c-.036.782-.166 1.206-.275 1.487a3.46 3.46 0 0 1-.598.92 3.46 3.46 0 0 1-.92.598c-.281.109-.705.239-1.487.275-.846.038-1.099.046-3.232.046s-2.386-.008-3.232-.046c-.782-.036-1.206-.166-1.487-.275a3.46 3.46 0 0 1-.92-.598 3.46 3.46 0 0 1-.598-.92c-.109-.281-.239-.705-.275-1.487C1.449 10.386 1.441 10.133 1.441 8s.008-2.386.046-3.232c.036-.782.166-1.206.275-1.487.145-.373.318-.64.598-.92.28-.28.547-.453.92-.598.281-.109.705-.239 1.487-.275C5.614 1.449 5.867 1.441 8 1.441"/>
+                            <path d="M8 3.892A4.108 4.108 0 1 0 8 12.108 4.108 4.108 0 0 0 8 3.892m0 6.775A2.667 2.667 0 1 1 8 5.333a2.667 2.667 0 0 1 0 5.334m4.271-6.94a.96.96 0 1 1-1.92 0 .96.96 0 0 1 1.92 0"/>
+                        </svg>
+                    </a>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.FacebookUrl))
+                {
+                    <a href="@Model.FacebookUrl" target="_blank" rel="noopener noreferrer" title="Facebook" aria-label="Facebook">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M16 8.049C16 3.604 12.418 0 8 0S0 3.604 0 8.049c0 4.017 2.925 7.347 6.75 7.951v-5.625H4.719V8.049H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.01c-.994 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.825-.604 6.75-3.934 6.75-7.951"/>
+                        </svg>
+                    </a>
+                }
+
+                @if (string.IsNullOrWhiteSpace(Model.InstagramUrl) && string.IsNullOrWhiteSpace(Model.FacebookUrl))
+                {
+                    <span>-</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Görseller (@(Model.Images?.Count ?? 0))</h4>
+    @if (canAdd)
     {
-        <a class="btn btn-outline-warning ms-2" href="/Admin/Uploads/Index?id=@Model.Id" title="Upload images">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.498.498 0 0 0-.697.007l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V11.5A.5.5 0 0 0 8 12z"/>
-                <path d="M2.5 14a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5z"/>
-            </svg>
-            <span class="visually-hidden">Upload Images</span>
-        </a>
+        <a class="btn btn-sm btn-primary" asp-controller="DestinationImages" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
     }
-</div>
-
-<div class="d-flex justify-content-between align-items-center">
-    <h4>Images (@(Model.Images?.Count ?? 0))</h4>
-    <a class="btn btn-sm btn-primary" asp-controller="DestinationImages" asp-action="Create" asp-route-destinationId="@Model.Id">Ekle</a>
 </div>
 @if (Model.Images != null && Model.Images.Count > 0)
 {
@@ -133,7 +86,7 @@ else
         {
             <div class="p-2 text-center">
                 <a asp-controller="DestinationImages" asp-action="Details" asp-route-id="@img.Id">
-                    <img src="@img.Url" alt="@img.AltText" style="max-width:200px;max-height:150px;object-fit:cover;border:1px solid #ddd;padding:2px;" />
+                    <img src="@img.Url" alt="@img.AltText" style="max-width:600px;max-height:400px;object-fit:cover;border:1px solid #ddd;padding:2px;" />
                 </a>
                 <div class="small text-muted">@img.AltText</div>
             </div>
@@ -142,31 +95,217 @@ else
 }
 else
 {
-    <div class="text-muted mb-3">(No images yet)</div>
+    <div class="text-muted mb-4">Henüz görsel yok.</div>
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Cazibe Noktaları (@(Model.Attractions?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
 @if (Model.Attractions != null && Model.Attractions.Count > 0)
 {
-    <h4>Attractions (@Model.Attractions.Count)</h4>
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Address</th>
-                <th>Rating</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach(var a in Model.Attractions)
+    <div class="row g-3 mb-4">
+        @foreach (var a in Model.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
         {
-            <tr>
-                <td>@a.Name</td>
-                <td>@a.Category</td>
-                <td>@a.Address</td>
-                <td>@a.AverageRating</td>
-            </tr>
+            var attractionPhoto = Model.Images?
+                .OrderBy(i => i.Order)
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.AltText) && i.AltText.Contains(a.Name, StringComparison.OrdinalIgnoreCase))
+                ?? Model.Images?.OrderBy(i => i.Order).FirstOrDefault();
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    @if (attractionPhoto != null)
+                    {
+                        <img src="@attractionPhoto.Url"
+                             alt="@(string.IsNullOrWhiteSpace(attractionPhoto.AltText) ? a.Name : attractionPhoto.AltText)"
+                             class="card-img-top"
+                             style="height:180px;object-fit:cover;" />
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">@a.Name</h5>
+                        <div class="small text-muted mb-1">Kategori: @(string.IsNullOrWhiteSpace(a.Category) ? "-" : a.Category)</div>
+                        <div class="small">
+                            @Html.RatingBadge(a.AverageRating)
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        @if (!string.IsNullOrWhiteSpace(a.Address))
+                        {
+                            var rawAddress = a.Address.Trim();
+                            var addressUrl = rawAddress.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                             rawAddress.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                                ? rawAddress
+                                : $"https://{rawAddress}";
+
+                            <a class="btn btn-sm btn-info"
+                               href="@addressUrl"
+                               title="Web sayfasını tarayıcıda aç"
+                               aria-label="Web sayfasını tarayıcıda aç">
+                                Detay
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Detay</span>
+                        }
+                    </div>
+                </div>
+            </div>
         }
-        </tbody>
-    </table>
+    </div>
+}
+else
+{
+    <div class="text-muted mb-4">Henüz cazibe noktası yok.</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Oteller (@(Model.Hotels?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+@if (Model.Hotels != null && Model.Hotels.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var h in Model.Hotels)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">@h.Name</h5>
+                        <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(h.Address) ? "-" : h.Address)</div>
+                        <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(h.Phone) ? "-" : h.Phone)</div>
+                        <div class="small text-muted mb-1">
+                            Website:
+                            @if (!string.IsNullOrWhiteSpace(h.Website))
+                            {
+                                var websiteUrl = h.Website.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                                 h.Website.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                                    ? h.Website
+                                    : $"https://{h.Website}";
+
+                                <a href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
+                                    <span class="text-decoration-underline">www</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </div>
+                        <div class="small text-muted">Fiyat: @(h.PriceFrom.HasValue ? h.PriceFrom.Value.ToString("C") : "-") - @(h.PriceTo.HasValue ? h.PriceTo.Value.ToString("C") : "-")</div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <a class="btn btn-sm btn-info" asp-controller="Hotels" asp-action="Details" asp-route-id="@h.Id">Detay</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-muted mb-4">Henüz otel yok.</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+@if (Model.Parkings != null && Model.Parkings.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var p in Model.Parkings)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">@p.Name</h5>
+                        <div class="small text-muted mb-1">Kapasite: @(p.Capacity?.ToString() ?? "-")</div>
+                        <div class="small text-muted mb-1">Ücretli: @(p.IsPaid ? "Evet" : "Hayır")</div>
+                        <div class="small text-muted mb-1">Ücret: @(p.Fee.HasValue ? p.Fee.Value.ToString("C") : "-")</div>
+                        <div class="small text-muted">Saatlik: @(p.HourlyRate.HasValue ? p.HourlyRate.Value.ToString("C") : "-")</div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <a class="btn btn-sm btn-info" asp-controller="Parkings" asp-action="Details" asp-route-id="@p.Id">Detay</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-muted mb-4">Henüz otopark yok.</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Lezzetler (@(Model.Flavors?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+@if (Model.Flavors != null && Model.Flavors.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var f in Model.Flavors)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-3">@f.Name</h5>
+                        <div class="mt-auto">
+                            <a class="btn btn-sm btn-info" asp-controller="Flavors" asp-action="Details" asp-route-id="@f.Id">Detay</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-muted mb-4">Henüz lezzet yok.</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Yemek Mekanları (@(Model.Meals?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+@if (Model.Meals != null && Model.Meals.Count > 0)
+{
+    <div class="row g-3">
+        @foreach (var m in Model.Meals)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">@m.Name</h5>
+                        <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(m.Address) ? "-" : m.Address)</div>
+                        <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(m.Phone) ? "-" : m.Phone)</div>
+                        <div class="small text-muted">Fiyat: @(m.Price.HasValue ? m.Price.Value.ToString("C") : "-")</div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <a class="btn btn-sm btn-info" asp-controller="Meals" asp-action="Details" asp-route-id="@m.Id">Detay</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-muted">Henüz yemek mekanı yok.</div>
 }

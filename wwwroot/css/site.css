@@ -18,7 +18,190 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.site-header .navbar {
+  min-height: 84px;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.layout-main-container {
+  flex: 1 0 auto;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.home-hero {
+  background: linear-gradient(135deg, #1f4fd6 0%, #5d7bf0 55%, #8aa1ff 100%);
+  color: #fff;
+}
+
+.py-lg-6 {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.85rem;
+}
+
+.subscribe-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  color: #111827;
+}
+
+.subscribe-card .form-label,
+.subscribe-card .form-check-label {
+  color: #374151;
+}
+
+.destination-card {
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.destination-card picture {
+  display: block;
+  padding: 0.75rem 0.75rem 0;
+}
+
+.destination-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.6rem 1.5rem rgba(0, 0, 0, 0.12) !important;
+}
+
+.destination-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.feature-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.quick-stat-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+  height: 100%;
+}
+
+.home-tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  background: #eef2ff;
+  border-radius: 999px;
+  padding: 0.35rem;
+}
+
+.home-tab-btn {
+  border: 0;
+  background: transparent;
+  color: #1f3fa8;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.home-tab-btn.active {
+  background: #1f4fd6;
+  color: #fff;
+}
+
+.home-tab-btn:focus-visible {
+  outline: 2px solid #1f4fd6;
+  outline-offset: 2px;
+}
+
+@media (max-width: 767.98px) {
+  .home-hero {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .subscribe-card {
+    padding: 1rem;
+  }
+
+  .home-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .home-tab-btn {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 0.88rem;
+  }
+
+  .py-lg-6 {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .subscribe-card {
+    background: #111827;
+    color: #f3f4f6;
+    border: 1px solid #374151;
+  }
+
+  .subscribe-card .text-muted,
+  .subscribe-card .form-label,
+  .subscribe-card .form-check-label {
+    color: #d1d5db !important;
+  }
+
+  .feature-box {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .quick-stat-box {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e5e7eb;
+  }
+
+  .feature-box .text-muted {
+    color: #cbd5e1 !important;
+  }
+
+  .home-tabs {
+    background: #1f2937;
+  }
+
+  .home-tab-btn {
+    color: #dbeafe;
+  }
+
+  .home-tab-btn.active {
+    background: #3b82f6;
+  }
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

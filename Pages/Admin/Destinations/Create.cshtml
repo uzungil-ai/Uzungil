@@ -3,7 +3,7 @@
 
 <h2>Yeni Destinasyon</h2>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <div>
         <label for="Name">Name</label>
         <input id="Name" asp-for="Destination.Name" />
@@ -31,5 +31,9 @@
     <div>
         <button type="submit">Kaydet</button>
         <a asp-page="Index">İptal</a>
+    </div>
+    <div>
+        <label for="files">Resimler (isteğe bağlı)</label>
+        <input id="files" name="files" type="file" multiple accept="image/*" />
     </div>
 </form>

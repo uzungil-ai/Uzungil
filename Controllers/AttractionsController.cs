@@ -32,9 +32,8 @@ namespace Roma.Controllers
 
             var attraction = await _context.Attractions!
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Destination)
-                .Include(a => a.Reviews.Where(r => r.IsApproved))
-                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id.Value);
             if (attraction == null) return NotFound();
 
@@ -44,8 +43,7 @@ namespace Roma.Controllers
         // GET: Attractions/Create
         public async Task<IActionResult> Create(int? destinationId)
         {
-            var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", destinationId);
+            await LoadDestinationSelectListAsync(destinationId);
             ViewBag.ReturnToDestination = destinationId.HasValue;
             return View();
         }
@@ -77,8 +75,7 @@ namespace Roma.Controllers
             }
 
             TempData["ErrorMessage"] = "Kayıt yapılamadı. Lütfen zorunlu alanları kontrol edin.";
-            var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", attraction.DestinationId);
+            await LoadDestinationSelectListAsync(attraction.DestinationId);
             ViewBag.ReturnToDestination = returnToDestination;
             return View(attraction);
         }
@@ -88,10 +85,12 @@ namespace Roma.Controllers
         {
             if (id == null) return NotFound();
 
-            var attraction = await _context.Attractions!.FindAsync(id.Value);
+            var attraction = await _context.Attractions!
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id.Value);
             if (attraction == null) return NotFound();
-            var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", attraction.DestinationId);
+
+            await LoadDestinationSelectListAsync(attraction.DestinationId);
             return View(attraction);
         }
 
@@ -123,8 +122,8 @@ namespace Roma.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new List<Roma.Models.Destination>()));
-            ViewData["DestinationId"] = new SelectList(destinations, "Id", "Name", attraction.DestinationId);
+
+            await LoadDestinationSelectListAsync(attraction.DestinationId);
             return View(attraction);
         }
 
@@ -158,6 +157,23 @@ namespace Roma.Controllers
         private bool AttractionExists(int id)
         {
             return _context.Attractions!.Any(e => e.Id == id);
+        }
+
+        private async Task LoadDestinationSelectListAsync(int? selectedDestinationId)
+        {
+            var destinationItems = _context.Destinations == null
+                ? new List<SelectListItem>()
+                : await _context.Destinations
+                    .AsNoTracking()
+                    .OrderBy(d => d.Name)
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.Id.ToString(),
+                        Text = d.Name
+                    })
+                    .ToListAsync();
+
+            ViewData["DestinationId"] = new SelectList(destinationItems, "Value", "Text", selectedDestinationId?.ToString());
         }
     }
 }

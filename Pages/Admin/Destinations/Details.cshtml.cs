@@ -20,6 +20,7 @@ namespace Roma.Pages.Admin.Destinations
             Destination = await _db.Destinations!
                 .Include(d => d.Images)
                 .Include(d => d.Meals)
+                .Include(d => d.Flavors)
                 .Include(d => d.Hotels)
                 .Include(d => d.Parkings)
                 .Include(d => d.Recommendations)

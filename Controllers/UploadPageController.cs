@@ -7,9 +7,11 @@ namespace Roma.Controllers
     public class UploadPageController : Controller
     {
         [HttpGet("/Upload")]
+        [HttpGet("/api/TestUpload")]
         public IActionResult Index()
         {
-            // Açık yol ile view döndürerek view'in konumunu kesinleştiriyoruz.
+            // Aynı view'i hem /Upload hem de /api/TestUpload (GET) istekleri için döndürüyoruz.
+            // API controller POST işlemlerini yapmaya devam edecek; GET ile view sunmak için ayrı bir MVC action kullanıyoruz.
             return View("~/Views/Upload/Index.cshtml");
         }
     }

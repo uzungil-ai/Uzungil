@@ -1,0 +1,29 @@
+@model Roma.Services.DemoChatService
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Demo Chat Service</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Input)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Input)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.SessionId)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.SessionId)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Reply)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Reply)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.CreatedAt)</dd>
+    </dl>
+</div>
+<div>
+    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+</div>

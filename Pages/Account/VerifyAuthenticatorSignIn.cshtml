@@ -4,7 +4,9 @@
 <h2>Authenticator Kodu ile Giriş</h2>
 <form method="post">
     <label for="Code">Kod</label>
-    <input id="Code" name="Code" />
+    <input id="Code" name="Code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" />
+    <small class="text-muted d-block">Uygulamadaki anlık 6 haneli kodu girin.</small>
+    <input type="hidden" asp-for="UserId" />
     <input type="hidden" asp-for="RememberMe" />
     <button type="submit">Giriş Yap</button>
 </form>

@@ -5,6 +5,9 @@
 }
 <h2>Chatbot</h2>
 <div id="chatbox" style="max-width:600px;">
+    <form id="chatAntiForgeryForm" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
     <div id="messages" style="border:1px solid #ccc;padding:10px;height:300px;overflow:auto;background:#f9f9f9;"></div>
     <div class="input-group mt-2">
         <input id="userInput" class="form-control" />
@@ -17,9 +20,17 @@
             var input = document.getElementById('userInput');
             var text = input.value.trim();
             if(!text) return;
+            var token = document.querySelector('#chatAntiForgeryForm input[name="__RequestVerificationToken"]')?.value || '';
             appendMessage('You', text);
             input.value = '';
-            var res = await fetch('?handler=Send', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: text }) });
+            var res = await fetch('?handler=Send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type':'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ text: text })
+            });
             if(res.ok){
                 var j = await res.json();
                 appendMessage('Bot', j.reply);

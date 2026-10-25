@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Roma.Models;
+using Roma.Services;
 using System.Text.Json;
 
 namespace Roma.Data
@@ -34,6 +35,7 @@ namespace Roma.Data
         public DbSet<FailedEmail>? FailedEmails { get; set; }
         public DbSet<Feedback>? Feedbacks { get; set; }
         public DbSet<TwoFactorCode>? TwoFactorCodes { get; set; }
+        public DbSet<DemoChatService>? DemoChatServices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

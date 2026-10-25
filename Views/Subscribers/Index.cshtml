@@ -1,0 +1,45 @@
+@model IEnumerable<Roma.Models.Subscriber>
+
+@{
+    ViewData["Title"] = "Subscribers";
+}
+
+<h1>Subscribers</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Email)</th>
+            <th>@Html.DisplayNameFor(model => model.ConsentGiven)</th>
+            <th>@Html.DisplayNameFor(model => model.IsConfirmed)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+            <th>@Html.DisplayNameFor(model => model.ConfirmationToken)</th>
+            <th>@Html.DisplayNameFor(model => model.ConfirmationExpiresAt)</th>
+            <th>@Html.DisplayNameFor(model => model.UnsubscribeToken)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.Email)</td>
+            <td>@Html.DisplayFor(modelItem => item.ConsentGiven)</td>
+            <td>@Html.DisplayFor(modelItem => item.IsConfirmed)</td>
+            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+            <td>@Html.DisplayFor(modelItem => item.ConfirmationToken)</td>
+            <td>@Html.DisplayFor(modelItem => item.ConfirmationExpiresAt)</td>
+            <td>@Html.DisplayFor(modelItem => item.UnsubscribeToken)</td>
+            <td>
+                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

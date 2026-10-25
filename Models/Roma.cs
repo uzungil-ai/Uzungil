@@ -627,6 +627,9 @@
         /// Yorumun yönetici tarafından onaylanma durumu.
         public bool IsApproved { get; set; } = false;
 
+        /// Yorumun yönetici tarafından reddedilme durumu.
+        public bool IsRejected { get; set; } = false;
+
         /// Yorumu yazan kullanıcının kimliği.
         public string UserId { get; set; } = null!;
 

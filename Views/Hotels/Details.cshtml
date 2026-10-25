@@ -19,7 +19,23 @@
         <dd class="col-sm-10">@Model.Phone</dd>
 
         <dt class="col-sm-2">Website</dt>
-        <dd class="col-sm-10">@Model.Website</dd>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrWhiteSpace(Model.Website))
+            {
+                var websiteUrl = Model.Website.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                 Model.Website.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                    ? Model.Website
+                    : $"https://{Model.Website}";
+
+                <a href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
+                    <span class="text-decoration-underline">www</span>
+                </a>
+            }
+            else
+            {
+                <span>-</span>
+            }
+        </dd>
 
         <dt class="col-sm-2">Price From</dt>
         <dd class="col-sm-10">@Model.PriceFrom</dd>

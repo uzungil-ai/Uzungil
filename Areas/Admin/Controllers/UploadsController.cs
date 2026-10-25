@@ -26,9 +26,16 @@ namespace Roma.Areas.Admin.Controllers
         }
 
         // GET: Admin/Uploads/Index?id={destinationId}
-        public async Task<IActionResult> Index(int id)
+        // Make id nullable so requests without id return a sensible result instead of 404 from NotFound()
+        public async Task<IActionResult> Index(int? id)
         {
-            var destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id);
+            if (!id.HasValue)
+            {
+                // If no destination id provided, redirect to Destinations index in Admin area
+                return RedirectToAction("Index", "Destinations", new { area = "Admin" });
+            }
+
+            var destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id.Value);
             if (destination == null) return NotFound();
             return View(destination);
         }

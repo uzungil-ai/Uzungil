@@ -17,13 +17,20 @@ namespace Roma.Pages
         }
 
         public List<Destination> Featured { get; set; } = new List<Destination>();
+        public List<Destination> Latest { get; set; } = new List<Destination>();
 
         public async Task OnGetAsync()
         {
             Featured = await _db.Destinations!
                 .Include(d => d.Images)
                 .OrderBy(d => d.Name)
-                .Take(6)
+                .Take(100)
+                .ToListAsync();
+
+            Latest = await _db.Destinations!
+                .Include(d => d.Images)
+                .OrderByDescending(d => d.Id)
+                .Take(100)
                 .ToListAsync();
         }
 

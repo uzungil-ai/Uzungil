@@ -27,7 +27,7 @@
             <td>
                 @if (!string.IsNullOrEmpty(item.Url))
                 {
-                    <img src="@item.Url" alt="" style="max-height:60px; max-width:120px;" />
+                    <img src="@item.Url" alt="@(item.AltText ?? "Destination image")" style="max-height:60px; max-width:120px;" />
                 }
             </td>
             <td>@item.Destination?.Name</td>

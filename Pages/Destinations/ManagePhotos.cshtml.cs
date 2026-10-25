@@ -19,13 +19,15 @@ namespace Roma.Pages.Destinations
         private readonly IWebHostEnvironment _env;
         private readonly Channel<Roma.Services.AiJob>? _aiChannel;
         private readonly Roma.Services.ImageProcessingService? _imgSvc;
+        private readonly ILogger<ManagePhotosModel> _logger;
 
-        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env, Channel<Roma.Services.AiJob>? aiChannel = null, Roma.Services.ImageProcessingService? imgSvc = null)
+        public ManagePhotosModel(ApplicationDbContext db, IWebHostEnvironment env, ILogger<ManagePhotosModel> logger, Channel<Roma.Services.AiJob>? aiChannel = null, Roma.Services.ImageProcessingService? imgSvc = null)
         {
             _db = db;
             _env = env;
             _aiChannel = aiChannel;
             _imgSvc = imgSvc;
+            _logger = logger;
         }
 
         public async Task<IActionResult> OnPostReorderAsync(int id)
@@ -69,12 +71,30 @@ namespace Roma.Pages.Destinations
         public Destination? Destination { get; set; }
         public List<DestinationImage>? Images { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async Task<IActionResult> OnGetAsync(int? id)
         {
-            Destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id);
-            if (Destination == null) return NotFound();
-            Images = Destination.Images;
-            return Page();
+            if (id == null)
+            {
+                _logger.LogWarning("ManagePhotos requested without id");
+                return BadRequest("destination id is required");
+            }
+
+            try
+            {
+                Destination = await _db.Destinations!.Include(d => d.Images).FirstOrDefaultAsync(d => d.Id == id.Value);
+                if (Destination == null)
+                {
+                    _logger.LogInformation("ManagePhotos: destination with id {Id} not found", id.Value);
+                    return NotFound($"Destination {id.Value} not found");
+                }
+                Images = Destination.Images;
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ManagePhotos: error loading destination {Id}", id.Value);
+                throw; // let exception propagate so developer exception page shows details in dev
+            }
         }
 
         public async Task<IActionResult> OnPostAsync(int id)

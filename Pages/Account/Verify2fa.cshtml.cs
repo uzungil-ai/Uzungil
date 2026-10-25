@@ -51,6 +51,8 @@ namespace Roma.Pages.Account
                 return Page();
             }
 
+            var normalizedCode = Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+
             var tf = await _db.TwoFactorCodes!.FirstOrDefaultAsync(t => t.Id == Id);
             if (tf == null || tf.Used || tf.ExpiresAt < DateTime.UtcNow)
             {
@@ -60,7 +62,7 @@ namespace Roma.Pages.Account
 
             // verify provided code by hashing with stored salt
             using var sha = System.Security.Cryptography.SHA256.Create();
-            var hashInput = System.Text.Encoding.UTF8.GetBytes(tf.Salt + Code);
+            var hashInput = System.Text.Encoding.UTF8.GetBytes(tf.Salt + normalizedCode);
             var hashed = Convert.ToBase64String(sha.ComputeHash(hashInput));
             if (hashed != tf.HashedCode)
             {
@@ -86,6 +88,10 @@ namespace Roma.Pages.Account
             await _db.SaveChangesAsync();
 
             await _signInManager.SignInAsync(user, RememberMe);
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                TempData["ShowPendingReviewsPopup"] = "1";
+            }
 
             return LocalRedirect("/");
         }

@@ -1,23 +1,32 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Roma.Data;
 using Roma.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Roma.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _db;
         private readonly Roma.Services.IEmailQueue? _queue;
+        private readonly bool _twoFactorEnabled;
 
-        public LoginModel(UserManager<User> userManager, ApplicationDbContext db, Roma.Services.IEmailQueue? queue = null)
+        public LoginModel(
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            ApplicationDbContext db,
+            IConfiguration configuration,
+            Roma.Services.IEmailQueue? queue = null)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _db = db;
             _queue = queue;
+            _twoFactorEnabled = configuration.GetValue("Features:TwoFactorEnabled", false);
         }
 
         [BindProperty]
@@ -57,6 +66,16 @@ namespace Roma.Pages.Account
             {
                 ErrorMessage = "Geçersiz giriş.";
                 return Page();
+            }
+
+            if (!_twoFactorEnabled)
+            {
+                await _signInManager.SignInAsync(user, Input.RememberMe);
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    TempData["ShowPendingReviewsPopup"] = "1";
+                }
+                return LocalRedirect("/");
             }
 
             // rate limiting: max 3 codes per hour
