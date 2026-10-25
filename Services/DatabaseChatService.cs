@@ -105,8 +105,25 @@ namespace Roma.Services
                 return FinalizeReply(countryTemplateReply, sessionId);
             }
 
+            // Listede olmayan konum/rota sorularında OpenAI öncelikli cevap verir.
+            string? openAiReply = null;
+            var openAiAttempted = false;
+            if (IsTravelLocationIntent(normalizedInput))
+            {
+                openAiReply = await TryGetOpenAiReplyAsync(input);
+                openAiAttempted = true;
+                if (!string.IsNullOrWhiteSpace(openAiReply))
+                {
+                    return FinalizeReply(openAiReply, sessionId);
+                }
+            }
+
             // Rule-based template/DB eşleşmeleri bulunamazsa OpenAI yanıtı kullanılır.
-            var openAiReply = await TryGetOpenAiReplyAsync(input);
+            if (!openAiAttempted)
+            {
+                openAiReply = await TryGetOpenAiReplyAsync(input);
+            }
+
             if (!string.IsNullOrWhiteSpace(openAiReply))
             {
                 return FinalizeReply(openAiReply, sessionId);
@@ -636,6 +653,13 @@ namespace Roma.Services
             }
 
             return "Mevsime göre genel öneri: katmanlı giyin, yağmur ihtimaline karşı ince yağmurluk bulundur, uzun yürüyüş için rahat ayakkabı seç. Ay ve şehir bilgisini paylaşırsan daha net liste verebilirim.";
+        }
+
+        private static bool IsTravelLocationIntent(string normalizedInput)
+        {
+            return ContainsAny(normalizedInput,
+                "gezilecek", "görülmesi gereken", "rota", "ne yenir", "yeme", "içme", "konaklama", "otel", "ulaşım", "taksi",
+                "hava durumu", "kaç gün", "destinasyon", "şehir", "sehir", "ilçe", "ilce", "mahalle", "semt");
         }
 
         private static string BuildWeatherLink(string location)
