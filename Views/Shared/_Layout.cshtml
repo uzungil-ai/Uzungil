@@ -4,7 +4,6 @@
         && string.Equals(TempData["ShowPendingReviewsPopup"]?.ToString(), "1", StringComparison.Ordinal);
 
     var currentPathAndQuery = Context.Request.Path + Context.Request.QueryString;
-    var layoutSearch = Context.Request.Query["search"].ToString();
 }
 
 <!DOCTYPE html>
@@ -34,7 +33,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Hakkında</a>
                         </li>
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
@@ -51,28 +50,13 @@
                             </li>
                         }
                     </ul>
-                    <partial name="_LoginPartial" />
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </nav>
-
-        <div class="border-bottom bg-light py-2">
-            <div class="container">
-                <form asp-area="" asp-controller="Home" asp-action="Index" method="get" class="row g-2 align-items-center">
-                    <div class="col-12 col-md-10">
-                        <input
-                            type="text"
-                            name="search"
-                            value="@layoutSearch"
-                            class="form-control"
-                            placeholder="Destinasyon adında ilk 3 harf ile ara" />
-                    </div>
-                    <div class="col-12 col-md-2 d-grid">
-                        <button type="submit" class="btn btn-primary">Ara</button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </header>
     <div class="container layout-main-container">
         <main role="main" class="pb-3">
@@ -85,6 +69,33 @@
         @await Component.InvokeAsync("PendingReviewsPopup", new { currentPathAndQuery })
     }
 
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5 mb-0" id="subscribeModalLabel">Yeni önerileri kaçırmayın</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Bültene abone olun, yeni destinasyon ve içerik güncellemelerini e-posta ile alın.</p>
+                    <form id="subscribeForm" method="post" asp-page="/Subscribe">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <label for="subEmail" class="form-label">E-posta</label>
+                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" />
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" />
+                            <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
+                        </div>
+                        <button type="button" id="subBtn" class="btn btn-primary w-100">Abone Ol</button>
+                    </form>
+                    <div id="subMessage" class="mt-2 small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - Roma - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -93,6 +104,53 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            var btn = document.getElementById('subBtn');
+            var email = document.getElementById('subEmail');
+            var consent = document.getElementById('subConsent');
+            var msg = document.getElementById('subMessage');
+            var form = document.getElementById('subscribeForm');
+
+            if (!btn || !email || !consent || !msg || !form) return;
+
+            btn.addEventListener('click', function () {
+                msg.textContent = '';
+                if (!email.value) { msg.textContent = 'E-posta giriniz.'; return; }
+                if (!consent.checked) { msg.textContent = 'Lütfen rıza veriniz.'; return; }
+
+                var data = new FormData();
+                data.append('Email', email.value);
+                data.append('Consent', consent.checked ? 'true' : 'false');
+
+                var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
+
+                btn.disabled = true; btn.textContent = 'Gönderiliyor...';
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: data
+                }).then(async function (resp) {
+                    var payload = null;
+                    try { payload = await resp.json(); } catch {}
+
+                    if (!resp.ok) {
+                        msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik işlemi başarısız oldu.';
+                        return;
+                    }
+
+                    msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.';
+                    form.reset();
+                }).catch(function () { msg.textContent = 'Hata oluştu.'; })
+                    .finally(function () { btn.disabled = false; btn.textContent = 'Abone Ol'; });
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

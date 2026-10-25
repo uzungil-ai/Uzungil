@@ -36,6 +36,7 @@ namespace Roma.Data
         public DbSet<Feedback>? Feedbacks { get; set; }
         public DbSet<TwoFactorCode>? TwoFactorCodes { get; set; }
         public DbSet<DemoChatService>? DemoChatServices { get; set; }
+        public DbSet<AiBudgetUsageStat>? AiBudgetUsageStats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,8 @@ namespace Roma.Data
             modelBuilder.Entity<Parking>().Property(p => p.Fee).HasPrecision(18, 2);
             modelBuilder.Entity<Parking>().Property(p => p.HourlyRate).HasPrecision(18, 2);
             modelBuilder.Entity<DownloadRecord>().Property(d => d.Amount).HasPrecision(18, 2);
+            modelBuilder.Entity<AiBudgetUsageStat>().Property(x => x.EstimatedCostUsd).HasPrecision(18, 4);
+            modelBuilder.Entity<AiBudgetUsageStat>().HasIndex(x => x.MonthKey).IsUnique();
 
             // Subscriber: unique email
             modelBuilder.Entity<Subscriber>().HasIndex(s => s.Email).IsUnique();

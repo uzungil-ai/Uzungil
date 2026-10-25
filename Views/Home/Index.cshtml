@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Ana Sayfa";
+    var nameFilter = ViewBag.NameFilter as string;
     var countryFilter = ViewBag.CountryFilter as string;
     var categoryFilter = ViewBag.CategoryFilter as string;
     var categoryOptions = ViewBag.CategoryOptions as List<string> ?? new List<string>();
@@ -22,8 +23,8 @@
 
         <form asp-controller="Home" asp-action="Index" method="get" class="row g-3 align-items-end">
             <div class="col-12 col-lg-4">
-                <label for="search" class="form-label">Genel Arama</label>
-                <input id="search" name="search" value="@ViewBag.SearchFilter" class="form-control" placeholder="Destinasyon adında ilk 3 harf" />
+                <label for="name" class="form-label">Destinasyon Adı</label>
+                <input id="name" name="name" value="@nameFilter" class="form-control" placeholder="Örn: Kapadokya" />
             </div>
 
             <div class="col-12 col-lg-3">

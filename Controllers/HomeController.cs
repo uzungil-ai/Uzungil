@@ -15,11 +15,25 @@ namespace Roma.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string? country, string? category, string? search)
+        public async Task<IActionResult> Index(string? name, string? search, string? country, string? conutry, string? category)
         {
-            country = string.IsNullOrWhiteSpace(country) ? null : country.Trim();
-            category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+            name = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
             search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+            country = string.IsNullOrWhiteSpace(country) ? null : country.Trim();
+            conutry = string.IsNullOrWhiteSpace(conutry) ? null : conutry.Trim();
+            category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+
+            // Geriye dönük destek: eski "search" parametresi name olarak kabul edilir.
+            if (name is null && search is not null)
+            {
+                name = search;
+            }
+
+            // Eski/yanlış yazım "conutry" ile gelen istekleri de destekle.
+            if (country is null && conutry is not null)
+            {
+                country = conutry;
+            }
 
             var destinationsQuery = _context.Destinations!
                 .AsNoTracking()
@@ -27,21 +41,18 @@ namespace Roma.Controllers
                 .Include(d => d.Attractions)
                 .AsQueryable();
 
-            if (search is not null)
+            if (name is not null)
             {
-                var normalizedSearch = search.Trim().ToLower();
-                var searchPrefix = normalizedSearch.Length >= 3
-                    ? normalizedSearch[..3]
-                    : normalizedSearch;
-
+                var pattern = $"%{name}%";
                 destinationsQuery = destinationsQuery.Where(d =>
-                    d.Name != null && d.Name.ToLower().StartsWith(searchPrefix));
+                    d.Name != null && EF.Functions.Like(d.Name, pattern));
             }
 
             if (country is not null)
             {
                 var countryPattern = $"%{country}%";
-                destinationsQuery = destinationsQuery.Where(d => d.Country != null && EF.Functions.Like(d.Country, countryPattern));
+                destinationsQuery = destinationsQuery.Where(d =>
+                    d.Country != null && EF.Functions.Like(d.Country, countryPattern));
             }
 
             if (category is not null)
@@ -64,7 +75,7 @@ namespace Roma.Controllers
 
             ViewBag.CountryFilter = country;
             ViewBag.CategoryFilter = category;
-            ViewBag.SearchFilter = search;
+            ViewBag.NameFilter = name;
             ViewBag.CategoryOptions = categories;
 
             return View(destinations);

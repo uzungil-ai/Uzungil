@@ -159,6 +159,35 @@ namespace Roma.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Roma.Models.AiBudgetUsageStat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("EstimatedCostUsd")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("EstimatedRequestCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthKey")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MonthKey")
+                        .IsUnique();
+
+                    b.ToTable("AiBudgetUsageStats");
+                });
+
             modelBuilder.Entity("Roma.Models.Attraction", b =>
                 {
                     b.Property<int>("Id")

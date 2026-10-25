@@ -29,7 +29,7 @@
     <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
 
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm destination-card border-0">
     <div class="card-header"><strong>Destinasyon Bilgisi</strong></div>
     <div class="card-body">
         <dl class="row mb-0">
@@ -116,12 +116,12 @@ else
                 ?? Model.Images?.OrderBy(i => i.Order).FirstOrDefault();
 
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                     @if (attractionPhoto != null)
                     {
                         <img src="@attractionPhoto.Url"
                              alt="@(string.IsNullOrWhiteSpace(attractionPhoto.AltText) ? a.Name : attractionPhoto.AltText)"
-                             class="card-img-top"
+                             class="card-img-top destination-image"
                              style="height:180px;object-fit:cover;" />
                     }
                     <div class="card-body">
@@ -175,7 +175,7 @@ else
         @foreach (var h in Model.Hotels)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                     <div class="card-body">
                         <h5 class="card-title mb-2">@h.Name</h5>
                         <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(h.Address) ? "-" : h.Address)</div>
@@ -226,7 +226,7 @@ else
         @foreach (var p in Model.Parkings)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                     <div class="card-body">
                         <h5 class="card-title mb-2">@p.Name</h5>
                         <div class="small text-muted mb-1">Kapasite: @(p.Capacity?.ToString() ?? "-")</div>
@@ -260,7 +260,7 @@ else
         @foreach (var f in Model.Flavors)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title mb-3">@f.Name</h5>
                         <div class="mt-auto">
@@ -290,7 +290,7 @@ else
         @foreach (var m in Model.Meals)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                     <div class="card-body">
                         <h5 class="card-title mb-2">@m.Name</h5>
                         <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(m.Address) ? "-" : m.Address)</div>

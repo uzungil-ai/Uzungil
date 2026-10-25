@@ -4,16 +4,17 @@
     ViewData["Title"] = "Roma - Keşfet";
 }
 
-<section class="home-hero py-5 py-lg-6">
+<section class="home-hero py-5 py-lg-6 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
     <div class="container">
         <div class="row align-items-center g-4">
-            <div class="col-lg-7">
-                <span class="badge rounded-pill text-bg-light mb-3">Seyahat planlama • Yapay zeka destekli</span>
-                <h1 class="display-5 fw-bold mb-3">Roma ile daha hızlı, daha net seyahat planı oluşturun</h1>
-                <p class="lead mb-4">Öne çıkan destinasyonları karşılaştırın, sohbet botundan rota önerisi alın ve güncellemeleri tek ekrandan takip edin.</p>
+            <div class="col-lg-8 col-xl-7">
+                <span class="badge rounded-pill text-bg-light mb-3">Yapay zeka destekli. Seyahat Planlama</span>
+                <h1 class="display-5 fw-bold mb-3">Fotografia ile daha hızlı, daha net seyahat planı oluşturun</h1>
+                <p class="lead mb-4">Öne çıkan destinasyonları görün, sohbet botundan öneri alın ve güncellemeleri takip edin.</p>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <a class="btn btn-light btn-lg" href="#explore">Destinasyonları Gör</a>
                     <a class="btn btn-outline-light btn-lg" href="/Chat">Sohbet Botu</a>
+                    <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <span class="hero-pill">Hızlı keşif</span>
@@ -21,30 +22,11 @@
                     <span class="hero-pill">Canlı güncelleme</span>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="subscribe-card shadow-sm">
-                    <h2 class="h5 mb-3">Yeni önerileri kaçırmayın</h2>
-                    <p class="text-muted small mb-3">Bültene abone olun, yeni destinasyon ve içerik güncellemelerini e-posta ile alın.</p>
-                    <form id="subscribeForm" method="post" asp-page="Subscribe">
-                        @Html.AntiForgeryToken()
-                        <div class="mb-2">
-                            <label for="subEmail" class="form-label">E-posta</label>
-                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" />
-                        </div>
-                        <div class="form-check mb-3">
-                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" />
-                            <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
-                        </div>
-                        <button type="button" id="subBtn" class="btn btn-primary w-100">Abone Ol</button>
-                    </form>
-                    <div id="subMessage" class="mt-2 small"></div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
 
-<section class="container my-4">
+<section class="container my-4 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
     <div class="row g-3">
         <div class="col-sm-6 col-lg-3">
             <div class="quick-stat-box">
@@ -75,9 +57,28 @@
 
 <section id="explore" class="container my-5">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h2 class="mb-0">Destinasyonları keşfedin</h2>
+        <h2 class="mb-0 section-title">Destinasyonları keşfedin</h2>
         <span class="text-muted small">Öne çıkan: @Model.Featured.Count • Yeni: @Model.Latest.Count</span>
     </div>
+
+    <form method="get" class="card border-0 shadow-sm mb-4 discover-filter-card">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label for="name" class="form-label">Destinasyon Adı</label>
+                    <input id="name" name="name" class="form-control" placeholder="Örn: Kapadokya" />
+                </div>
+                <div class="col-12 col-md-5">
+                    <label for="country" class="form-label">Ülke</label>
+                    <input id="country" name="country" class="form-control" placeholder="Örn: Türkiye" />
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary btn-modern">Ara</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
     <div class="home-tabs mb-4" role="tablist" aria-label="Destinasyon sekmeleri">
         <button type="button" class="home-tab-btn active" data-target="featured-list" aria-selected="true">Öne Çıkanlar</button>
         <button type="button" class="home-tab-btn" data-target="latest-list" aria-selected="false">En Yeniler</button>
@@ -92,7 +93,7 @@
                 var srcset = Model.BuildSrcSet(img);
                 var hiddenClass = i >= 9 ? "d-none" : string.Empty;
                 <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
-                    <div class="card h-100 shadow-sm destination-card border-0">
+                    <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                         <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
@@ -141,7 +142,7 @@
                 var srcset = Model.BuildSrcSet(img);
                 var hiddenClass = i >= 9 ? "d-none" : string.Empty;
                 <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
-                    <div class="card h-100 shadow-sm destination-card border-0">
+                    <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                         <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
@@ -185,22 +186,26 @@
 <section class="container pb-5">
     <div class="row g-3">
         <div class="col-md-4">
-            <div class="feature-box h-100">
-                <h3 class="h6">1. Keşfet</h3>
-                <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
-            </div>
+            <a href="#explore" class="text-decoration-none text-reset d-block h-100">
+                <div class="feature-box h-100 reveal-up">
+                    <h3 class="h6">1. Keşfet</h3>
+                    <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
+                </div>
+            </a>
         </div>
         <div class="col-md-4">
-            <div class="feature-box h-100">
-                <h3 class="h6">2. Planla</h3>
-                <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
-            </div>
+            <a href="/Chat" class="text-decoration-none text-reset d-block h-100">
+                <div class="feature-box h-100 reveal-up">
+                    <h3 class="h6">2. Planla</h3>
+                    <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
+                </div>
+            </a>
         </div>
         <div class="col-md-4">
-            <div class="feature-box h-100">
+            <button type="button" class="feature-box h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
                 <h3 class="h6">3. Takip Et</h3>
                 <p class="mb-0 text-muted">Bülten ile yeni destinasyonları ve güncellemeleri öğren.</p>
-            </div>
+            </button>
         </div>
     </div>
 </section>
@@ -208,11 +213,6 @@
 @section Scripts {
     <script>
         (function(){
-            var btn = document.getElementById('subBtn');
-            var email = document.getElementById('subEmail');
-            var consent = document.getElementById('subConsent');
-            var msg = document.getElementById('subMessage');
-            var form = document.getElementById('subscribeForm');
             var tabButtons = document.querySelectorAll('.home-tab-btn');
             var loadMoreButtons = document.querySelectorAll('.js-load-more');
 
@@ -267,40 +267,6 @@
                 });
             });
 
-            btn?.addEventListener('click', function(){
-                msg.textContent = '';
-                if(!email.value){ msg.textContent = 'E-posta giriniz.'; return; }
-                if(!consent.checked){ msg.textContent = 'Lütfen rıza veriniz.'; return; }
-
-                var data = new FormData();
-                data.append('Email', email.value);
-                data.append('Consent', consent.checked ? 'true' : 'false');
-
-                var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
-                if(tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
-
-                btn.disabled = true; btn.textContent = 'Gönderiliyor...';
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: data
-                }).then(async function(resp){
-                    var payload = null;
-                    try { payload = await resp.json(); } catch {}
-
-                    if(!resp.ok){
-                        msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik işlemi başarısız oldu.';
-                        return;
-                    }
-
-                    msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.';
-                }).catch(function(){ msg.textContent = 'Hata oluştu.'; })
-                .finally(function(){ btn.disabled = false; btn.textContent = 'Abone Ol'; });
-            });
         })();
     </script>
 }

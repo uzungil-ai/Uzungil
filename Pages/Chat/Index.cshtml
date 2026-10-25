@@ -3,26 +3,50 @@
 @{
     Layout = "_Layout";
 }
-<h2>Chatbot</h2>
-<div id="chatbox" style="max-width:600px;">
-    <form id="chatAntiForgeryForm" method="post" class="d-none">
-        @Html.AntiForgeryToken()
-    </form>
-    <div id="messages" style="border:1px solid #ccc;padding:10px;height:300px;overflow:auto;background:#f9f9f9;"></div>
-    <div class="input-group mt-2">
-        <input id="userInput" class="form-control" />
-        <button id="sendBtn" class="btn btn-primary">Gönder</button>
+<section class="chat-shell container py-3">
+    <div class="chat-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Seyahat Asistanı</h2>
+        <span class="badge text-bg-light border">Canlı sohbet</span>
     </div>
-</div>
+
+    <div id="chatbox" class="chat-card destination-card border-0 shadow-sm">
+        <form id="chatAntiForgeryForm" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+        </form>
+        <div id="messages" class="chat-messages"></div>
+        <div class="chat-composer input-group mt-2">
+            <input id="userInput" class="form-control" placeholder="Sorunuzu yazın..." />
+            <button id="sendBtn" class="btn btn-primary btn-modern">Gönder</button>
+        </div>
+    </div>
+</section>
+
 @section Scripts{
     <script>
-        document.getElementById('sendBtn').addEventListener('click', async function(){
-            var input = document.getElementById('userInput');
-            var text = input.value.trim();
+        var input = document.getElementById('userInput');
+        var sendBtn = document.getElementById('sendBtn');
+        var messagesEl = document.getElementById('messages');
+
+        sendBtn.addEventListener('click', function () {
+            sendMessage(input.value);
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage(input.value);
+            }
+        });
+
+        async function sendMessage(rawText){
+            var text = (rawText || '').trim();
             if(!text) return;
+
             var token = document.querySelector('#chatAntiForgeryForm input[name="__RequestVerificationToken"]')?.value || '';
-            appendMessage('You', text);
+
+            appendMessage('user', text);
             input.value = '';
+
             var res = await fetch('?handler=Send', {
                 method: 'POST',
                 headers: {
@@ -31,18 +55,24 @@
                 },
                 body: JSON.stringify({ text: text })
             });
+
             if(res.ok){
                 var j = await res.json();
-                appendMessage('Bot', j.reply);
+                appendMessage('bot', j.reply);
+                if(j.redirectUrl){
+                    setTimeout(function(){ window.location.href = j.redirectUrl; }, 800);
+                }
             } else {
-                appendMessage('Bot', 'Hata: sunucuya ulaşılamadı');
+                appendMessage('bot', 'Hata: sunucuya ulaşılamadı');
             }
-        });
+        }
+
         function appendMessage(who, text){
             var m = document.createElement('div');
-            m.innerHTML = '<strong>'+who+':</strong> '+text;
-            document.getElementById('messages').appendChild(m);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            m.className = 'chat-message ' + (who === 'user' ? 'chat-message-user' : 'chat-message-bot');
+            m.textContent = text;
+            messagesEl.appendChild(m);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
         }
     </script>
 }
