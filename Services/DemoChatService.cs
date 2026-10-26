@@ -8,7 +8,7 @@ namespace Roma.Services
         public string Reply { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public Task<string> GetReplyAsync(string input, string? sessionId = null)
+        public Task<string> GetReplyAsync(string input, string? sessionId = null, CancellationToken cancellationToken = default)
         {
             // echo demo
             return Task.FromResult($"(Bot) Siz: {input}. Ben de: Bu bir demo yanıttır.");

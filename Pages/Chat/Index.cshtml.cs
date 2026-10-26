@@ -32,7 +32,7 @@ namespace Roma.Pages.Chat
         {
         }
 
-        public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req)
+        public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.Text)) return BadRequest();
 
@@ -46,7 +46,7 @@ namespace Roma.Pages.Chat
                 return new JsonResult(new { reply = "Çok hızlı mesaj gönderiyorsunuz. Lütfen kısa bir süre bekleyip tekrar deneyin." });
             }
 
-            if (!await TryReserveEstimatedBudgetAsync())
+            if (!await TryReserveEstimatedBudgetAsync(cancellationToken))
             {
                 return new JsonResult(new { reply = "Bu ay için yapay zeka kullanım limiti doldu. Lütfen daha sonra tekrar deneyin." });
             }
@@ -85,7 +85,7 @@ namespace Roma.Pages.Chat
                 HttpContext.Session.Remove("ChatSubscribePromptPending");
             }
 
-            var reply = await _chat.GetReplyAsync(req.Text, HttpContext.Session.Id);
+            var reply = await _chat.GetReplyAsync(req.Text, HttpContext.Session.Id, cancellationToken);
             if (!string.IsNullOrEmpty(reply) && reply.Length > _maxOutputChars)
             {
                 reply = reply[.._maxOutputChars] + "...";
@@ -135,7 +135,7 @@ namespace Roma.Pages.Chat
             return true;
         }
 
-        private async Task<bool> TryReserveEstimatedBudgetAsync()
+        private async Task<bool> TryReserveEstimatedBudgetAsync(CancellationToken cancellationToken)
         {
             if (_monthlyBudgetUsd <= 0 || _estimatedCostPerRequestUsd <= 0)
             {
@@ -144,7 +144,7 @@ namespace Roma.Pages.Chat
 
             var monthKey = (DateTime.UtcNow.Year * 100) + DateTime.UtcNow.Month;
             var usage = await _db.AiBudgetUsageStats!
-                .SingleOrDefaultAsync(x => x.MonthKey == monthKey);
+                .SingleOrDefaultAsync(x => x.MonthKey == monthKey, cancellationToken);
 
             if (usage == null)
             {
@@ -168,7 +168,7 @@ namespace Roma.Pages.Chat
             usage.EstimatedRequestCount = nextCount;
             usage.EstimatedCostUsd = nextEstimatedCost;
             usage.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
             return true;
         }
     }

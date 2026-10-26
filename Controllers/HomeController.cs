@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Roma.Data;
 using Roma.Models;
@@ -9,10 +10,12 @@ namespace Roma.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ApplicationDbContext context)
+        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string? name, string? search, string? country, string? conutry, string? category)
@@ -81,7 +84,7 @@ namespace Roma.Controllers
             return View(destinations);
         }
 
-        public IActionResult Privacy()
+        public IActionResult Hakkında()
         {
             return View();
         }
@@ -89,6 +92,15 @@ namespace Roma.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
+            var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+            if (exceptionFeature?.Error is not null)
+            {
+                _logger.LogError(
+                    exceptionFeature.Error,
+                    "Unhandled exception captured on path: {Path}",
+                    exceptionFeature.Path);
+            }
+
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }

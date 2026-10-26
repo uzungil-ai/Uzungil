@@ -1,0 +1,79 @@
+@page "/OpenAiSoruCevap"
+@model Roma.Pages.OpenAiSoruCevap.IndexModel
+@{
+    ViewData["Title"] = "OpenAI Soru-Cevap";
+}
+
+<section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">OpenAI Soru-Cevap</h2>
+        <span class="badge text-bg-light border">Doğrudan</span>
+    </div>
+
+    <div class="destination-card border-0 shadow-sm p-3">
+        <form id="qaAntiForgeryForm" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+        </form>
+
+        <div id="qaMessages" class="chat-messages mb-3"></div>
+
+        <div class="input-group">
+            <input id="qaInput" class="form-control" placeholder="Sorunuzu yazın..." />
+            <button id="qaSendBtn" type="button" class="btn btn-primary btn-modern">Sor</button>
+        </div>
+    </div>
+</section>
+
+@section Scripts{
+    <script>
+        const qaInput = document.getElementById('qaInput');
+        const qaSendBtn = document.getElementById('qaSendBtn');
+        const qaMessages = document.getElementById('qaMessages');
+
+        qaSendBtn.addEventListener('click', function () {
+            askQuestion(qaInput.value);
+        });
+
+        qaInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                askQuestion(qaInput.value);
+            }
+        });
+
+        async function askQuestion(rawText) {
+            const text = (rawText || '').trim();
+            if (!text) return;
+
+            const token = document.querySelector('#qaAntiForgeryForm input[name="__RequestVerificationToken"]')?.value || '';
+
+            appendMessage('user', text);
+            qaInput.value = '';
+
+            const response = await fetch('?handler=Ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            if (!response.ok) {
+                appendMessage('bot', 'İstek gönderilemedi. Lütfen tekrar deneyin.');
+                return;
+            }
+
+            const json = await response.json();
+            appendMessage('bot', json.reply || 'Yanıt alınamadı.');
+        }
+
+        function appendMessage(role, text) {
+            const item = document.createElement('div');
+            item.className = 'chat-message ' + (role === 'user' ? 'chat-message-user' : 'chat-message-bot');
+            item.textContent = text;
+            qaMessages.appendChild(item);
+            qaMessages.scrollTop = qaMessages.scrollHeight;
+        }
+    </script>
+}

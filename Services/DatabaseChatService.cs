@@ -5,6 +5,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Net;
 
 namespace Roma.Services
 {
@@ -71,7 +73,7 @@ namespace Roma.Services
             _logger = logger;
         }
 
-        public async Task<string> GetReplyAsync(string input, string? sessionId = null)
+        public async Task<string> GetReplyAsync(string input, string? sessionId = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -99,7 +101,7 @@ namespace Roma.Services
                 return FinalizeReply(cityTemplateReply, sessionId);
             }
 
-            var countryTemplateReply = await BuildCountryTemplateReplyAsync(normalizedInput);
+            var countryTemplateReply = await BuildCountryTemplateReplyAsync(normalizedInput, cancellationToken);
             if (!string.IsNullOrWhiteSpace(countryTemplateReply))
             {
                 return FinalizeReply(countryTemplateReply, sessionId);
@@ -110,7 +112,7 @@ namespace Roma.Services
             var openAiAttempted = false;
             if (IsTravelLocationIntent(normalizedInput))
             {
-                openAiReply = await TryGetOpenAiReplyAsync(input);
+                openAiReply = await TryGetOpenAiReplyAsync(input, cancellationToken);
                 openAiAttempted = true;
                 if (!string.IsNullOrWhiteSpace(openAiReply))
                 {
@@ -121,7 +123,7 @@ namespace Roma.Services
             // Rule-based template/DB eşleşmeleri bulunamazsa OpenAI yanıtı kullanılır.
             if (!openAiAttempted)
             {
-                openAiReply = await TryGetOpenAiReplyAsync(input);
+                openAiReply = await TryGetOpenAiReplyAsync(input, cancellationToken);
             }
 
             if (!string.IsNullOrWhiteSpace(openAiReply))
@@ -135,7 +137,7 @@ namespace Roma.Services
 
             var candidates = await baseQuery
                 .Select(x => new { x.Input, x.Reply, x.CreatedAt })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var containsReply = candidates
                 .Select(x =>
@@ -176,7 +178,7 @@ namespace Roma.Services
             return FinalizeReply("(Bot) Bu mesaj için kayıtlı bir yanıt bulunamadı. Daha kısa ve net yazmayı deneyin.", sessionId);
         }
 
-        private async Task<string?> TryGetOpenAiReplyAsync(string input)
+        private async Task<string?> TryGetOpenAiReplyAsync(string input, CancellationToken cancellationToken)
         {
             var apiKey = _configuration["OpenAI:ApiKey"]
                 ?? _configuration["OPENAI_API_KEY"];
@@ -187,83 +189,118 @@ namespace Roma.Services
 
             var model = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
             var maxTokens = _configuration.GetValue<int?>("OpenAI:MaxOutputTokens") ?? 220;
+            var timeoutSeconds = _configuration.GetValue<int?>("OpenAI:TimeoutSeconds") ?? 30;
+            var maxRetries = Math.Clamp(_configuration.GetValue<int?>("OpenAI:MaxRetries") ?? 2, 0, 5);
+            const string endpoint = "https://api.openai.com/v1/responses";
+
+            using var client = _httpClientFactory.CreateClient("OpenAI");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var payload = new
+            {
+                model,
+                max_output_tokens = maxTokens,
+                temperature = 0.4,
+                input = new object[]
+                {
+                    new
+                    {
+                        role = "system",
+                        content = new object[]
+                        {
+                            new { type = "input_text", text = "Sen seyahat asistanısın. Türkçe, kısa, net ve uygulanabilir cevap ver." }
+                        }
+                    },
+                    new
+                    {
+                        role = "user",
+                        content = new object[]
+                        {
+                            new { type = "input_text", text = input }
+                        }
+                    }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(payload);
 
             try
             {
-                using var client = _httpClientFactory.CreateClient();
-                client.Timeout = TimeSpan.FromSeconds(20);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
-                var payload = new
+                for (var attempt = 1; attempt <= maxRetries + 1; attempt++)
                 {
-                    model,
-                    max_output_tokens = maxTokens,
-                    temperature = 0.4,
-                    input = new object[]
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
                     {
-                        new
-                        {
-                            role = "system",
-                            content = new object[]
-                            {
-                                new { type = "input_text", text = "Sen seyahat asistanısın. Türkçe, kısa, net ve uygulanabilir cevap ver." }
-                            }
-                        },
-                        new
-                        {
-                            role = "user",
-                            content = new object[]
-                            {
-                                new { type = "input_text", text = input }
-                            }
-                        }
+                        Content = new StringContent(json, Encoding.UTF8, "application/json")
+                    };
+
+                    using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+                    var stopwatch = Stopwatch.StartNew();
+
+                    _logger.LogInformation("OpenAI request started. Attempt: {Attempt}, Model: {Model}", attempt, model);
+
+                    HttpResponseMessage response;
+                    try
+                    {
+                        response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
                     }
-                };
-
-                var json = JsonSerializer.Serialize(payload);
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var response = await client.PostAsync("https://api.openai.com/v1/responses", content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorBody = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("OpenAI request failed. StatusCode: {StatusCode}, Body: {Body}", (int)response.StatusCode, errorBody);
-                    return null;
-                }
-
-                var body = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-
-                if (doc.RootElement.TryGetProperty("output_text", out var outputTextEl) &&
-                    outputTextEl.ValueKind == JsonValueKind.String)
-                {
-                    var outputText = outputTextEl.GetString();
-                    return string.IsNullOrWhiteSpace(outputText) ? null : outputText.Trim();
-                }
-
-                if (doc.RootElement.TryGetProperty("output", out var outputEl) && outputEl.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var item in outputEl.EnumerateArray())
+                    catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!item.TryGetProperty("content", out var contentEl) || contentEl.ValueKind != JsonValueKind.Array)
+                        stopwatch.Stop();
+                        _logger.LogWarning(ex, "OpenAI request timed out. Attempt: {Attempt}, TimeoutSeconds: {TimeoutSeconds}, DurationMs: {DurationMs}", attempt, timeoutSeconds, stopwatch.ElapsedMilliseconds);
+                        if (attempt <= maxRetries)
                         {
+                            await Task.Delay(GetRetryDelay(attempt), cancellationToken);
                             continue;
                         }
+                        return null;
+                    }
 
-                        foreach (var contentItem in contentEl.EnumerateArray())
+                    using (response)
+                    {
+                        var body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+                        stopwatch.Stop();
+
+                        _logger.LogInformation(
+                            "OpenAI request finished. Attempt: {Attempt}, StatusCode: {StatusCode}, DurationMs: {DurationMs}",
+                            attempt,
+                            (int)response.StatusCode,
+                            stopwatch.ElapsedMilliseconds);
+
+                        if (!response.IsSuccessStatusCode)
                         {
-                            if (contentItem.TryGetProperty("text", out var textEl) && textEl.ValueKind == JsonValueKind.String)
+                            _logger.LogWarning("OpenAI request failed. Attempt: {Attempt}, StatusCode: {StatusCode}, Body: {Body}", attempt, (int)response.StatusCode, body);
+                            if (attempt <= maxRetries && IsTransientStatusCode(response.StatusCode))
                             {
-                                var text = textEl.GetString();
-                                if (!string.IsNullOrWhiteSpace(text))
-                                {
-                                    return text.Trim();
-                                }
+                                await Task.Delay(GetRetryDelay(attempt), cancellationToken);
+                                continue;
                             }
+
+                            return null;
                         }
+
+                        var parsedReply = ParseOpenAiReply(body);
+                        if (!string.IsNullOrWhiteSpace(parsedReply))
+                        {
+                            return parsedReply;
+                        }
+
+                        return null;
                     }
                 }
 
+                return null;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("OpenAI request cancelled by client.");
+                throw;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "OpenAI request network exception.");
                 return null;
             }
             catch (Exception ex)
@@ -273,14 +310,67 @@ namespace Roma.Services
             }
         }
 
-        private async Task<string?> BuildCountryTemplateReplyAsync(string normalizedInput)
+        private static string? ParseOpenAiReply(string body)
+        {
+            using var doc = JsonDocument.Parse(body);
+
+            if (doc.RootElement.TryGetProperty("output_text", out var outputTextEl) &&
+                outputTextEl.ValueKind == JsonValueKind.String)
+            {
+                var outputText = outputTextEl.GetString();
+                return string.IsNullOrWhiteSpace(outputText) ? null : outputText.Trim();
+            }
+
+            if (doc.RootElement.TryGetProperty("output", out var outputEl) && outputEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in outputEl.EnumerateArray())
+                {
+                    if (!item.TryGetProperty("content", out var contentEl) || contentEl.ValueKind != JsonValueKind.Array)
+                    {
+                        continue;
+                    }
+
+                    foreach (var contentItem in contentEl.EnumerateArray())
+                    {
+                        if (contentItem.TryGetProperty("text", out var textEl) && textEl.ValueKind == JsonValueKind.String)
+                        {
+                            var text = textEl.GetString();
+                            if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                return text.Trim();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsTransientStatusCode(HttpStatusCode statusCode)
+        {
+            return statusCode == HttpStatusCode.RequestTimeout
+                || statusCode == HttpStatusCode.TooManyRequests
+                || statusCode == HttpStatusCode.BadGateway
+                || statusCode == HttpStatusCode.ServiceUnavailable
+                || statusCode == HttpStatusCode.GatewayTimeout
+                || statusCode == HttpStatusCode.InternalServerError;
+        }
+
+        private static TimeSpan GetRetryDelay(int attempt)
+        {
+            var seconds = Math.Min(8, Math.Pow(2, attempt));
+            return TimeSpan.FromSeconds(seconds);
+        }
+
+        private async Task<string?> BuildCountryTemplateReplyAsync(string normalizedInput, CancellationToken cancellationToken)
         {
             var countries = await _context.Destinations!
                 .AsNoTracking()
                 .Where(d => d.Country != null && d.Country.Trim() != string.Empty)
                 .Select(d => d.Country!.Trim())
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var matchedCountry = countries
                 .Select(c => new { Original = c, Normalized = Normalize(c) })

@@ -14,6 +14,7 @@
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <a class="btn btn-light btn-lg" href="#explore">Destinasyonları Gör</a>
                     <a class="btn btn-outline-light btn-lg" href="/Chat">Sohbet Botu</a>
+                    <a class="btn btn-outline-warning btn-lg" href="/OpenAiSoruCevap">OpenAI Soru-Cevap</a>
                     <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
@@ -49,7 +50,7 @@
         <div class="col-sm-6 col-lg-3">
             <div class="quick-stat-box">
                 <div class="small text-muted">Hızlı işlem</div>
-                <a href="/Chat" class="fw-semibold text-decoration-none">Hemen soru sor →</a>
+                <a href="/OpenAiSoruCevap" class="fw-semibold text-decoration-none">OpenAI ile soru sor →</a>
             </div>
         </div>
     </div>
@@ -187,24 +188,30 @@
     <div class="row g-3">
         <div class="col-md-4">
             <a href="#explore" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box h-100 reveal-up">
+                <div class="feature-box feature-step-card h-100 reveal-up">
+                    <div class="feature-step-icon" aria-hidden="true">🧭</div>
                     <h3 class="h6">1. Keşfet</h3>
                     <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
+                    <span class="feature-step-link">Destinasyonları aç →</span>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
             <a href="/Chat" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box h-100 reveal-up">
+                <div class="feature-box feature-step-card h-100 reveal-up">
+                    <div class="feature-step-icon" aria-hidden="true">🗺️</div>
                     <h3 class="h6">2. Planla</h3>
                     <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
+                    <span class="feature-step-link">Sohbet botunu aç →</span>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
-            <button type="button" class="feature-box h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+            <button type="button" class="feature-box feature-step-card h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+                <div class="feature-step-icon" aria-hidden="true">🔔</div>
                 <h3 class="h6">3. Takip Et</h3>
                 <p class="mb-0 text-muted">Bülten ile yeni destinasyonları ve güncellemeleri öğren.</p>
+                <span class="feature-step-link">Bültene katıl →</span>
             </button>
         </div>
     </div>
