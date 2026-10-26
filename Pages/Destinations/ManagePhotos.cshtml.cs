@@ -59,7 +59,7 @@ namespace Roma.Pages.Destinations
                 if (img != null) img.Order = i;
             }
 
-            _db.DestinationImages.UpdateRange(images);
+            _db.UpdateRange(images);
             await _db.SaveChangesAsync();
 
             return new JsonResult(new { success = true });

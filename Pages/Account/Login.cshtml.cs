@@ -97,15 +97,12 @@ namespace Roma.Pages.Account
             }
 
             // create two-factor code (6 digits)
-            var rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
-            var bytes = new byte[4];
-            rng.GetBytes(bytes);
-            var num = System.BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
+            var num = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000);
             var code = num.ToString();
 
             // generate salt and hash
             var saltBytes = new byte[16];
-            rng.GetBytes(saltBytes);
+            System.Security.Cryptography.RandomNumberGenerator.Fill(saltBytes);
             var salt = Convert.ToBase64String(saltBytes);
             using var sha = System.Security.Cryptography.SHA256.Create();
             var hashInput = System.Text.Encoding.UTF8.GetBytes(salt + code);

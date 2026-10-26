@@ -133,7 +133,7 @@ namespace Roma.Data
                                 : $"{baseUrl}/Destinations/Details/{dest.Id}";
 
                             // Compose email: prefer IEmailComposer when available, otherwise use template or fallback HTML/plain text
-                            string body = null;
+                            string? body = null;
                             if (_emailComposer != null)
                             {
                                 try
@@ -187,7 +187,7 @@ namespace Roma.Data
 
                             if (_emailQueue != null)
                             {
-                                await _emailQueue.EnqueueAsync(new Services.EmailMessage(sub.Email, subject, body));
+                                await _emailQueue.EnqueueAsync(new Services.EmailMessage(sub.Email, subject, body ?? string.Empty));
                             }
                         }
                         catch

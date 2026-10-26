@@ -45,7 +45,7 @@ namespace Roma.Services
                                     var alt = await vision.GenerateAltTextAsync(fs);
                                     // persist alt-text on the image record
                                     img.AltText = alt;
-                                    db.DestinationImages.Update(img);
+                                    db.Update(img);
                                     await db.SaveChangesAsync();
                                 }
                             }
@@ -61,7 +61,7 @@ namespace Roma.Services
                                     var prompt = job.Payload ?? dest.Name + " " + dest.Country;
                                     var generated = await ai.GenerateDescriptionAsync(prompt);
                                     dest.Description = generated;
-                                    db.Destinations.Update(dest);
+                                    db.Update(dest);
                                     await db.SaveChangesAsync();
                                 }
                             }
