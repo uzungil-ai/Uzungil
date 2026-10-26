@@ -7,6 +7,17 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
+AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+{
+    Console.Error.WriteLine($"[FATAL] Unhandled exception: {e.ExceptionObject}");
+};
+
+TaskScheduler.UnobservedTaskException += (_, e) =>
+{
+    Console.Error.WriteLine($"[FATAL] Unobserved task exception: {e.Exception}");
+    e.SetObserved();
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,6 +27,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 // In-memory cache used by upload rate-limiting and other features
 builder.Services.AddMemoryCache();
 // Session for tracking anonymous users' first-download free rule
@@ -45,6 +60,7 @@ builder.Services.AddSingleton<Roma.Services.ImageProcessingService>();
 builder.Services.AddSingleton<Roma.Services.IAiService, Roma.Services.DemoAiService>();
 builder.Services.AddSingleton<Roma.Services.IVisionService, Roma.Services.DemoVisionService>();
 builder.Services.AddScoped<Roma.Services.IChatService, Roma.Services.DatabaseChatService>();
+builder.Services.AddScoped<Roma.Services.IOpenAiQaService, Roma.Services.OpenAiQaService>();
 builder.Services.AddSingleton<Roma.Services.IEmailComposer, Roma.Services.DemoEmailComposer>();
 // AI job channel + background processor
 builder.Services.AddSingleton(Channel.CreateUnbounded<Roma.Services.AiJob>());
@@ -67,10 +83,13 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 });
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 // Destination image saving service
 builder.Services.AddScoped<Roma.Services.IDestinationImageService, Roma.Services.DestinationImageService>();
 
 var app = builder.Build();
+
+app.Logger.LogInformation("Startup Environment: {EnvironmentName}", app.Environment.EnvironmentName);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
