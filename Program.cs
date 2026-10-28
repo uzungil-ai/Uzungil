@@ -73,7 +73,13 @@ builder.Services.AddSingleton<Roma.Services.IEmailQueue, Roma.Services.EmailQueu
 builder.Services.AddSingleton<Roma.Services.IEmailSenderService, Roma.Services.EmailSenderService>();
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Roma.Services.IdentityEmailSender>();
 builder.Services.AddHostedService<Roma.Services.BackgroundEmailSender>();
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<User>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+    options.Lockout.AllowedForNewUsers = true;
+})
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -90,6 +96,15 @@ builder.Services.AddScoped<Roma.Services.IDestinationImageService, Roma.Services
 var app = builder.Build();
 
 app.Logger.LogInformation("Startup Environment: {EnvironmentName}", app.Environment.EnvironmentName);
+
+var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+    ?? Environment.GetEnvironmentVariable("OpenAI__ApiKey")
+    ?? app.Configuration["OpenAI:ApiKey"];
+
+if (string.IsNullOrWhiteSpace(openAiKey))
+{
+    app.Logger.LogWarning("OpenAI API key is missing. Set OPENAI_API_KEY or OpenAI__ApiKey in production environment.");
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

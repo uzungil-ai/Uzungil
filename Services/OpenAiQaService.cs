@@ -20,20 +20,16 @@ namespace Roma.Services
 
         public async Task<string> AskAsync(string question, CancellationToken cancellationToken = default)
         {
-            // Environment variable should have priority to avoid stale JSON keys.
-            var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-                ?? _configuration["OpenAI:ApiKey"];
-
-            apiKey = apiKey?.Trim();
+            var apiKey = ResolveApiKey();
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
-                return "OpenAI API anahtarı bulunamadı.";
+                return "OpenAI API anahtarı bulunamadı. Production ortamında OPENAI_API_KEY veya OpenAI__ApiKey ayarlayın.";
             }
 
-            var model = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
-            var maxTokens = _configuration.GetValue<int?>("OpenAI:MaxOutputTokens") ?? 300;
-            const string endpoint = "https://api.openai.com/v1/responses";
+            var model = ResolveModel();
+            var maxTokens = ResolveMaxOutputTokens();
+            var endpoint = ResolveEndpoint();
 
             try
             {
@@ -76,7 +72,16 @@ namespace Roma.Services
                 {
                     var errorMessage = TryReadErrorMessage(body);
                     _logger.LogWarning("OpenAI isteği başarısız. StatusCode: {StatusCode}, Error: {Error}", (int)response.StatusCode, errorMessage);
-                    return $"OpenAI isteği başarısız oldu ({(int)response.StatusCode}). {errorMessage}";
+                    var hint = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "(API anahtarı geçersiz veya eksik)",
+                        System.Net.HttpStatusCode.Forbidden => "(model erişim izni yok)",
+                        System.Net.HttpStatusCode.NotFound => "(endpoint/model hatalı)",
+                        (System.Net.HttpStatusCode)429 => "(rate limit veya kota dolu)",
+                        _ => string.Empty
+                    };
+
+                    return $"OpenAI isteği başarısız oldu ({(int)response.StatusCode}) {hint}. {errorMessage}".Trim();
                 }
 
                 using var doc = JsonDocument.Parse(body);
@@ -104,6 +109,50 @@ namespace Roma.Services
                 _logger.LogError(ex, "OpenAI API hatası oluştu.");
                 return $"OpenAI API hatası oluştu: {ex.Message}";
             }
+        }
+
+        private string? ResolveApiKey()
+        {
+            var key = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+                ?? Environment.GetEnvironmentVariable("OpenAI__ApiKey")
+                ?? _configuration["OpenAI:ApiKey"];
+
+            return key?.Trim().Trim('"');
+        }
+
+        private string ResolveModel()
+        {
+            var model = Environment.GetEnvironmentVariable("OPENAI_MODEL")
+                ?? Environment.GetEnvironmentVariable("OpenAI__Model")
+                ?? _configuration["OpenAI:Model"];
+
+            model = model?.Trim().Trim('"');
+            return string.IsNullOrWhiteSpace(model) ? "gpt-4o-mini" : model;
+        }
+
+        private int ResolveMaxOutputTokens()
+        {
+            var raw = Environment.GetEnvironmentVariable("OPENAI_MAX_OUTPUT_TOKENS")
+                ?? Environment.GetEnvironmentVariable("OpenAI__MaxOutputTokens");
+
+            if (int.TryParse(raw, out var tokens) && tokens > 0)
+            {
+                return tokens;
+            }
+
+            return _configuration.GetValue<int?>("OpenAI:MaxOutputTokens") ?? 300;
+        }
+
+        private string ResolveEndpoint()
+        {
+            var endpoint = Environment.GetEnvironmentVariable("OPENAI_ENDPOINT")
+                ?? Environment.GetEnvironmentVariable("OpenAI__Endpoint")
+                ?? _configuration["OpenAI:Endpoint"];
+
+            endpoint = endpoint?.Trim().Trim('"');
+            return string.IsNullOrWhiteSpace(endpoint)
+                ? "https://api.openai.com/v1/responses"
+                : endpoint;
         }
 
         private static string? ExtractAnswer(JsonElement root)
