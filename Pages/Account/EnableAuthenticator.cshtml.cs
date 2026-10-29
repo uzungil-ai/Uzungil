@@ -89,7 +89,8 @@ namespace Roma.Pages.Account
                 return Page();
             }
 
-            RecoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10)).ToArray();
+            RecoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10))?.ToArray()
+                ?? Array.Empty<string>();
             SuccessMessage = "Authenticator başarıyla etkinleştirildi. Aşağıdaki recovery code'ları güvenli bir yerde saklayın.";
 
             await LoadSharedKeyAndQrCodeUriAsync(user);
