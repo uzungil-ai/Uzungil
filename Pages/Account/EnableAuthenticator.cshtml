@@ -5,6 +5,11 @@
 
 <p>QR kodunu Authenticator uygulamanıza ekleyin veya manuel anahtarı uygulamaya tanımlayın.</p>
 
+@if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
 <div>
     <img src="@Model.QrCodeUrl" alt="QR Code" width="200" height="200"
          onerror="this.style.display='none';document.getElementById('qrFallback').style.display='block';" />
@@ -17,8 +22,9 @@
 
 <form method="post">
     @Html.AntiForgeryToken()
-    <label for="Code">Doğrulama Kodu (6 hane)</label>
-    <input id="Code" name="Code" type="tel" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" />
+    <label asp-for="Input.Code">Doğrulama Kodu (6 hane)</label>
+    <input asp-for="Input.Code" type="tel" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" />
+    <span asp-validation-for="Input.Code" class="text-danger"></span>
     <small class="text-muted d-block">Manuel anahtarı değil, Authenticator uygulamasında görünen anlık 6 haneli kodu girin.</small>
     <button type="submit">Doğrula ve Etkinleştir</button>
     @if (Model.ErrorMessage != null)
@@ -27,10 +33,23 @@
     }
 </form>
 
+@if (Model.RecoveryCodes.Count > 0)
+{
+    <div class="alert alert-warning mt-3">
+        <p><strong>Recovery code'ları şimdi kaydedin.</strong> Her kod tek kullanımlıktır.</p>
+        <ul>
+            @foreach (var recoveryCode in Model.RecoveryCodes)
+            {
+                <li><code>@recoveryCode</code></li>
+            }
+        </ul>
+    </div>
+}
+
 @section Scripts {
     <script>
         (function () {
-            var codeInput = document.getElementById('Code');
+            var codeInput = document.getElementById('Input_Code');
             if (!codeInput) return;
 
             codeInput.addEventListener('input', function () {

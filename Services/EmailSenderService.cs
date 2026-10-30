@@ -16,18 +16,24 @@ namespace Roma.Services
         private readonly string? _user;
         private readonly string? _pass;
         private readonly string _from;
+        private readonly string? _fromName;
         private readonly bool _useSsl;
 
         public EmailSenderService(IConfiguration config, ILogger<EmailSenderService> logger)
         {
             _config = config;
             _logger = logger;
-            _host = _config["Smtp:Host"] ?? "";
-            _port = int.TryParse(_config["Smtp:Port"], out var p) ? p : 25;
-            _user = _config["Smtp:User"];
-            _pass = _config["Smtp:Pass"];
-            _from = _config["Smtp:From"] ?? _user ?? "noreply@example.com";
-            _useSsl = bool.TryParse(_config["Smtp:UseSsl"], out var ssl) ? ssl : !string.IsNullOrEmpty(_user);
+            _host = _config["Email:SmtpHost"] ?? _config["Smtp:Host"] ?? "";
+            _port = int.TryParse(_config["Email:SmtpPort"], out var emailPort)
+                ? emailPort
+                : (int.TryParse(_config["Smtp:Port"], out var smtpPort) ? smtpPort : 25);
+            _user = _config["Email:Username"] ?? _config["Smtp:User"];
+            _pass = _config["Email:Password"] ?? _config["Smtp:Pass"];
+            _from = _config["Email:FromAddress"] ?? _config["Smtp:From"] ?? _user ?? "noreply@example.com";
+            _fromName = _config["Email:FromName"];
+            _useSsl = bool.TryParse(_config["Email:EnableSsl"], out var emailSsl)
+                ? emailSsl
+                : (bool.TryParse(_config["Smtp:UseSsl"], out var smtpSsl) ? smtpSsl : !string.IsNullOrEmpty(_user));
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
@@ -36,11 +42,13 @@ namespace Roma.Services
             {
                 if (string.IsNullOrWhiteSpace(_host))
                 {
-                    throw new InvalidOperationException("SMTP host yapılandırılmamış. appsettings içinde Smtp:Host değerini ayarlayın.");
+                    throw new InvalidOperationException("SMTP host yapılandırılmamış. appsettings içinde Email:SmtpHost (veya Smtp:Host) değerini ayarlayın.");
                 }
 
                 using var msg = new MailMessage();
-                msg.From = new MailAddress(_from);
+                msg.From = string.IsNullOrWhiteSpace(_fromName)
+                    ? new MailAddress(_from)
+                    : new MailAddress(_from, _fromName);
                 msg.To.Add(new MailAddress(to));
                 msg.Subject = subject;
                 msg.Body = body;

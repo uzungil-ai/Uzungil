@@ -17,6 +17,8 @@ namespace Roma.Pages.Chat
         private readonly int _maxInputChars;
         private readonly int _maxOutputChars;
 
+        public List<ChatHistoryMessage> HistoryMessages { get; private set; } = new();
+
         public IndexModel(IChatService chat, ApplicationDbContext db, IConfiguration configuration)
         {
             _chat = chat;
@@ -28,11 +30,38 @@ namespace Roma.Pages.Chat
             _maxOutputChars = configuration.GetValue<int?>("AiBudget:MaxOutputChars") ?? 400;
         }
 
-        public void OnGet()
+        public async Task OnGetAsync(CancellationToken cancellationToken)
         {
+            var sessionId = HttpContext.Session.Id;
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return;
+            }
+
+            var recentPairs = await _db.DemoChatServices!
+                .AsNoTracking()
+                .Where(x => x.SessionId == sessionId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(30)
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => new { x.Input, x.Reply })
+                .ToListAsync(cancellationToken);
+
+            foreach (var pair in recentPairs)
+            {
+                if (!string.IsNullOrWhiteSpace(pair.Input))
+                {
+                    HistoryMessages.Add(new ChatHistoryMessage { Role = "user", Text = pair.Input! });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pair.Reply))
+                {
+                    HistoryMessages.Add(new ChatHistoryMessage { Role = "bot", Text = pair.Reply! });
+                }
+            }
         }
 
-        public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req)
+        public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.Text)) return BadRequest();
 
@@ -46,7 +75,7 @@ namespace Roma.Pages.Chat
                 return new JsonResult(new { reply = "Çok hızlı mesaj gönderiyorsunuz. Lütfen kısa bir süre bekleyip tekrar deneyin." });
             }
 
-            if (!await TryReserveEstimatedBudgetAsync())
+            if (!await TryReserveEstimatedBudgetAsync(cancellationToken))
             {
                 return new JsonResult(new { reply = "Bu ay için yapay zeka kullanım limiti doldu. Lütfen daha sonra tekrar deneyin." });
             }
@@ -85,11 +114,13 @@ namespace Roma.Pages.Chat
                 HttpContext.Session.Remove("ChatSubscribePromptPending");
             }
 
-            var reply = await _chat.GetReplyAsync(req.Text, HttpContext.Session.Id);
+            var reply = await _chat.GetReplyAsync(req.Text, HttpContext.Session.Id, cancellationToken);
             if (!string.IsNullOrEmpty(reply) && reply.Length > _maxOutputChars)
             {
                 reply = reply[.._maxOutputChars] + "...";
             }
+
+            await SaveConversationAsync(req.Text, reply, cancellationToken);
 
             var questionCount = HttpContext.Session.GetInt32("ChatQuestionCount") ?? 0;
             questionCount++;
@@ -104,6 +135,30 @@ namespace Roma.Pages.Chat
             }
 
             return new JsonResult(new { reply });
+        }
+
+        private async Task SaveConversationAsync(string input, string reply, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(reply))
+            {
+                return;
+            }
+
+            _db.DemoChatServices!.Add(new DemoChatService
+            {
+                Input = input.Trim(),
+                Reply = reply.Trim(),
+                SessionId = HttpContext.Session.Id,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public class ChatHistoryMessage
+        {
+            public string Role { get; set; } = string.Empty;
+            public string Text { get; set; } = string.Empty;
         }
 
         public class ChatRequest { public string Text { get; set; } = string.Empty; }
@@ -135,7 +190,7 @@ namespace Roma.Pages.Chat
             return true;
         }
 
-        private async Task<bool> TryReserveEstimatedBudgetAsync()
+        private async Task<bool> TryReserveEstimatedBudgetAsync(CancellationToken cancellationToken)
         {
             if (_monthlyBudgetUsd <= 0 || _estimatedCostPerRequestUsd <= 0)
             {
@@ -144,7 +199,7 @@ namespace Roma.Pages.Chat
 
             var monthKey = (DateTime.UtcNow.Year * 100) + DateTime.UtcNow.Month;
             var usage = await _db.AiBudgetUsageStats!
-                .SingleOrDefaultAsync(x => x.MonthKey == monthKey);
+                .SingleOrDefaultAsync(x => x.MonthKey == monthKey, cancellationToken);
 
             if (usage == null)
             {
@@ -168,7 +223,7 @@ namespace Roma.Pages.Chat
             usage.EstimatedRequestCount = nextCount;
             usage.EstimatedCostUsd = nextEstimatedCost;
             usage.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
             return true;
         }
     }

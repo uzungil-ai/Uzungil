@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
 using Roma.Data;
 using Roma.Models;
 using Roma.Services;
@@ -33,8 +34,9 @@ namespace Roma.Pages
         public async Task<IActionResult> OnPostAsync()
         {
             var isAjax = HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            var normalizedEmail = NormalizeEmail(Email);
 
-            if (string.IsNullOrWhiteSpace(Email) || !Consent)
+            if (string.IsNullOrWhiteSpace(normalizedEmail) || !Consent)
             {
                 ModelState.AddModelError("", "E-posta ve rıza gereklidir.");
                 if (isAjax)
@@ -44,7 +46,18 @@ namespace Roma.Pages
                 return Page();
             }
 
-            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email == Email);
+            if (!IsValidEmail(normalizedEmail))
+            {
+                ModelState.AddModelError("", "Geçerli bir e-posta adresi giriniz.");
+                if (isAjax)
+                {
+                    return BadRequest(new { success = false, message = "Geçerli bir e-posta adresi giriniz." });
+                }
+
+                return Page();
+            }
+
+            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email.ToLower() == normalizedEmail.ToLower());
             if (existing != null)
             {
                 var resentConfirmation = false;
@@ -82,11 +95,11 @@ namespace Roma.Pages
 
             var tokenNew = System.Guid.NewGuid().ToString("N");
             var expires = System.DateTime.UtcNow.AddDays(7);
-            var sub = new Subscriber { Email = Email, ConsentGiven = true, IsConfirmed = false, CreatedAt = System.DateTime.UtcNow, ConfirmationToken = tokenNew, ConfirmationExpiresAt = expires };
+            var sub = new Subscriber { Email = normalizedEmail, ConsentGiven = true, IsConfirmed = false, CreatedAt = System.DateTime.UtcNow, ConfirmationToken = tokenNew, ConfirmationExpiresAt = expires };
             _db.Subscribers!.Add(sub);
             await _db.SaveChangesAsync();
 
-            var queued = await TryQueueConfirmationEmailAsync(Email, tokenNew);
+            var queued = await TryQueueConfirmationEmailAsync(normalizedEmail, tokenNew);
             if (!queued)
             {
                 _logger.LogWarning("Abonelik onay e-postası kuyruğa alınamadı: {Email}", Email);
@@ -105,6 +118,24 @@ namespace Roma.Pages
             }
 
             return RedirectToPage("/Index");
+        }
+
+        private static string NormalizeEmail(string? email)
+        {
+            return (email ?? string.Empty).Trim();
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new MailAddress(email);
+                return addr.Address.Equals(email, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private async Task<bool> TryQueueConfirmationEmailAsync(string email, string token)

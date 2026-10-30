@@ -11,7 +11,7 @@
     <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" class="hover-blue-shadow p-3 rounded-3">
     <input type="hidden" name="returnToDestination" value="@((ViewBag.ReturnToDestination == true).ToString().ToLowerInvariant())" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="form-group">
@@ -41,8 +41,8 @@
         <span asp-validation-for="DestinationId" class="text-danger"></span>
     </div>
     <div class="form-group mt-3">
-        <input type="submit" value="Create" class="btn btn-primary" />
-        <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        <input type="submit" value="Create" class="btn btn-primary hover-blue-shadow" />
+        <a class="btn btn-secondary hover-blue-shadow" asp-action="Index">Back to List</a>
     </div>
 </form>
 

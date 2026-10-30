@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Roma</title>
+    <title>Hoşgeldiniz</title>
     @RenderSection("Head", required: false)
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -20,9 +20,9 @@
 </head>
 <body>
     <header class="site-header">
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark navbar-turquoise border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Fotografia.com.tr</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Hoşgeldiniz</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -30,28 +30,24 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Hakkında</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
                         </li>
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Yönetim</a>
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Yönetim</a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                                     <li><a class="dropdown-item" asp-page="/Admin/Destinations/Index">Destinasyonlar</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Index">Fotograf Yönetimi</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Create">Yeni Fotograf Ekle</a></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Subscribers" asp-action="Index">Aboneler</a></li>
                                      <li><a class="dropdown-item" asp-area="" asp-controller="BackgroundEmailSenders" asp-action="Index">Background Email Senders</a></li>
-                                     <li><a class="dropdown-item" asp-area="" asp-controller="DemoChatServices" asp-action="Index">Demo Chat Services</a></li>
+                                     <li><a class="dropdown-item" asp-area="" asp-controller="DemoChatServices" asp-action="Index">Chat Servisi</a></li>
                                 </ul>
                             </li>
                         }
                     </ul>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
@@ -71,7 +67,7 @@
 
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content subscribe-modal-card">
                 <div class="modal-header">
                     <h2 class="modal-title h5 mb-0" id="subscribeModalLabel">Yeni önerileri kaçırmayın</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
@@ -82,23 +78,82 @@
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
                             <label for="subEmail" class="form-label">E-posta</label>
-                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" />
+                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" maxlength="254" required />
                         </div>
                         <div class="form-check mb-3">
-                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" />
+                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" required />
                             <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
                         </div>
-                        <button type="button" id="subBtn" class="btn btn-primary w-100">Abone Ol</button>
                     </form>
                     <div id="subMessage" class="mt-2 small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" id="subBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Abone Ol</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Roma - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="site-footer mt-4">
+        <div class="container py-4 py-md-5">
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-md-5">
+                    <h2 class="h5 mb-2">Fotografia.com.tr</h2>
+                    <p class="mb-3 text-muted">Seyahat rehberleri ve yeni içerikler için güncel kalın.</p>
+                    <a href="https://www.windy.com" class="weather-chip weather-chip-link mb-3" target="_blank" rel="noopener noreferrer" aria-label="Windy hava durumu">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 18a3.5 3.5 0 1 1 .7-6.9A5.5 5.5 0 0 1 18 12.5a3 3 0 0 1-.5 5.9H6.5Zm0-1.7h11a1.3 1.3 0 1 0 0-2.6h-.9l-.3-.7a3.8 3.8 0 0 0-7.4.4l-.2.8h-.9a1.8 1.8 0 1 0 0 3.6Zm6.8-11.6.9.5.5-.9.9.5-.5.9.9.5-.5.9-.9-.5-.5.9-.9-.5.5-.9-.9-.5.5-.9Z" /></svg>
+                        <span>Hava Durumu (Windy)</span>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">Bültene Katıl</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h3 class="h6 text-uppercase mb-2">Keşfet</h3>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <a href="https://www.google.com/travel/flights" class="footer-link footer-icon-link footer-cta-link" target="_blank" rel="noopener noreferrer" aria-label="Uçak bileti bul">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16.5a1.5 1.5 0 0 1-1.5 1.5h-6l-3.8 3.2a.6.6 0 0 1-1-.5V18H5.5A1.5 1.5 0 0 1 4 16.5V15h17v1.5Zm-9-13.7a1 1 0 0 1 1.9 0l1.1 4.2h3.3c.8 0 1.1 1 .4 1.4l-2.7 1.7 1 3.6a1 1 0 0 1-1.5 1.1L12 12.6l-3.5 2.2A1 1 0 0 1 7 13.7l1-3.6-2.7-1.7c-.7-.4-.4-1.4.4-1.4H9l1.1-4.2Z" /></svg>
+                                <span>Uçak Bileti Bul</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://news.google.com/search?q=seyahat&hl=tr&gl=TR&ceid=TR:tr" class="footer-link footer-icon-link footer-cta-link" target="_blank" rel="noopener noreferrer" aria-label="Google Haberler seyahat">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H5V9h14v9Zm-8-7h6v2h-6v-2Zm-4 0h3v2H7v-2Zm0 4h10v2H7v-2Z" /></svg>
+                                <span>Google Haberler (Seyahat)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h3 class="h6 text-uppercase mb-2">Yasal</h3>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-1"><a asp-area="" asp-controller="Home" asp-action="Privacy" class="footer-link">Gizlilik</a></li>
+                        <li class="mb-1"><a href="mailto:info@fotografia.com.tr" class="footer-link footer-contact-link">İletişim</a></li>
+                        <li><span class="text-muted small">Yanıt süresi: 24 saat</span></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" />
+            <div class="d-flex flex-column flex-md-row justify-content-center align-items-center text-center gap-3 small text-muted">
+                <span>&copy; @DateTime.UtcNow.Year Fotografia.com.tr Tüm hakları saklıdır.</span>
+                <div class="social-links" aria-label="Sosyal medya bağlantıları">
+                    <a href="https://www.linkedin.com/in/recep-uzungil-477a2935?originalSubdomain=tr/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.2A1.7 1.7 0 1 1 6.5 4.8a1.7 1.7 0 0 1 0 3.4ZM5 10h3v9H5v-9Zm5 0h2.9v1.3h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19h-3v-4c0-.9 0-2.1-1.3-2.1s-1.5 1-1.5 2V19h-3v-9Z" /></svg>
+                    </a>
+                    <a href="https://www.instagram.com/recepuzungil/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 1.8A3.7 3.7 0 0 0 3.8 7.5v9a3.7 3.7 0 0 0 3.7 3.7h9a3.7 3.7 0 0 0 3.7-3.7v-9a3.7 3.7 0 0 0-3.7-3.7h-9Zm9.35 1.35a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.8A3.2 3.2 0 1 0 12 15.2 3.2 3.2 0 0 0 12 8.8Z" /></svg>
+                    </a>
+                    <a href="https://youtube.com" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 8.2a3 3 0 0 0-2.1-2.1C19 5.5 12 5.5 12 5.5s-7 0-8.9.6A3 3 0 0 0 1 8.2 31.2 31.2 0 0 0 .5 12a31.2 31.2 0 0 0 .5 3.8 3 3 0 0 0 2.1 2.1c1.9.6 8.9.6 8.9.6s7 0 8.9-.6a3 3 0 0 0 2.1-2.1 31.2 31.2 0 0 0 .5-3.8 31.2 31.2 0 0 0-.5-3.8ZM10 15.1V8.9L15.5 12 10 15.1Z" /></svg>
+                    </a>
+                    <a href="https://x.com/UzungilRecep" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.7L23 22h-6.2l-4.9-6.5L6.2 22H3l7.3-8.3L1 2h6.3l4.4 5.9L18.9 2Zm-1.1 18h1.7L6.4 3.9H4.6L17.8 20Z" /></svg>
+                    </a>
+                    <a href="https://www.facebook.com/recep.uzungil" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5h1.7V4.9a23 23 0 0 0-2.4-.1c-2.4 0-4 1.4-4 4.1V11H8v3h2.4v8h3.1Z" /></svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -114,7 +169,7 @@
 
             if (!btn || !email || !consent || !msg || !form) return;
 
-            btn.addEventListener('click', function () {
+            function submitSubscription() {
                 msg.textContent = '';
                 if (!email.value) { msg.textContent = 'E-posta giriniz.'; return; }
                 if (!consent.checked) { msg.textContent = 'Lütfen rıza veriniz.'; return; }
@@ -148,6 +203,15 @@
                     form.reset();
                 }).catch(function () { msg.textContent = 'Hata oluştu.'; })
                     .finally(function () { btn.disabled = false; btn.textContent = 'Abone Ol'; });
+            }
+
+            btn.addEventListener('click', function () {
+                submitSubscription();
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                submitSubscription();
             });
         })();
     </script>

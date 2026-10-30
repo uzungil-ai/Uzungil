@@ -1,18 +1,29 @@
 @page
 @model Roma.Pages.Account.Verify2faModel
 
-<h2>Doğrulama Kodu</h2>
-<form method="post">
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="RememberMe" />
-    <div>
-        <label for="Code">Kod</label>
-        <input id="Code" name="Code" />
-    </div>
-    <button type="submit">Doğrula ve Giriş Yap</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+        <h2 class="mb-4">2 Adımlı Doğrulama</h2>
 
-@if (Model.ErrorMessage != null)
-{
-    <div class="text-danger">@Model.ErrorMessage</div>
-}
+        <form method="post" class="border rounded p-4 bg-light">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="RememberMe" />
+
+            <div class="alert alert-info" role="alert">
+                E-posta adresinize gönderilen 6 haneli doğrulama kodunu girin.
+            </div>
+
+            <div class="mb-3">
+                <label for="Code" class="form-label">Doğrulama Kodu</label>
+                <input id="Code" name="Code" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Doğrula ve Giriş Yap</button>
+
+            @if (Model.ErrorMessage != null)
+            {
+                <div class="text-danger mt-3">@Model.ErrorMessage</div>
+            }
+        </form>
+    </div>
+</div>

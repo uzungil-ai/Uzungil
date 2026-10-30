@@ -36,7 +36,7 @@ namespace Roma.Pages.Admin.Destinations
             var img = await _db.DestinationImages!.FirstOrDefaultAsync(i => i.Id == req.ImageId);
             if (img == null) return NotFound();
             img.AltText = req.AltText;
-            _db.DestinationImages.Update(img);
+            _db.Update(img);
             await _db.SaveChangesAsync();
             return new JsonResult(new { success = true });
         }
@@ -54,7 +54,7 @@ namespace Roma.Pages.Admin.Destinations
                     img.AltText = it.AltText;
                 }
             }
-            _db.DestinationImages.UpdateRange(imgs);
+            _db.UpdateRange(imgs);
             await _db.SaveChangesAsync();
             return new JsonResult(new { success = true, updated = imgs.Count });
         }

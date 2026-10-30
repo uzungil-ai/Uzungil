@@ -1,23 +1,32 @@
 @page
 @model Roma.Pages.Account.LoginModel
 
-<h2>Giriş</h2>
-<form method="post">
-    <div>
-        <label for="Email">E-posta</label>
-        <input id="Email" name="Input.Email" />
-    </div>
-    <div>
-        <label for="Password">Şifre</label>
-        <input id="Password" name="Input.Password" type="password" />
-    </div>
-    <div>
-        <label><input type="checkbox" asp-for="Input.RememberMe" /> Beni hatırla</label>
-    </div>
-    <button type="submit">Giriş yap</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+        <h2 class="mb-4">Giriş</h2>
 
-@if (Model.ErrorMessage != null)
-{
-    <div class="text-danger">@Model.ErrorMessage</div>
-}
+        <form method="post" class="border rounded p-4 bg-light">
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label">Kullanıcı adı (E-posta)</label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label">Şifre</label>
+                <input asp-for="Input.Password" type="password" class="form-control" autocomplete="current-password" />
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="Input.RememberMe" class="form-check-input" />
+                <label asp-for="Input.RememberMe" class="form-check-label">Beni hatırla</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
+
+            @if (Model.ErrorMessage != null)
+            {
+                <div class="text-danger mt-3">@Model.ErrorMessage</div>
+            }
+        </form>
+    </div>
+</div>

@@ -1,11 +1,12 @@
 ﻿@{
     var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    var userName = User?.Identity?.Name ?? "Kullanıcı";
 }
 <ul class="navbar-nav">
     @if (isAuthenticated)
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @userName!</a>
         </li>
 
         <li class="nav-item">
@@ -24,9 +25,9 @@
     }
     else
     {
-        <li class="nav-item">
+       @*  <li class="nav-item">
             <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-        </li>
+        </li> *@
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="" asp-page="/Account/Login">Login</a>
         </li>

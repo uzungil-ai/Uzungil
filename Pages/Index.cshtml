@@ -1,10 +1,10 @@
 @page
 @model Roma.Pages.IndexModel
 @{
-    ViewData["Title"] = "Roma - Keşfet";
+    ViewData["Title"] = "Fotografia ile - Keşfet";
 }
 
-<section class="home-hero py-5 py-lg-6 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
+<section class="home-hero home-hero-turquoise py-5 py-lg-6 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
     <div class="container">
         <div class="row align-items-center g-4">
             <div class="col-lg-8 col-xl-7">
@@ -12,9 +12,10 @@
                 <h1 class="display-5 fw-bold mb-3">Fotografia ile daha hızlı, daha net seyahat planı oluşturun</h1>
                 <p class="lead mb-4">Öne çıkan destinasyonları görün, sohbet botundan öneri alın ve güncellemeleri takip edin.</p>
                 <div class="d-flex flex-wrap gap-2 mb-3">
-                    <a class="btn btn-light btn-lg" href="#explore">Destinasyonları Gör</a>
+                    <a class="btn btn-light btn-lg hero-explore-btn" href="#explore">Destinasyonları Gör</a>
                     <a class="btn btn-outline-light btn-lg" href="/Chat">Sohbet Botu</a>
-                    <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
+                    <a class="btn btn-warning text-dark btn-lg app-yellow-cta" href="/OpenAiSoruCevap">OpenAI Soru-Cevap</a>
+                    <button type="button" class="btn btn-warning btn-lg app-yellow-cta" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <span class="hero-pill">Hızlı keşif</span>
@@ -26,50 +27,51 @@
     </div>
 </section>
 
-<section class="container my-4 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
-    <div class="row g-3">
-        <div class="col-sm-6 col-lg-3">
+<div class="home-under-hero-bg">
+<section class="container my-4 home-stats-section @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
+    <div class="row g-2 g-md-3">
+        <div class="col-6 col-lg-3">
             <div class="quick-stat-box">
                 <div class="small text-muted">Öne çıkan</div>
                 <div class="h4 mb-0">@Model.Featured.Count</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="quick-stat-box">
                 <div class="small text-muted">En yeni</div>
                 <div class="h4 mb-0">@Model.Latest.Count</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="quick-stat-box">
                 <div class="small text-muted">Yardım aracı</div>
                 <div class="h6 mb-0">Sohbet Botu hazır</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="quick-stat-box">
                 <div class="small text-muted">Hızlı işlem</div>
-                <a href="/Chat" class="fw-semibold text-decoration-none">Hemen soru sor →</a>
+                <a href="/OpenAiSoruCevap" class="fw-semibold text-decoration-none">OpenAI ile soru sor →</a>
             </div>
         </div>
     </div>
 </section>
 
-<section id="explore" class="container my-5">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h2 class="mb-0 section-title">Destinasyonları keşfedin</h2>
+<section id="explore" class="container my-5 home-explore-section">
+    @* <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h2 class="mb-0 section-title" style="text-decoration-color:mediumblue">Destinasyonları keşfedin</h2>
         <span class="text-muted small">Öne çıkan: @Model.Featured.Count • Yeni: @Model.Latest.Count</span>
-    </div>
+    </div> *@
 
     <form method="get" class="card border-0 shadow-sm mb-4 discover-filter-card">
         <div class="card-body">
-            <div class="row g-3 align-items-end">
+            <div class="row g-2 align-items-end">
                 <div class="col-12 col-md-5">
-                    <label for="name" class="form-label">Destinasyon Adı</label>
+                  <label for="name" class="form-label">Destinasyon Adı</label>
                     <input id="name" name="name" class="form-control" placeholder="Örn: Kapadokya" />
                 </div>
                 <div class="col-12 col-md-5">
-                    <label for="country" class="form-label">Ülke</label>
+                   <label for="country" class="form-label">Ülke</label>
                     <input id="country" name="country" class="form-control" placeholder="Örn: Türkiye" />
                 </div>
                 <div class="col-12 col-md-2 d-grid">
@@ -187,28 +189,35 @@
     <div class="row g-3">
         <div class="col-md-4">
             <a href="#explore" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box h-100 reveal-up">
+                <div class="feature-box feature-step-card h-100 reveal-up">
+                    <div class="feature-step-icon" aria-hidden="true">🧭</div>
                     <h3 class="h6">1. Keşfet</h3>
                     <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
+                    <span class="feature-step-link">Destinasyonları aç →</span>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
             <a href="/Chat" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box h-100 reveal-up">
+                <div class="feature-box feature-step-card h-100 reveal-up">
+                    <div class="feature-step-icon" aria-hidden="true">🗺️</div>
                     <h3 class="h6">2. Planla</h3>
                     <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
+                    <span class="feature-step-link">Sohbet botunu aç →</span>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
-            <button type="button" class="feature-box h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+            <button type="button" class="feature-box feature-step-card h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
+                <div class="feature-step-icon" aria-hidden="true">🔔</div>
                 <h3 class="h6">3. Takip Et</h3>
                 <p class="mb-0 text-muted">Bülten ile yeni destinasyonları ve güncellemeleri öğren.</p>
+                <span class="feature-step-link">Bültene katıl →</span>
             </button>
         </div>
     </div>
 </section>
+</div>
 
 @section Scripts {
     <script>
