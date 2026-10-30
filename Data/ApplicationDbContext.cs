@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Roma.Models;
 using Roma.Services;
@@ -33,6 +34,7 @@ namespace Roma.Data
         public DbSet<AuditLog>? AuditLogs { get; set; }
         public DbSet<Subscriber>? Subscribers { get; set; }
         public DbSet<FailedEmail>? FailedEmails { get; set; }
+        public DbSet<SentEmail>? SentEmails { get; set; }
         public DbSet<Feedback>? Feedbacks { get; set; }
         public DbSet<TwoFactorCode>? TwoFactorCodes { get; set; }
         public DbSet<DemoChatService>? DemoChatServices { get; set; }
@@ -57,6 +59,7 @@ namespace Roma.Data
             modelBuilder.Entity<Subscriber>().HasIndex(s => s.Email).IsUnique();
 
             modelBuilder.Entity<FailedEmail>().HasIndex(f => f.CreatedAt);
+            modelBuilder.Entity<SentEmail>().HasIndex(s => s.SentAt);
             modelBuilder.Entity<Subscriber>().Property(s => s.UnsubscribeToken).HasMaxLength(100);
             modelBuilder.Entity<Feedback>().HasIndex(f => f.CreatedAt);
 
@@ -90,10 +93,10 @@ namespace Roma.Data
 
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            // after save, send notifications for added destinations (fire-and-forget)
+            // after save, send notifications for added destinations
             if (_emailQueue != null && addedDestinations.Count > 0)
             {
-                _ = NotifySubscribersAsync(addedDestinations);
+                await NotifySubscribersAsync(addedDestinations);
             }
 
             return result;
