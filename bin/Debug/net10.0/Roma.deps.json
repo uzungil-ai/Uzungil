@@ -8,8 +8,10 @@
     ".NETCoreApp,Version=v10.0": {
       "Roma/1.0.0": {
         "dependencies": {
+          "AutoGen.OpenAI": "0.2.3",
           "Azure.Core": "1.64.0",
           "Azure.Identity": "1.21.0",
+          "DotEnv.Microsoft.Extensions.Configuration": "1.0.0",
           "Humanizer.Core": "3.0.10",
           "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": "10.0.14",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.14",
@@ -18,6 +20,7 @@
           "Microsoft.Data.SqlClient": "7.1.1",
           "Microsoft.EntityFrameworkCore.Design": "10.0.14",
           "Microsoft.EntityFrameworkCore.SqlServer": "10.0.14",
+          "Microsoft.Extensions.AI.OpenAI": "10.11.0",
           "Microsoft.IdentityModel.Abstractions": "8.23.0",
           "Microsoft.IdentityModel.JsonWebTokens": "8.23.0",
           "Microsoft.IdentityModel.Protocols": "8.23.0",
@@ -25,10 +28,41 @@
           "Microsoft.IdentityModel.Tokens": "8.23.0",
           "OpenAI": "2.14.0",
           "OpenAI-DotNet": "8.8.8",
-          "QRCoder": "1.8.1"
+          "OpenAI.API": "1.0.0",
+          "OpenAI.ChatGPT": "4.1.0",
+          "OpenAI.ChatGPT.EntityFrameworkCore": "4.1.0",
+          "OpenAI.ChatGPT.Modules.Translator": "4.1.0",
+          "OpenAI.Net.Client": "1.0.21",
+          "QRCoder": "1.8.1",
+          "Standard.AI.OpenAI": "0.6.0"
         },
         "runtime": {
           "Roma.dll": {}
+        }
+      },
+      "AutoGen.Core/0.2.3": {
+        "dependencies": {
+          "JsonSchema.Net.Generation": "4.5.1",
+          "Microsoft.Extensions.AI.Abstractions": "10.11.0",
+          "System.Memory.Data": "10.0.10"
+        },
+        "runtime": {
+          "lib/net8.0/AutoGen.Core.dll": {
+            "assemblyVersion": "0.2.3.0",
+            "fileVersion": "0.2.3.0"
+          }
+        }
+      },
+      "AutoGen.OpenAI/0.2.3": {
+        "dependencies": {
+          "AutoGen.Core": "0.2.3",
+          "OpenAI": "2.14.0"
+        },
+        "runtime": {
+          "lib/net8.0/AutoGen.OpenAI.dll": {
+            "assemblyVersion": "0.2.3.0",
+            "fileVersion": "0.2.3.0"
+          }
         }
       },
       "Azure.Core/1.64.0": {
@@ -57,11 +91,81 @@
           }
         }
       },
+      "DeepCloner/0.10.4": {
+        "runtime": {
+          "lib/netstandard1.3/DeepCloner.dll": {
+            "assemblyVersion": "0.10.0.0",
+            "fileVersion": "0.10.4.0"
+          }
+        }
+      },
+      "DotEnv.Microsoft.Extensions.Configuration/1.0.0": {
+        "runtime": {
+          "lib/net9.0/DotEnvConfigProvider.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "FluentAssertions/6.5.1": {
+        "dependencies": {
+          "System.Configuration.ConfigurationManager": "9.0.18"
+        },
+        "runtime": {
+          "lib/netcoreapp3.0/FluentAssertions.dll": {
+            "assemblyVersion": "6.5.1.0",
+            "fileVersion": "6.5.1.0"
+          }
+        }
+      },
       "Humanizer.Core/3.0.10": {
         "runtime": {
           "lib/net10.0/Humanizer.dll": {
             "assemblyVersion": "3.0.0.0",
             "fileVersion": "3.0.10.37104"
+          }
+        }
+      },
+      "Json.More.Net/2.0.1.2": {
+        "runtime": {
+          "lib/net8.0/Json.More.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.1.2"
+          }
+        }
+      },
+      "JsonPointer.Net/5.0.0": {
+        "dependencies": {
+          "Humanizer.Core": "3.0.10",
+          "Json.More.Net": "2.0.1.2"
+        },
+        "runtime": {
+          "lib/net8.0/JsonPointer.Net.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.0.0"
+          }
+        }
+      },
+      "JsonSchema.Net/7.2.3": {
+        "dependencies": {
+          "JsonPointer.Net": "5.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/JsonSchema.Net.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.2.3.0"
+          }
+        }
+      },
+      "JsonSchema.Net.Generation/4.5.1": {
+        "dependencies": {
+          "Humanizer.Core": "3.0.10",
+          "JsonSchema.Net": "7.2.3"
+        },
+        "runtime": {
+          "lib/net8.0/JsonSchema.Net.Generation.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.5.1.0"
           }
         }
       },
@@ -563,6 +667,26 @@
           }
         }
       },
+      "Microsoft.Extensions.AI.Abstractions/10.11.0": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "assemblyVersion": "10.11.0.0",
+            "fileVersion": "10.1100.26.51307"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI.OpenAI/10.11.0": {
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.11.0",
+          "OpenAI": "2.14.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.AI.OpenAI.dll": {
+            "assemblyVersion": "10.11.0.0",
+            "fileVersion": "10.1100.26.51307"
+          }
+        }
+      },
       "Microsoft.Extensions.DependencyModel/10.0.14": {
         "runtime": {
           "lib/net10.0/Microsoft.Extensions.DependencyModel.dll": {
@@ -729,6 +853,82 @@
           }
         }
       },
+      "OpenAI.API/1.0.0": {
+        "dependencies": {
+          "Microsoft.Bcl.AsyncInterfaces": "10.0.14",
+          "Newtonsoft.Json": "13.0.4"
+        },
+        "runtime": {
+          "lib/net6.0/OpenAI.API.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "OpenAI.ChatGPT/4.1.0": {
+        "runtime": {
+          "lib/net8.0/OpenAI.ChatGpt.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
+        }
+      },
+      "OpenAI.ChatGPT.AspNetCore/4.1.0": {
+        "dependencies": {
+          "OpenAI.ChatGPT": "4.1.0",
+          "OpenAI.ChatGPT.Modules.StructuredResponse": "4.1.0",
+          "OpenAI.ChatGPT.Modules.Translator": "4.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/OpenAI.ChatGpt.AspNetCore.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
+        }
+      },
+      "OpenAI.ChatGPT.EntityFrameworkCore/4.1.0": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "10.0.14",
+          "OpenAI.ChatGPT.AspNetCore": "4.1.0"
+        },
+        "runtime": {
+          "lib/net8.0/OpenAI.ChatGpt.EntityFrameworkCore.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
+        }
+      },
+      "OpenAI.ChatGPT.Modules.StructuredResponse/4.1.0": {
+        "dependencies": {
+          "JsonSchema.Net.Generation": "4.5.1",
+          "OpenAI.ChatGPT": "4.1.0"
+        },
+        "runtime": {
+          "lib/net7.0/OpenAI.ChatGpt.Modules.StructuredResponse.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
+        }
+      },
+      "OpenAI.ChatGPT.Modules.Translator/4.1.0": {
+        "dependencies": {
+          "OpenAI.ChatGPT.Modules.StructuredResponse": "4.1.0"
+        },
+        "runtime": {
+          "lib/net7.0/OpenAI.ChatGpt.Modules.Translator.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
+        }
+      },
+      "OpenAI.Net.Client/1.0.21": {
+        "runtime": {
+          "lib/net6.0/OpenAI.Net.dll": {
+            "assemblyVersion": "1.0.21.0",
+            "fileVersion": "1.0.21.0"
+          }
+        }
+      },
       "QRCoder/1.8.1": {
         "dependencies": {
           "System.Drawing.Common": "6.0.0"
@@ -737,6 +937,29 @@
           "lib/net6.0/QRCoder.dll": {
             "assemblyVersion": "1.8.1.0",
             "fileVersion": "1.8.1.0"
+          }
+        }
+      },
+      "RESTFulSense/2.15.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4",
+          "Xeption": "2.5.0"
+        },
+        "runtime": {
+          "lib/netstandard2.1/RESTFulSense.dll": {
+            "assemblyVersion": "2.15.0.0",
+            "fileVersion": "2.15.0.0"
+          }
+        }
+      },
+      "Standard.AI.OpenAI/0.6.0": {
+        "dependencies": {
+          "RESTFulSense": "2.15.0"
+        },
+        "runtime": {
+          "lib/net7.0/Standard.AI.OpenAI.dll": {
+            "assemblyVersion": "0.6.0.0",
+            "fileVersion": "0.6.0.0"
           }
         }
       },
@@ -882,6 +1105,18 @@
             "fileVersion": "9.0.1826.31522"
           }
         }
+      },
+      "Xeption/2.5.0": {
+        "dependencies": {
+          "DeepCloner": "0.10.4",
+          "FluentAssertions": "6.5.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Xeption.dll": {
+            "assemblyVersion": "2.4.0.0",
+            "fileVersion": "2.4.0.0"
+          }
+        }
       }
     }
   },
@@ -890,6 +1125,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AutoGen.Core/0.2.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DIU1DQmSCa7PO6SjSM4DTfn02OSpmvA+z1NsHsTVtV3J7VUFpB68cLuxvVAsXlaBYSE4flluJaS2IblcepFxdg==",
+      "path": "autogen.core/0.2.3",
+      "hashPath": "autogen.core.0.2.3.nupkg.sha512"
+    },
+    "AutoGen.OpenAI/0.2.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LPqJpyKXcOQH7cON63z/Ckb1e8CObgPXoBRUwEbB4CP34r6876vtp5LxhdCLZk5bg92Gd4UtcXM0iB/nXQR+fA==",
+      "path": "autogen.openai/0.2.3",
+      "hashPath": "autogen.openai.0.2.3.nupkg.sha512"
     },
     "Azure.Core/1.64.0": {
       "type": "package",
@@ -905,12 +1154,61 @@
       "path": "azure.identity/1.21.0",
       "hashPath": "azure.identity.1.21.0.nupkg.sha512"
     },
+    "DeepCloner/0.10.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-z8ASd9bjXkVjcnIrwUKrxb/bPi/gvG5NX3nv7MHK/5QrlYwbK7N5ZTDNaYXQ5qunaUCMGN0UHdgkNARIEBTEyA==",
+      "path": "deepcloner/0.10.4",
+      "hashPath": "deepcloner.0.10.4.nupkg.sha512"
+    },
+    "DotEnv.Microsoft.Extensions.Configuration/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9+H9RDlUVKtoq0TlWD87skuMtMSDi2eTosCoY/h8u7FNiPyWeHD1nMoc1Oex+O4lyMMsHUZbP4qYQMH+IiPx1A==",
+      "path": "dotenv.microsoft.extensions.configuration/1.0.0",
+      "hashPath": "dotenv.microsoft.extensions.configuration.1.0.0.nupkg.sha512"
+    },
+    "FluentAssertions/6.5.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hdY/upTFYEc7SFJQ+pKsMZP1J5bELh9feB8kXzk6FKAGE/tvAPDzHd76Z+nIYdgnqkocthaDUq+tKPsGD0um2A==",
+      "path": "fluentassertions/6.5.1",
+      "hashPath": "fluentassertions.6.5.1.nupkg.sha512"
+    },
     "Humanizer.Core/3.0.10": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-yZIhtw8sYuvsONzQbZxWpR60tMWYHXoo0DL6nyOqSFiU5POjBTSEyWFpTQtJEZuy+oqiYTXKXY/Mjx7KnqIQFw==",
       "path": "humanizer.core/3.0.10",
       "hashPath": "humanizer.core.3.0.10.nupkg.sha512"
+    },
+    "Json.More.Net/2.0.1.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uF3QeiaXEfH92emz0/BWUiNtMSfxIIvgynuB0Bf1vF4s8eWTcZitBx9l+g/FDaJk5XxqBv9buQXizXKQcXFG1w==",
+      "path": "json.more.net/2.0.1.2",
+      "hashPath": "json.more.net.2.0.1.2.nupkg.sha512"
+    },
+    "JsonPointer.Net/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fm4T5w20AY6C+p5/pJr0vrXRNGgtSfHl34I1LxC9zdPwS9S3j0GiR1Mz/CVPWKDXXGDpCt1APHpCq7kn5adCfA==",
+      "path": "jsonpointer.net/5.0.0",
+      "hashPath": "jsonpointer.net.5.0.0.nupkg.sha512"
+    },
+    "JsonSchema.Net/7.2.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-O3KclMcPVFYTZsTeZBpwtKd/lYrNc3AFR+xi9j3Q4CfhDufOUx25TMMWJOcFRrqVklvKQ4Kl+0UhlNX1iDGoRw==",
+      "path": "jsonschema.net/7.2.3",
+      "hashPath": "jsonschema.net.7.2.3.nupkg.sha512"
+    },
+    "JsonSchema.Net.Generation/4.5.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Fr6PxLs4aq/FTigJ1tQPhvZ28aBe9op1pieN6RqJBYPMa0NcZJuqeZSkBeqc1TfkckUwJwfWUQzr9uCkqe80fw==",
+      "path": "jsonschema.net.generation/4.5.1",
+      "hashPath": "jsonschema.net.generation.4.5.1.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore/10.0.14": {
       "type": "package",
@@ -1052,6 +1350,20 @@
       "path": "microsoft.entityframeworkcore.sqlserver/10.0.14",
       "hashPath": "microsoft.entityframeworkcore.sqlserver.10.0.14.nupkg.sha512"
     },
+    "Microsoft.Extensions.AI.Abstractions/10.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-h4DX/TdJU4fk1GGaf19n6Kujkj6VXbGeL4UEOsQ8+ZJC5fVApPauokCtvBP684BYbczUYZQNfo1mbmyHG4WVSg==",
+      "path": "microsoft.extensions.ai.abstractions/10.11.0",
+      "hashPath": "microsoft.extensions.ai.abstractions.10.11.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.AI.OpenAI/10.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-p8fJdcPOrwaUPRrag5dY9SLohaouutY+bqg1Lw+8OOEFqMXvCHGNWQXv2GcUUNPBCkTR4mcBEHoP9LAV2RtxzA==",
+      "path": "microsoft.extensions.ai.openai/10.11.0",
+      "hashPath": "microsoft.extensions.ai.openai.10.11.0.nupkg.sha512"
+    },
     "Microsoft.Extensions.DependencyModel/10.0.14": {
       "type": "package",
       "serviceable": true,
@@ -1164,12 +1476,75 @@
       "path": "openai-dotnet/8.8.8",
       "hashPath": "openai-dotnet.8.8.8.nupkg.sha512"
     },
+    "OpenAI.API/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Igq+XLmc5Y2FvJEmg/BUPbdhzohkDJCXpFsRtebU/gZV5kOd6ZMb1ZPpDVzzkG0n8OhyNq85J9v5VhOAP5dfxQ==",
+      "path": "openai.api/1.0.0",
+      "hashPath": "openai.api.1.0.0.nupkg.sha512"
+    },
+    "OpenAI.ChatGPT/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-YvnmoXjck0tpQOivZdTvbBiEFZWMdsIH+ZjF4MidomUREjoW4RRXXq8NL75PezPvXN54CmsUVpXFohB/Fy9A1g==",
+      "path": "openai.chatgpt/4.1.0",
+      "hashPath": "openai.chatgpt.4.1.0.nupkg.sha512"
+    },
+    "OpenAI.ChatGPT.AspNetCore/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CsYJhj3WUwplUWQ+q1vKFPMDgig1hHrCAG+8XHBdWHntd1vcARM2t4s4x4k0nnvWGXuCk+fV7fpsdWilASXu5g==",
+      "path": "openai.chatgpt.aspnetcore/4.1.0",
+      "hashPath": "openai.chatgpt.aspnetcore.4.1.0.nupkg.sha512"
+    },
+    "OpenAI.ChatGPT.EntityFrameworkCore/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xmz5cYIcbX0MCkSqL0+/OVTKE3SpfhYTRxH3hyo4NbWnsdyfu6B2maxNl0u3jyJKTbXNfj6x83Fwz7dgmZbBDg==",
+      "path": "openai.chatgpt.entityframeworkcore/4.1.0",
+      "hashPath": "openai.chatgpt.entityframeworkcore.4.1.0.nupkg.sha512"
+    },
+    "OpenAI.ChatGPT.Modules.StructuredResponse/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zddo2dES9skQBZPRH+aNOOCl26nudVw7aNEkLXAP4+pv32N0dgjDE//Ql9owO+vcIrGQ/9tIP/Ku4QV/QA3a9A==",
+      "path": "openai.chatgpt.modules.structuredresponse/4.1.0",
+      "hashPath": "openai.chatgpt.modules.structuredresponse.4.1.0.nupkg.sha512"
+    },
+    "OpenAI.ChatGPT.Modules.Translator/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5h8l699+Rp4fd8HkS+lCklkUPAp5tHQhDgAB8Vnc4UFFooClmYSnp0vVJ68vrXCdMvZbYg+Lzs6j8tMroHf38A==",
+      "path": "openai.chatgpt.modules.translator/4.1.0",
+      "hashPath": "openai.chatgpt.modules.translator.4.1.0.nupkg.sha512"
+    },
+    "OpenAI.Net.Client/1.0.21": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3QEWyOLl/1SugNDLd5o4uh8+wTpZrI55AnhqBn0RElESCayfnlRb8/8tu/2KkCR8ENXyEIgiYXVcgyKp8QeZmA==",
+      "path": "openai.net.client/1.0.21",
+      "hashPath": "openai.net.client.1.0.21.nupkg.sha512"
+    },
     "QRCoder/1.8.1": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-aGfRFpU/IPexAtEOEXCNxC3fMCAqgn6kqALRvXt6LxVAW0VolSDGHiyrY+o2CJgTITOsMpsrsDi7svMJaJ9Vfg==",
       "path": "qrcoder/1.8.1",
       "hashPath": "qrcoder.1.8.1.nupkg.sha512"
+    },
+    "RESTFulSense/2.15.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7R8tFXxTolBV1GknENz8moh+GWSOBBdsPK3u+O3ufU+t3RuR+lad4XEKj/jpaW00xReiWOmPifZBRPtEIQuSIg==",
+      "path": "restfulsense/2.15.0",
+      "hashPath": "restfulsense.2.15.0.nupkg.sha512"
+    },
+    "Standard.AI.OpenAI/0.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Q5LO0XS2ICpjvmJcqgHojDDPE+89AIMNIUYBqPwOVJiSiUNAXm5T9q9jPwrjuPt2+WTN3YcnXBwExpoZLMzGHQ==",
+      "path": "standard.ai.openai/0.6.0",
+      "hashPath": "standard.ai.openai.0.6.0.nupkg.sha512"
     },
     "System.ClientModel/1.16.0": {
       "type": "package",
@@ -1261,6 +1636,13 @@
       "sha512": "sha512-1/iz9Eex1TBMYdAk+m3igaMvL+nk+rY1EqL6u93an/j1ghxmB24vGOKXkVFy3NSPA39s1H/+SNoK257tHoXoLA==",
       "path": "system.security.cryptography.protecteddata/9.0.18",
       "hashPath": "system.security.cryptography.protecteddata.9.0.18.nupkg.sha512"
+    },
+    "Xeption/2.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-huOV9emiZIsYC3uz+HdZ8qHtVDddFRI753thyn5sWwau4jmJIkMCQvR/KDrGevjxQ4N1MRrviHZFqxZuF239NQ==",
+      "path": "xeption/2.5.0",
+      "hashPath": "xeption.2.5.0.nupkg.sha512"
     }
   }
 }

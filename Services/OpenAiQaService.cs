@@ -20,9 +20,9 @@ namespace Roma.Services
 
         public async Task<string> AskAsync(string question, CancellationToken cancellationToken = default)
         {
-            var apiKey = ResolveApiKey();
+            var apiKeys = ResolveApiKeys();
 
-            if (string.IsNullOrWhiteSpace(apiKey))
+            if (apiKeys.Count == 0)
             {
                 return "OpenAI API anahtarı bulunamadı. Production ortamında OPENAI_API_KEY veya OpenAI__ApiKey ayarlayın.";
             }
@@ -34,7 +34,6 @@ namespace Roma.Services
             try
             {
                 using var client = _httpClientFactory.CreateClient("OpenAI");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             var payload = new
             {
@@ -62,37 +61,53 @@ namespace Roma.Services
                 }
             };
 
-                using var response = await client.PostAsync(
-                    endpoint,
-                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"),
-                    cancellationToken);
-
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                if (!response.IsSuccessStatusCode)
+                for (var i = 0; i < apiKeys.Count; i++)
                 {
-                    var errorMessage = TryReadErrorMessage(body);
-                    _logger.LogWarning("OpenAI isteği başarısız. StatusCode: {StatusCode}, Error: {Error}", (int)response.StatusCode, errorMessage);
-                    var hint = response.StatusCode switch
+                    var apiKey = apiKeys[i];
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+                    using var response = await client.PostAsync(
+                        endpoint,
+                        new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"),
+                        cancellationToken);
+
+                    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                    if (!response.IsSuccessStatusCode)
                     {
-                        System.Net.HttpStatusCode.Unauthorized => "(API anahtarı geçersiz veya eksik)",
-                        System.Net.HttpStatusCode.Forbidden => "(model erişim izni yok)",
-                        System.Net.HttpStatusCode.NotFound => "(endpoint/model hatalı)",
-                        (System.Net.HttpStatusCode)429 => "(rate limit veya kota dolu)",
-                        _ => string.Empty
-                    };
+                        var errorMessage = TryReadErrorMessage(body);
+                        _logger.LogWarning("OpenAI isteği başarısız. StatusCode: {StatusCode}, Error: {Error}", (int)response.StatusCode, errorMessage);
 
-                    return $"OpenAI isteği başarısız oldu ({(int)response.StatusCode}) {hint}. {errorMessage}".Trim();
+                        // Birden fazla anahtar varsa ve yetkisiz hatası alındıysa sıradaki anahtarı dene.
+                        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && i < apiKeys.Count - 1)
+                        {
+                            _logger.LogWarning("OpenAI 401 alındı, bir sonraki API anahtarı denenecek.");
+                            continue;
+                        }
+
+                        var hint = response.StatusCode switch
+                        {
+                            System.Net.HttpStatusCode.Unauthorized => "(API anahtarı geçersiz veya eksik)",
+                            System.Net.HttpStatusCode.Forbidden => "(model erişim izni yok)",
+                            System.Net.HttpStatusCode.NotFound => "(endpoint/model hatalı)",
+                            (System.Net.HttpStatusCode)429 => "(rate limit veya kota dolu)",
+                            _ => string.Empty
+                        };
+
+                        return $"OpenAI isteği başarısız oldu ({(int)response.StatusCode}) {hint}. {errorMessage}".Trim();
+                    }
+
+                    using var doc = JsonDocument.Parse(body);
+                    var answer = ExtractAnswer(doc.RootElement);
+                    if (!string.IsNullOrWhiteSpace(answer))
+                    {
+                        return answer;
+                    }
+
+                    _logger.LogWarning("OpenAI yanıtı parse edilemedi. Body: {Body}", Truncate(body, 500));
+                    return $"Yanıt üretilemedi. Ham yanıt: {Truncate(body, 280)}";
                 }
 
-                using var doc = JsonDocument.Parse(body);
-                var answer = ExtractAnswer(doc.RootElement);
-                if (!string.IsNullOrWhiteSpace(answer))
-                {
-                    return answer;
-                }
-
-                _logger.LogWarning("OpenAI yanıtı parse edilemedi. Body: {Body}", Truncate(body, 500));
-                return $"Yanıt üretilemedi. Ham yanıt: {Truncate(body, 280)}";
+                return "OpenAI API anahtarı doğrulanamadı. Lütfen aktif bir anahtar tanımlayın.";
             }
             catch (TaskCanceledException ex)
             {
@@ -111,13 +126,20 @@ namespace Roma.Services
             }
         }
 
-        private string? ResolveApiKey()
+        private List<string> ResolveApiKeys()
         {
-            var key = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-                ?? Environment.GetEnvironmentVariable("OpenAI__ApiKey")
-                ?? _configuration["OpenAI:ApiKey"];
+            var candidates = new[]
+            {
+                Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
+                Environment.GetEnvironmentVariable("OpenAI__ApiKey"),
+                _configuration["OpenAI:ApiKey"]
+            };
 
-            return key?.Trim().Trim('"');
+            return candidates
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!.Trim().Trim('"'))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
         }
 
         private string ResolveModel()

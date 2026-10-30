@@ -19,6 +19,10 @@ TaskScheduler.UnobservedTaskException += (_, e) =>
 };
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5188);
+});
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -164,6 +168,19 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
+app.MapPost("/api/chat", async (HttpContext context, Roma.Services.IOpenAiQaService qaService, ILogger<Program> logger, CancellationToken cancellationToken) =>
+{
+    var request = await context.Request.ReadFromJsonAsync<ApiChatRequest>(cancellationToken);
+    if (request is null || string.IsNullOrWhiteSpace(request.Message))
+    {
+        return Results.BadRequest(new { reply = "Mesaj boş olamaz." });
+    }
+
+    logger.LogInformation("/api/chat çağrısı alındı. Mesaj uzunluğu: {Length}", request.Message.Length);
+    var reply = await qaService.AskAsync(request.Message.Trim(), cancellationToken);
+    return Results.Ok(new { reply = string.IsNullOrWhiteSpace(reply) ? "Yanıt üretilemedi." : reply });
+});
+
 // Seed roles and optional admin user from configuration (App:AdminEmail, App:AdminPassword)
     using (var scope = app.Services.CreateScope())
     {
@@ -226,8 +243,8 @@ app.MapRazorPages()
                 }
             }
 
-            // Seed demo chat replies (add only missing inputs)
-            var samples = new (string Input, string Reply)[]
+        // Seed demo chat replies (add only missing inputs)
+        var samples = new (string Input, string Reply)[]
             {
                 // Selamlama
                 ("merhaba", "Merhaba! Roma gezi planın için yardımcı olabilirim."),
@@ -447,7 +464,7 @@ app.MapRazorPages()
                 ("brüksel için konaklama önerisi", "Merkez gezi için Grand Place çevresi, iş ve ulaşım için Avrupa bölgesi, daha sakin konaklama için Ixelles değerlendirilebilir."),
 
                 // Suudi Arabistan şehir önerileri
-                ("mekke için gezilecek yerler", "Mekke'de ziyaret odaklı başlıca noktalar: Mescid-i Haram çevresi, Cebel-i Nur ve Hira Mağarası hattıdır."),
+                ("mekke için gezilecek yerler", "Mekke'de ziyaret odaklı başlıca noktalar: Mescid-i Haram çevresi, Cebel-i Nur ve Hira Mağarası hattır."),
                 ("mekkede ne yenir", "Mekke'de Arap mutfağından kabsa, mutabbaq, hurma çeşitleri ve yöresel çorba yemekleri öne çıkar."),
                 ("mekke akşam ne yapılır", "Akşam saatlerinde ibadet programı, çevre çarşılarda kısa alışveriş ve dinlenme odaklı plan tercih edilebilir."),
                 ("mekke için konaklama önerisi", "Mescid-i Haram'a yürüme mesafesindeki oteller ibadet odaklı seyahatlerde zaman avantajı sağlar."),
@@ -668,3 +685,5 @@ app.MapRazorPages()
     }
 
 app.Run();
+
+internal record ApiChatRequest(string Message);

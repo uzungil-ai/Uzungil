@@ -2,11 +2,12 @@
 
 @{
     ViewData["Title"] = "Edit";
+    var isAuthenticated = User?.Identity?.IsAuthenticated == true;
 }
 
 <h1>Edit</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" class="hover-blue-shadow p-3 rounded-3">
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
         <label asp-for="Name" class="control-label"></label>
@@ -35,8 +36,12 @@
         <span asp-validation-for="DestinationId" class="text-danger"></span>
     </div>
     <div class="form-group mt-3">
-        <input type="submit" value="Save" class="btn btn-primary" />
-        <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+        <input type="submit" value="Save" class="btn btn-primary hover-blue-shadow" />
+        <a class="btn btn-secondary hover-blue-shadow" asp-action="Index">Back to List</a>
+        @if (isAuthenticated)
+        {
+            <a class="btn btn-outline-secondary hover-blue-shadow" href="javascript:history.back()">Önceki Sayfaya Dön</a>
+        }
     </div>
 </form>
 

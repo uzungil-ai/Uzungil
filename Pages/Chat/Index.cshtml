@@ -13,7 +13,12 @@
         <form id="chatAntiForgeryForm" method="post" class="d-none">
             @Html.AntiForgeryToken()
         </form>
-        <div id="messages" class="chat-messages"></div>
+        <div id="messages" class="chat-messages">
+            @foreach (var message in Model.HistoryMessages)
+            {
+                <div class="chat-message @(message.Role == "user" ? "chat-message-user" : "chat-message-bot")">@message.Text</div>
+            }
+        </div>
         <div class="chat-composer input-group mt-2">
             <input id="userInput" class="form-control" placeholder="Sorunuzu yazın..." />
             <button id="sendBtn" class="btn btn-primary btn-modern">Gönder</button>

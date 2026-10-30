@@ -83,6 +83,27 @@ namespace Roma.Services
             var normalizedInput = Normalize(input);
             var inputTokens = Tokenize(normalizedInput);
 
+            // OpenAI Soru-Cevap ve Chat alanı aynı session geçmişini kullansın.
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                var sessionHistory = await _context.DemoChatServices!
+                    .AsNoTracking()
+                    .Where(x => x.SessionId == sessionId && !string.IsNullOrWhiteSpace(x.Input) && !string.IsNullOrWhiteSpace(x.Reply))
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Take(100)
+                    .Select(x => new { x.Input, x.Reply, x.CreatedAt })
+                    .ToListAsync(cancellationToken);
+
+                var exactSessionReply = sessionHistory
+                    .FirstOrDefault(x => Normalize(x.Input!) == normalizedInput)
+                    ?.Reply;
+
+                if (!string.IsNullOrWhiteSpace(exactSessionReply))
+                {
+                    return FinalizeReply(exactSessionReply, sessionId);
+                }
+            }
+
             var seasonalClothingReply = BuildSeasonalClothingReply(normalizedInput);
             if (!string.IsNullOrWhiteSpace(seasonalClothingReply))
             {
@@ -136,7 +157,7 @@ namespace Roma.Services
                 .Where(x => !string.IsNullOrWhiteSpace(x.Input) && !string.IsNullOrWhiteSpace(x.Reply));
 
             var candidates = await baseQuery
-                .Select(x => new { x.Input, x.Reply, x.CreatedAt })
+                .Select(x => new { x.Input, x.Reply, x.CreatedAt, x.SessionId })
                 .ToListAsync(cancellationToken);
 
             var containsReply = candidates
@@ -150,6 +171,13 @@ namespace Roma.Services
                     if (normalizedCandidate == normalizedInput)
                     {
                         score += 100;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(sessionId)
+                        && !string.IsNullOrWhiteSpace(x.SessionId)
+                        && string.Equals(x.SessionId, sessionId, StringComparison.Ordinal))
+                    {
+                        score += 30;
                     }
 
                     if (!string.IsNullOrWhiteSpace(normalizedCandidate) && normalizedInput.Contains(normalizedCandidate))

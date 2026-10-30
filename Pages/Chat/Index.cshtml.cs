@@ -17,6 +17,8 @@ namespace Roma.Pages.Chat
         private readonly int _maxInputChars;
         private readonly int _maxOutputChars;
 
+        public List<ChatHistoryMessage> HistoryMessages { get; private set; } = new();
+
         public IndexModel(IChatService chat, ApplicationDbContext db, IConfiguration configuration)
         {
             _chat = chat;
@@ -28,8 +30,35 @@ namespace Roma.Pages.Chat
             _maxOutputChars = configuration.GetValue<int?>("AiBudget:MaxOutputChars") ?? 400;
         }
 
-        public void OnGet()
+        public async Task OnGetAsync(CancellationToken cancellationToken)
         {
+            var sessionId = HttpContext.Session.Id;
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                return;
+            }
+
+            var recentPairs = await _db.DemoChatServices!
+                .AsNoTracking()
+                .Where(x => x.SessionId == sessionId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(30)
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => new { x.Input, x.Reply })
+                .ToListAsync(cancellationToken);
+
+            foreach (var pair in recentPairs)
+            {
+                if (!string.IsNullOrWhiteSpace(pair.Input))
+                {
+                    HistoryMessages.Add(new ChatHistoryMessage { Role = "user", Text = pair.Input! });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pair.Reply))
+                {
+                    HistoryMessages.Add(new ChatHistoryMessage { Role = "bot", Text = pair.Reply! });
+                }
+            }
         }
 
         public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
@@ -91,6 +120,8 @@ namespace Roma.Pages.Chat
                 reply = reply[.._maxOutputChars] + "...";
             }
 
+            await SaveConversationAsync(req.Text, reply, cancellationToken);
+
             var questionCount = HttpContext.Session.GetInt32("ChatQuestionCount") ?? 0;
             questionCount++;
             HttpContext.Session.SetInt32("ChatQuestionCount", questionCount);
@@ -104,6 +135,30 @@ namespace Roma.Pages.Chat
             }
 
             return new JsonResult(new { reply });
+        }
+
+        private async Task SaveConversationAsync(string input, string reply, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(reply))
+            {
+                return;
+            }
+
+            _db.DemoChatServices!.Add(new DemoChatService
+            {
+                Input = input.Trim(),
+                Reply = reply.Trim(),
+                SessionId = HttpContext.Session.Id,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public class ChatHistoryMessage
+        {
+            public string Role { get; set; } = string.Empty;
+            public string Text { get; set; } = string.Empty;
         }
 
         public class ChatRequest { public string Text { get; set; } = string.Empty; }
