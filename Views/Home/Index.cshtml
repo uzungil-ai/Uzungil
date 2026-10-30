@@ -14,6 +14,11 @@
         <p class="col-md-10 fs-5 text-muted mb-0">
             Destinasyonları ülkeye ve kategoriye göre filtreleyin, size uygun rotayı hızlıca bulun.
         </p>
+        <div class="mt-3">
+            <a id="chatLaunchLink" asp-page="/Chat/Index" class="btn btn-warning text-dark fw-semibold" aria-label="Yardım aracı sohbet botu">
+                Sohbet Botu hazır ->
+            </a>
+        </div>
     </div>
 </section>
 
@@ -42,6 +47,28 @@
                         {
                             <option value="@option" selected>@option</option>
                         }
+
+@section Scripts {
+    <script>
+        (function () {
+            var link = document.getElementById('chatLaunchLink');
+            if (!link) return;
+
+            var launched = false;
+            function launchChat() {
+                if (launched) return;
+                launched = true;
+                window.location.href = link.href;
+            }
+
+            link.addEventListener('mouseenter', launchChat);
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                launchChat();
+            });
+        })();
+    </script>
+}
                         else
                         {
                             <option value="@option">@option</option>
