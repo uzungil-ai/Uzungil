@@ -6,7 +6,7 @@ using Roma.Models;
 
 namespace Roma.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class SubscribersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,7 +19,70 @@ namespace Roma.Controllers
         // GET: Subscribers
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Subscribers!.ToListAsync());
+            var pending = await _context.Subscribers!
+                .AsNoTracking()
+                .Where(x => x.ConsentGiven && !x.IsConfirmed)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            var confirmed = await _context.Subscribers!
+                .AsNoTracking()
+                .Where(x => x.ConsentGiven && x.IsConfirmed)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            var cancelled = await _context.Subscribers!
+                .AsNoTracking()
+                .Where(x => !x.ConsentGiven)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            var sentMessages = await _context.SentEmails!
+                .AsNoTracking()
+                .Where(x => x.Subject.Contains("Abonelik") || x.Subject.Contains("destinasyon") || x.Subject.Contains("Destinasyon"))
+                .OrderByDescending(x => x.SentAt)
+                .Take(200)
+                .ToListAsync();
+
+            var pendingReviews = await _context.Reviews!
+                .AsNoTracking()
+                .Include(r => r.User)
+                .Include(r => r.Attraction)
+                .Where(r => !r.IsApproved && !r.IsRejected)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            var approvedReviews = await _context.Reviews!
+                .AsNoTracking()
+                .Include(r => r.User)
+                .Include(r => r.Attraction)
+                .Where(r => r.IsApproved && !r.IsRejected)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            var rejectedReviews = await _context.Reviews!
+                .AsNoTracking()
+                .Include(r => r.User)
+                .Include(r => r.Attraction)
+                .Where(r => r.IsRejected)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            var vm = new SubscriberDashboardViewModel
+            {
+                PendingSubscribers = pending,
+                ConfirmedSubscribers = confirmed,
+                CancelledSubscribers = cancelled,
+                SentMessages = sentMessages,
+                PendingReviews = pendingReviews,
+                ApprovedReviews = approvedReviews,
+                RejectedReviews = rejectedReviews
+            };
+
+            return View(vm);
         }
 
         // GET: Subscribers/Details/5

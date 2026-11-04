@@ -1,45 +1,259 @@
-@model IEnumerable<Roma.Models.Subscriber>
+@model Roma.Models.SubscriberDashboardViewModel
 
 @{
-    ViewData["Title"] = "Subscribers";
+    ViewData["Title"] = "Abonelik Yönetimi";
 }
 
-<h1>Subscribers</h1>
+<br />
 
-<p>
-    <a class="btn btn-primary" asp-action="Create">Create New</a>
-</p>
+<div class="card shadow-sm border-0 destination-card">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h1 class="h4 mb-0">Abonelik Yönetimi</h1>
+            <a class="btn btn-primary btn-sm" asp-action="Create">Yeni Kayıt</a>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>@Html.DisplayNameFor(model => model.Email)</th>
-            <th>@Html.DisplayNameFor(model => model.ConsentGiven)</th>
-            <th>@Html.DisplayNameFor(model => model.IsConfirmed)</th>
-            <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
-            <th>@Html.DisplayNameFor(model => model.ConfirmationToken)</th>
-            <th>@Html.DisplayNameFor(model => model.ConfirmationExpiresAt)</th>
-            <th>@Html.DisplayNameFor(model => model.UnsubscribeToken)</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model)
-{
-        <tr>
-            <td>@Html.DisplayFor(modelItem => item.Email)</td>
-            <td>@Html.DisplayFor(modelItem => item.ConsentGiven)</td>
-            <td>@Html.DisplayFor(modelItem => item.IsConfirmed)</td>
-            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
-            <td>@Html.DisplayFor(modelItem => item.ConfirmationToken)</td>
-            <td>@Html.DisplayFor(modelItem => item.ConfirmationExpiresAt)</td>
-            <td>@Html.DisplayFor(modelItem => item.UnsubscribeToken)</td>
-            <td>
-                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <div class="small text-muted mb-3">
+            Bekleyen: <strong>@Model.PendingSubscribers.Count</strong> •
+            Onaylanan: <strong>@Model.ConfirmedSubscribers.Count</strong> •
+            İptal Eden: <strong>@Model.CancelledSubscribers.Count</strong><br />
+            Yorum - Onay Bekleyen: <strong>@Model.PendingReviews.Count</strong> •
+            Yorum - Onaylanan: <strong>@Model.ApprovedReviews.Count</strong> •
+            Yorum - Reddedilen: <strong>@Model.RejectedReviews.Count</strong>
+        </div>
+
+        <h6 class="mt-3">Onay Bekleyenler</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>E-posta</th>
+                    <th>Talep</th>
+                    <th>Son Geçerlilik</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.PendingSubscribers.Any())
+            {
+                @foreach (var item in Model.PendingSubscribers)
+                {
+                    <tr>
+                        <td>@item.Email</td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@(item.ConfirmationExpiresAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="3" class="text-muted">Kayıt yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">Onaylananlar</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>E-posta</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.ConfirmedSubscribers.Any())
+            {
+                @foreach (var item in Model.ConfirmedSubscribers)
+                {
+                    <tr>
+                        <td>@item.Email</td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="2" class="text-muted">Kayıt yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">İptal Edenler</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>E-posta</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.CancelledSubscribers.Any())
+            {
+                @foreach (var item in Model.CancelledSubscribers)
+                {
+                    <tr>
+                        <td>@item.Email</td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="2" class="text-muted">Kayıt yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">Gönderilen Mesajlar</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Kime</th>
+                    <th>Konu</th>
+                    <th>Mesaj</th>
+                    <th class="text-nowrap">Zaman</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.SentMessages.Any())
+            {
+                @foreach (var item in Model.SentMessages)
+                {
+                    <tr>
+                        <td>@item.To</td>
+                        <td>@item.Subject</td>
+                        <td style="max-width:420px; white-space:normal; word-break:break-word;">@item.Body</td>
+                        <td class="text-nowrap">@item.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-muted">Gönderilmiş mesaj kaydı yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">Onay Bekleyen Yorumlar</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Kullanıcı</th>
+                    <th>Gezilecek Yer</th>
+                    <th>Yorum</th>
+                    <th>Puan</th>
+                    <th class="text-nowrap">Zaman</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.PendingReviews.Any())
+            {
+                @foreach (var item in Model.PendingReviews)
+                {
+                    <tr>
+                        <td>@(item.User?.UserName ?? item.UserId)</td>
+                        <td>@(item.Attraction?.Name ?? "-")</td>
+                        <td style="max-width:420px; white-space:normal; word-break:break-word;">@item.Comment</td>
+                        <td>@item.Rating</td>
+                        <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-muted">Bekleyen yorum yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">Onaylanan Yorumlar</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Kullanıcı</th>
+                    <th>Gezilecek Yer</th>
+                    <th>Yorum</th>
+                    <th>Puan</th>
+                    <th class="text-nowrap">Zaman</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.ApprovedReviews.Any())
+            {
+                @foreach (var item in Model.ApprovedReviews)
+                {
+                    <tr>
+                        <td>@(item.User?.UserName ?? item.UserId)</td>
+                        <td>@(item.Attraction?.Name ?? "-")</td>
+                        <td style="max-width:420px; white-space:normal; word-break:break-word;">@item.Comment</td>
+                        <td>@item.Rating</td>
+                        <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-muted">Onaylanan yorum yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+
+        <h6 class="mt-4">Reddedilen Yorumlar</h6>
+        <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Kullanıcı</th>
+                    <th>Gezilecek Yer</th>
+                    <th>Yorum</th>
+                    <th>Puan</th>
+                    <th class="text-nowrap">Zaman</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.RejectedReviews.Any())
+            {
+                @foreach (var item in Model.RejectedReviews)
+                {
+                    <tr>
+                        <td>@(item.User?.UserName ?? item.UserId)</td>
+                        <td>@(item.Attraction?.Name ?? "-")</td>
+                        <td style="max-width:420px; white-space:normal; word-break:break-word;">@item.Comment</td>
+                        <td>@item.Rating</td>
+                        <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-muted">Reddedilen yorum yok.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
