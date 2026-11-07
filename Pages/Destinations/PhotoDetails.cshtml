@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Fotoğraf Detayı";
     var canAdd = User?.Identity?.IsAuthenticated == true;
+    var isAdmin = User?.IsInRole("Admin") == true;
 }
 
 @section Head {
@@ -135,6 +136,29 @@
             background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
         }
 
+        .attraction-name-link {
+            transition: color .15s ease, text-decoration-color .15s ease;
+        }
+
+        .attraction-name-link:hover,
+        .attraction-name-link:focus {
+            color: #1f4fd6 !important;
+            text-decoration: underline !important;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 2px;
+        }
+
+        @@media (max-width: 767.98px) {
+            .mobile-three-cards {
+                flex-wrap: wrap;
+            }
+
+            .mobile-three-cards > [class*="col-"] {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
     </style>
 }
 
@@ -194,18 +218,34 @@
                 <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
             {
+                var googleQuery = $"{item.Name} {Model.Destination.Name}";
+                var googleSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(googleQuery)}";
+                var googleMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(googleQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <h5 class="card-title mb-2">@item.Name</h5>
-                            <div>@Html.RatingBadge(item.AverageRating)</div>
+                            <h5 class="card-title mb-2 d-flex align-items-center gap-2">
+                                <a href="@googleSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @googleQuery">
+                                    @item.Name
+                                </a>
+                                <a href="@googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @googleQuery" aria-label="Haritada aç: @googleQuery">
+                                    📍
+                                </a>
+                            </h5>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0">
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                            <div class="d-flex align-items-center gap-2">
+                                <div>@Html.RatingBadge(item.AverageRating)</div>
+                                <a class="btn btn-sm btn-comment-gradient" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id">Yorum Ekle</a>
+                                <div class="d-flex gap-2">
+                                    @if (isAdmin)
+                                    {
+                                        <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -223,7 +263,7 @@
                 <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Hotels)
             {
                 <div class="col-12 col-md-6 col-lg-3">
@@ -263,13 +303,19 @@
                 <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Meals)
             {
+                var mealQuery = $"{item.Name} {Model.Destination.Name}";
+                var mealSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(mealQuery)}";
+                var mealMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(mealQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @mealQuery">@item.Name</a>
+                                <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -287,14 +333,19 @@
                 <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Flavors)
             {
+                var flavorQuery = $"{item.Name} {Model.Destination.Name}";
+                var flavorSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(flavorQuery)}";
+                var flavorMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(flavorQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted details-value-line">Bu destinasyona özgü önerilen tat.</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @flavorQuery">@item.Name</a>
+                                <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -314,13 +365,19 @@
                 <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Parkings)
             {
+                var parkingQuery = $"{item.Name} {Model.Destination.Name}";
+                var parkingSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(parkingQuery)}";
+                var parkingMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(parkingQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @parkingQuery">@item.Name</a>
+                                <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -9,13 +9,17 @@ public static class RatingHtmlHelper
     public static IHtmlContent RatingBadge(this IHtmlHelper html, double rating, bool showDecimal = true)
     {
         var clampedRating = Math.Clamp(rating, 1, 5);
+        var filledStars = Math.Clamp((int)Math.Round(clampedRating, MidpointRounding.AwayFromZero), 1, 5);
+        var stars = string.Concat(new string('★', filledStars), new string('☆', 5 - filledStars));
         var ratingText = showDecimal
             ? clampedRating.ToString("0.0", CultureInfo.InvariantCulture)
-            : Math.Clamp((int)Math.Round(clampedRating), 1, 5).ToString(CultureInfo.InvariantCulture);
+            : filledStars.ToString(CultureInfo.InvariantCulture);
 
         var badge = new TagBuilder("span");
-        badge.AddCssClass($"badge {GetBadgeClass(clampedRating)}");
-        badge.InnerHtml.Append($"★ {ratingText} / 5");
+        badge.Attributes["style"] = "color:#f4c430;";
+        badge.Attributes["title"] = $"{ratingText} / 5";
+        badge.Attributes["aria-label"] = $"Puan: {ratingText} / 5";
+        badge.InnerHtml.Append(stars);
 
         return badge;
     }
@@ -24,13 +28,4 @@ public static class RatingHtmlHelper
     {
         return html.RatingBadge((double)rating, showDecimal: false);
     }
-
-    private static string GetBadgeClass(double rating) => rating switch
-    {
-        >= 4.5 and <= 5 => "bg-success",
-        >= 3.5 and < 4.5 => "bg-primary",
-        >= 2.5 and < 3.5 => "bg-warning text-dark",
-        >= 1 and < 2.5 => "bg-danger",
-        _ => "bg-secondary"
-    };
 }
