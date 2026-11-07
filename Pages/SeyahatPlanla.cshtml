@@ -1,0 +1,162 @@
+@page
+@model Roma.Pages.SeyahatPlanlaModel
+@{
+    ViewData["Title"] = "Seyahat Planla";
+
+    var selectedDestinationName = Model.Destinations.FirstOrDefault(x => x.Id == Model.DestinationId)?.Name ?? "-";
+    var totalBudget = Model.BudgetBreakdown.Accommodation + Model.BudgetBreakdown.Transport + Model.BudgetBreakdown.Food + Model.BudgetBreakdown.Activities;
+    var accPct = totalBudget > 0 ? (Model.BudgetBreakdown.Accommodation / totalBudget * 100m) : 0m;
+    var trnPct = totalBudget > 0 ? (Model.BudgetBreakdown.Transport / totalBudget * 100m) : 0m;
+    var foodPct = totalBudget > 0 ? (Model.BudgetBreakdown.Food / totalBudget * 100m) : 0m;
+    var actPct = totalBudget > 0 ? (Model.BudgetBreakdown.Activities / totalBudget * 100m) : 0m;
+}
+
+@section Head {
+    <style>
+        .plan-hero {
+            background: linear-gradient(135deg, #eef4ff 0%, #f8fbff 100%);
+            border: 1px solid #dbe7ff;
+            border-radius: 14px;
+            padding: 1rem;
+        }
+
+        .budget-line {
+            margin-bottom: .75rem;
+        }
+
+            .budget-line:last-child {
+                margin-bottom: 0;
+            }
+    </style>
+}
+
+<div class="container mt-4">
+    <div class="plan-hero mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h1 class="mb-0">Seyahat Planla</h1>
+            <a class="btn btn-outline-primary btn-sm" href="/Planlarim">Planlarım</a>
+        </div>
+        <div class="small text-muted">Destinasyon, tarih ve bütçeye göre otomatik günlük taslak plan üretir.</div>
+    </div>
+
+    <form method="post" class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-5">
+                    <label asp-for="DestinationId" class="form-label">Destinasyon</label>
+                    <select asp-for="DestinationId" class="form-select">
+                        <option value="">Destinasyon seçiniz</option>
+                        @foreach (var d in Model.Destinations)
+                        {
+                            <option value="@d.Id">@d.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="DestinationId" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label asp-for="StartDate" class="form-label">Başlangıç</label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label asp-for="EndDate" class="form-label">Bitiş</label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-3">
+                    <label asp-for="Budget" class="form-label">Toplam Bütçe (₺)</label>
+                    <input asp-for="Budget" type="number" min="0" class="form-control" placeholder="Örn: 25000" />
+                    <span asp-validation-for="Budget" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary">Plan Oluştur</button>
+            </div>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.PlanSummary))
+    {
+        <div class="alert alert-success">@Model.PlanSummary</div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SaveErrorMessage))
+        {
+            <div class="alert alert-warning">@Model.SaveErrorMessage</div>
+        }
+
+        @if (Model.SavedToMyPlans)
+        {
+            <div class="alert alert-info">Plan kaydedildi. <a href="/Planlarim">Planlarım</a> sayfasından yönetebilirsiniz.</div>
+        }
+
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Plan Özeti</div>
+                        <div><strong>Destinasyon:</strong> @selectedDestinationName</div>
+                        <div><strong>Toplam Gün:</strong> @Model.TotalDays</div>
+                        <div><strong>Tahmini Bütçe:</strong> @totalBudget.ToString("N0") ₺</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted mb-2">Bütçe Dağılımı</div>
+
+                        <div class="budget-line">
+                            <div class="d-flex justify-content-between small"><span>Konaklama</span><span>@Model.BudgetBreakdown.Accommodation.ToString("N0") ₺</span></div>
+                            <div class="progress" role="progressbar" aria-label="Konaklama bütçesi"><div class="progress-bar bg-primary" style="width:@accPct.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                        </div>
+
+                        <div class="budget-line">
+                            <div class="d-flex justify-content-between small"><span>Ulaşım</span><span>@Model.BudgetBreakdown.Transport.ToString("N0") ₺</span></div>
+                            <div class="progress" role="progressbar" aria-label="Ulaşım bütçesi"><div class="progress-bar bg-info" style="width:@trnPct.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                        </div>
+
+                        <div class="budget-line">
+                            <div class="d-flex justify-content-between small"><span>Yeme-İçme</span><span>@Model.BudgetBreakdown.Food.ToString("N0") ₺</span></div>
+                            <div class="progress" role="progressbar" aria-label="Yeme içme bütçesi"><div class="progress-bar bg-warning" style="width:@foodPct.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                        </div>
+
+                        <div class="budget-line">
+                            <div class="d-flex justify-content-between small"><span>Aktiviteler</span><span>@Model.BudgetBreakdown.Activities.ToString("N0") ₺</span></div>
+                            <div class="progress" role="progressbar" aria-label="Aktivite bütçesi"><div class="progress-bar bg-success" style="width:@actPct.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-3">Günlük Taslak Plan</h5>
+                <div class="row g-3">
+                    @foreach (var day in Model.DailyPlan)
+                    {
+                        <div class="col-12">
+                            <div class="border rounded-3 p-3">
+                                <div class="fw-semibold mb-2">@day.DayNumber. Gün • @day.Date.ToString("dd.MM.yyyy")</div>
+                                <div class="small"><strong>Sabah:</strong> @day.Morning</div>
+                                <div class="small"><strong>Öğle:</strong> @day.Afternoon</div>
+                                <div class="small"><strong>Akşam:</strong> @day.Evening</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

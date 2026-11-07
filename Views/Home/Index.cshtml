@@ -15,7 +15,7 @@
             Destinasyonları ülkeye ve kategoriye göre filtreleyin, size uygun rotayı hızlıca bulun.
         </p>
         <div class="mt-3">
-            <a id="chatLaunchLink" asp-page="/Chat/Index" class="btn btn-warning text-dark fw-semibold" aria-label="Yardım aracı sohbet botu">
+            <a asp-page="/Chat/Index" class="btn btn-warning text-dark fw-semibold" aria-label="Yardım aracı sohbet botu">
                 Sohbet Botu hazır ->
             </a>
         </div>
@@ -43,32 +43,10 @@
                     <option value="">Tüm kategoriler</option>
                     @foreach (var option in categoryOptions)
                     {
-                        if (string.Equals(option, categoryFilter, StringComparison.OrdinalIgnoreCase))
+                        @if (string.Equals(option, categoryFilter, StringComparison.OrdinalIgnoreCase))
                         {
                             <option value="@option" selected>@option</option>
                         }
-
-@section Scripts {
-    <script>
-        (function () {
-            var link = document.getElementById('chatLaunchLink');
-            if (!link) return;
-
-            var launched = false;
-            function launchChat() {
-                if (launched) return;
-                launched = true;
-                window.location.href = link.href;
-            }
-
-            link.addEventListener('mouseenter', launchChat);
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                launchChat();
-            });
-        })();
-    </script>
-}
                         else
                         {
                             <option value="@option">@option</option>
@@ -138,6 +116,28 @@ else
                                 }
                             </div>
                         }
+
+@section Scripts {
+    <script>
+        (function () {
+            var link = document.getElementById('chatLaunchLink');
+            if (!link) return;
+
+            var launched = false;
+            function launchChat() {
+                if (launched) return;
+                launched = true;
+                window.location.href = link.href;
+            }
+
+            link.addEventListener('mouseenter', launchChat);
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                launchChat();
+            });
+        })();
+    </script>
+}
 
                         <div class="small text-muted mb-3">
                             Cazibe noktası: @(item.Attractions?.Count ?? 0)

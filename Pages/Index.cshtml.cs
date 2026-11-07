@@ -33,6 +33,7 @@ namespace Roma.Pages
         public string? Conutry { get; set; }
 
         public bool HasActiveSearch =>
+            !string.IsNullOrWhiteSpace(Search) ||
             !string.IsNullOrWhiteSpace(Name) ||
             !string.IsNullOrWhiteSpace(Country);
 
@@ -43,11 +44,6 @@ namespace Roma.Pages
             Country = string.IsNullOrWhiteSpace(Country) ? null : Country.Trim();
             Conutry = string.IsNullOrWhiteSpace(Conutry) ? null : Conutry.Trim();
 
-            if (Name is null && Search is not null)
-            {
-                Name = Search;
-            }
-
             if (Country is null && Conutry is not null)
             {
                 Country = Conutry;
@@ -56,6 +52,14 @@ namespace Roma.Pages
             var baseQuery = _db.Destinations!
                 .Include(d => d.Images)
                 .AsQueryable();
+
+            if (Search is not null)
+            {
+                var pattern = $"%{Search}%";
+                baseQuery = baseQuery.Where(d =>
+                    (d.Name != null && EF.Functions.Like(d.Name, pattern)) ||
+                    (d.Country != null && EF.Functions.Like(d.Country, pattern)));
+            }
 
             if (Name is not null)
             {
@@ -71,12 +75,12 @@ namespace Roma.Pages
 
             Featured = await baseQuery
                 .OrderBy(d => d.Name)
-                .Take(100)
+                .Take(60)
                 .ToListAsync();
 
             Latest = await baseQuery
                 .OrderByDescending(d => d.Id)
-                .Take(100)
+                .Take(60)
                 .ToListAsync();
         }
 

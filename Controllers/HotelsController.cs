@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,7 @@ namespace Roma.Controllers
         }
 
         // GET: Hotels/Create
+        [Authorize]
         public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
@@ -50,6 +52,7 @@ namespace Roma.Controllers
         // POST: Hotels/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Name,Address,Phone,Website,PriceFrom,PriceTo,DestinationId")] Hotel hotel)
         {
             // Navigation properties are not bound in the form; remove their ModelState entries to avoid "required" validation failures
@@ -79,6 +82,7 @@ namespace Roma.Controllers
         }
 
         // GET: Hotels/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -93,6 +97,7 @@ namespace Roma.Controllers
         // POST: Hotels/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Address,Phone,Website,PriceFrom,PriceTo,DestinationId")] Hotel hotel)
         {
             if (id != hotel.Id) return NotFound();
@@ -117,6 +122,7 @@ namespace Roma.Controllers
         }
 
         // GET: Hotels/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -132,6 +138,7 @@ namespace Roma.Controllers
         // POST: Hotels/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var hotel = await _context.Hotels!.FindAsync(id);

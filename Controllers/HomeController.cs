@@ -84,6 +84,11 @@ namespace Roma.Controllers
             return View(destinations);
         }
 
+        public IActionResult Hakkinda()
+        {
+            return View("Hakkında");
+        }
+
         public IActionResult Hakkında()
         {
             return View();

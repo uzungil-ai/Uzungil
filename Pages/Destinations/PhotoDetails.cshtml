@@ -14,6 +14,12 @@
 
         .info-card {
             transition: transform .15s ease, box-shadow .15s ease;
+            border: 0 !important;
+            background: var(--bs-card-bg, #fff) !important;
+        }
+
+        .photo-details-page .info-card .card-footer {
+            border-top: 0 !important;
         }
 
         .info-card:hover {
@@ -34,9 +40,10 @@
             justify-content: center;
             overflow: hidden;
             border-radius: 14px !important;
+            position: relative;
 
             display: block;
-            padding: var(--space-3) var(--space-3) 0;
+            padding: 0;
 
         }
 
@@ -47,27 +54,104 @@
             border-radius: 14px !important;
         }
 
+        .details-top-offset {
+            margin-top: 1rem;
+        }
+
+        .details-plain-text {
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .details-plain-text::first-letter {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .details-value-line {
+            text-align: left;
+            margin: 0;
+            padding-right: 0;
+        }
+
+        .details-name-align {
+            padding-left: var(--space-3);
+        }
+
+        .photo-details-page .destination-card .card-body,
+        .photo-card .card-body {
+            padding-left: var(--space-3) !important;
+            padding-right: var(--space-3) !important;
+        }
+
+        .photo-details-page,
+        .photo-details-page .card-title,
+        .photo-details-page .fw-semibold,
+        .photo-details-page .small,
+        .photo-details-page h4,
+        .photo-details-page h5 {
+            text-align: left;
+        }
+
+        .details-value-line::first-letter {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .photo-alt-overlay {
+            position: absolute;
+            left: var(--space-3);
+            right: var(--space-3);
+            bottom: 0;
+            padding: 0.45rem 0.6rem;
+            text-align: center;
+            color: #fff;
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.03) 0%, rgba(15, 23, 42, 0.86) 100%);
+            border-bottom-left-radius: var(--radius-sm);
+            border-bottom-right-radius: var(--radius-sm);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+
+        .details-section-title {
+            font-weight: 700;
+            color: #1f4fd6;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-comment-gradient {
+            color: #fff !important;
+            border: none;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%);
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+        }
+
+        .btn-comment-gradient:hover,
+        .btn-comment-gradient:focus {
+            color: #fff !important;
+            background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+        }
+
     </style>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@Model.Destination?.Name</h2>
-    <a asp-page="/Index" class="btn btn-sm btn-primary">Ana Sayfa</a>
-</div>
-
+<div class="photo-details-page">
+<br />
+<br />
 @if (Model.Destination != null)
 {
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-2"><strong>Ülke:</strong> @Model.Destination.Country</div>
-                <div class="col-md-10"><strong>Açıklama:</strong> @Model.Destination.Description</div>
+                <div class="col-12 details-plain-text">@Model.Destination.Description</div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">Fotoğraflar (@(Model.Destination.Images?.Count ?? 0))</h4>
+    <div class="d-flex justify-content-end align-items-center mb-2">
         @if (canAdd)
         {
             <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
@@ -83,10 +167,11 @@
                 <div class="col-12 col-sm-6 col-md-4">
                     <div class="card shadow-sm photo-card destination-card border-0 reveal-up">
                         <div class="photo-frame">
-                            <img src="@img.Url" alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)" class="card-img-top" />
-                        </div>
-                        <div class="card-body p-2">
-                            <div class="fw-semibold small">@(string.IsNullOrWhiteSpace(img.AltText) ? "Alt text yok" : img.AltText.Trim())</div>
+                            <img src="@img.Url" alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)" class="card-img-top" loading="lazy" decoding="async" />
+                            @if (!string.IsNullOrWhiteSpace(img.AltText))
+                            {
+                                <span class="photo-alt-overlay">@img.AltText.Trim()</span>
+                            }
                         </div>
                     </div>
                 </div>
@@ -103,7 +188,7 @@
     @if (Model.Destination.Attractions?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Cazibe Noktaları (@Model.Destination.Attractions.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Cazibe Noktaları</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -112,16 +197,16 @@
         <div class="row g-3 mb-4">
             @foreach (var item in Model.Destination.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
             {
-                <div class="col-12 col-md-6 col-lg-4">
+                <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <h5 class="card-title mb-2">@item.Name</h5>
-                            <div class="small text-muted mb-1">Kategori: @(string.IsNullOrWhiteSpace(item.Category) ? "-" : item.Category)</div>
-                            <div class="small text-muted mb-2">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
                             <div>@Html.RatingBadge(item.AverageRating)</div>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0">
-                            <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -132,7 +217,7 @@
     @if (Model.Destination.Hotels?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Konaklama (@Model.Destination.Hotels.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Konaklama</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -145,10 +230,7 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
-                            <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(item.Phone) ? "-" : item.Phone)</div>
-                            <div class="small text-muted">
-                                Website:
+                            <div class="small text-muted details-value-line">
                                 @if (!string.IsNullOrWhiteSpace(item.Website))
                                 {
                                     var websiteUrl = item.Website.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -156,8 +238,8 @@
                                         ? item.Website
                                         : $"https://{item.Website}";
 
-                                    <a href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
-                                        <span class="text-decoration-underline">www</span>
+                                    <a class="btn btn-sm btn-navbar-theme" href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
+                                        Link
                                     </a>
                                 }
                                 else
@@ -175,7 +257,7 @@
     @if (Model.Destination.Meals?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Yemekler (@Model.Destination.Meals.Count)</h4>
+            <h5 class="mb-0 details-section-title">Yemekler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -188,9 +270,6 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
-                            <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(item.Phone) ? "-" : item.Phone)</div>
-                            <div class="small text-muted">Fiyat: @(item.Price.HasValue ? item.Price.Value.ToString("C") : "-")</div>
                         </div>
                     </div>
                 </div>
@@ -202,7 +281,7 @@
     @if (Model.Destination.Flavors?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Lezzetler (@Model.Destination.Flavors.Count)</h4>
+            <h5 class="mb-0 details-section-title">Lezzetler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -214,9 +293,8 @@
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <span class="badge text-bg-warning-subtle border text-dark mini-label mb-2">Yerel Lezzet</span>
                             <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted">Bu destinasyona özgü önerilen tat.</div>
+                            <div class="small text-muted details-value-line">Bu destinasyona özgü önerilen tat.</div>
                         </div>
                     </div>
                 </div>
@@ -230,7 +308,7 @@
     @if (Model.Destination.Parkings?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Otoparklar (@Model.Destination.Parkings.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Otoparklar</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -240,24 +318,19 @@
             @foreach (var item in Model.Destination.Parkings)
             {
                 <div class="col-12 col-md-6 col-lg-3">
-                    <div class="card h-100 shadow-sm info-card">
+                    <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Kapasite: @(item.Capacity?.ToString() ?? "-")</div>
-                            <div>
-                                @if (item.IsPaid)
-                                {
-                                    <span class="badge text-bg-warning">Ücretli</span>
-                                }
-                                else
-                                {
-                                    <span class="badge text-bg-success">Ücretsiz</span>
-                                }
-                            </div>
                         </div>
                     </div>
                 </div>
             }
         </div>
     }
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-4">
+        <a class="btn btn-navbar-yellow-theme" href="javascript:history.back()">Önceki Sayfa</a>
+        <a class="btn btn-navbar-theme" asp-page="/Index">Ana Sayfa</a>
+    </div>
 }
+</div>

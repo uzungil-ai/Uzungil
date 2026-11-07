@@ -13,6 +13,7 @@
           "Azure.Identity": "1.21.0",
           "DotEnv.Microsoft.Extensions.Configuration": "1.0.0",
           "Humanizer.Core": "3.0.10",
+          "Microsoft.AspNetCore.Authentication.Google": "10.0.14",
           "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": "10.0.14",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.14",
           "Microsoft.AspNetCore.Identity.UI": "10.0.14",
@@ -166,6 +167,14 @@
           "lib/net8.0/JsonSchema.Net.Generation.dll": {
             "assemblyVersion": "4.0.0.0",
             "fileVersion": "4.5.1.0"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Authentication.Google/10.0.14": {
+        "runtime": {
+          "lib/net10.0/Microsoft.AspNetCore.Authentication.Google.dll": {
+            "assemblyVersion": "10.0.14.0",
+            "fileVersion": "10.0.1426.52326"
           }
         }
       },
@@ -1209,6 +1218,13 @@
       "sha512": "sha512-Fr6PxLs4aq/FTigJ1tQPhvZ28aBe9op1pieN6RqJBYPMa0NcZJuqeZSkBeqc1TfkckUwJwfWUQzr9uCkqe80fw==",
       "path": "jsonschema.net.generation/4.5.1",
       "hashPath": "jsonschema.net.generation.4.5.1.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.Authentication.Google/10.0.14": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3enUvuEqorstWs1o2wc2hd8VgiF+fK0vZtGXl3wjE760887BNXUTh9vl86cLY+qdDujCHHWxA773nkWW4n8FBA==",
+      "path": "microsoft.aspnetcore.authentication.google/10.0.14",
+      "hashPath": "microsoft.aspnetcore.authentication.google.10.0.14.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore/10.0.14": {
       "type": "package",

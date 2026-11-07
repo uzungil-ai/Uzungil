@@ -28,7 +28,11 @@ namespace Roma.Pages.Account
         [BindProperty]
         public InputModel Input { get; set; } = new InputModel();
 
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+
         public string? ErrorMessage { get; set; }
+        public bool HasGoogleLogin { get; set; }
 
         public class InputModel
         {
@@ -37,17 +41,21 @@ namespace Roma.Pages.Account
             public bool RememberMe { get; set; }
         }
 
-        public void OnGet()
+        public async Task OnGetAsync(string? returnUrl = null)
         {
+            ReturnUrl = returnUrl;
+            HasGoogleLogin = await HasGoogleLoginAsync();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
+            var safeReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Content("~/");
             var loginIdentifier = (Input.Email ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(loginIdentifier) || string.IsNullOrWhiteSpace(Input.Password))
             {
                 ErrorMessage = "E-posta ve şifre gereklidir.";
+                HasGoogleLogin = await HasGoogleLoginAsync();
                 return Page();
             }
 
@@ -58,6 +66,7 @@ namespace Roma.Pages.Account
             {
                 _logger.LogWarning("Login failed: user not found for '{LoginIdentifier}'.", loginIdentifier);
                 ErrorMessage = "Geçersiz giriş.";
+                HasGoogleLogin = await HasGoogleLoginAsync();
                 return Page();
             }
 
@@ -65,6 +74,7 @@ namespace Roma.Pages.Account
             {
                 _logger.LogInformation("Login blocked: unconfirmed account for user '{UserId}'.", user.Id);
                 ErrorMessage = "Hesabınız henüz onaylanmamış. Lütfen e-posta onayını tamamlayın.";
+                HasGoogleLogin = await HasGoogleLoginAsync();
                 return Page();
             }
 
@@ -73,6 +83,7 @@ namespace Roma.Pages.Account
             {
                 _logger.LogWarning("Login blocked: user '{UserId}' is locked out.", user.Id);
                 ErrorMessage = "Hesabınız geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.";
+                HasGoogleLogin = await HasGoogleLoginAsync();
                 return Page();
             }
 
@@ -80,6 +91,7 @@ namespace Roma.Pages.Account
             {
                 _logger.LogInformation("Login blocked: user '{UserId}' is not allowed to sign in.", user.Id);
                 ErrorMessage = "Hesabınız şu an girişe uygun değil.";
+                HasGoogleLogin = await HasGoogleLoginAsync();
                 return Page();
             }
 
@@ -93,7 +105,7 @@ namespace Roma.Pages.Account
                     TempData["ShowPendingReviewsPopup"] = "1";
                 }
 
-                return LocalRedirect("/");
+                return LocalRedirect(safeReturnUrl!);
             }
 
             if (signInResult.Succeeded)
@@ -102,12 +114,19 @@ namespace Roma.Pages.Account
                 {
                     TempData["ShowPendingReviewsPopup"] = "1";
                 }
-                return LocalRedirect("/");
+                return LocalRedirect(safeReturnUrl!);
             }
 
             _logger.LogWarning("Login failed: invalid password for user '{UserId}'.", user.Id);
             ErrorMessage = "Geçersiz giriş.";
+            HasGoogleLogin = await HasGoogleLoginAsync();
             return Page();
+        }
+
+        private async Task<bool> HasGoogleLoginAsync()
+        {
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            return schemes.Any(s => string.Equals(s.Name, "Google", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

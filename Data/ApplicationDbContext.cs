@@ -104,12 +104,28 @@ namespace Roma.Data
 
         private async Task NotifySubscribersAsync(List<Destination> newDestinations)
         {
+            var tokensUpdated = false;
+
             try
             {
                 var subscribers = await Subscribers!.Where(s => s.IsConfirmed && s.ConsentGiven).ToListAsync();
                 if (subscribers.Count == 0) return;
 
                 var baseUrl = _configuration?[("App:BaseUrl")]?.TrimEnd('/') ?? string.Empty;
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
+                string? destinationTemplate = null;
+                if (File.Exists(templatePath))
+                {
+                    try
+                    {
+                        destinationTemplate = await File.ReadAllTextAsync(templatePath);
+                    }
+                    catch
+                    {
+                        destinationTemplate = null;
+                    }
+                }
+
                 foreach (var dest in newDestinations)
                 {
                     var subject = $"Yeni destinasyon eklendi: {dest.Name}";
@@ -122,9 +138,8 @@ namespace Roma.Data
                             if (string.IsNullOrEmpty(sub.UnsubscribeToken))
                             {
                                 sub.UnsubscribeToken = System.Guid.NewGuid().ToString("N");
-                                // persist token
                                 this.Subscribers!.Update(sub);
-                                await this.SaveChangesAsync();
+                                tokensUpdated = true;
                             }
 
                             var unsubscribeLink = string.IsNullOrEmpty(baseUrl)
@@ -152,14 +167,12 @@ namespace Roma.Data
 
                             if (string.IsNullOrEmpty(body))
                             {
-                                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
-                                if (File.Exists(templatePath))
+                                if (!string.IsNullOrEmpty(destinationTemplate))
                                 {
                                     try
                                     {
-                                        var tpl = File.ReadAllText(templatePath);
                                         var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
-                                        var replaced = tpl.Replace("{{LogoUrl}}", logoUrl)
+                                        var replaced = destinationTemplate.Replace("{{LogoUrl}}", logoUrl)
                                                           .Replace("{{DestName}}", System.Net.WebUtility.HtmlEncode(dest.Name))
                                                           .Replace("{{DestDesc}}", System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty))
                                                           .Replace("{{DestLink}}", destLink)
@@ -204,13 +217,24 @@ namespace Roma.Data
             {
                 // don't throw from DbContext notification
             }
+
+            if (tokensUpdated)
+            {
+                // Unsubscribe token güncellemeleri tek seferde kaydedilir (bildirim/audit tekrarını önler)
+                await base.SaveChangesAsync();
+            }
         }
 
         private async Task AddAuditLogs()
         {
             var auditLogs = new List<AuditLog>();
 
-            var entries = ChangeTracker.Entries().Where(e => e.State != EntityState.Detached && e.State != EntityState.Unchanged);
+            var entries = ChangeTracker.Entries().Where(e => e.State != EntityState.Detached && e.State != EntityState.Unchanged).ToList();
+            if (entries.Count == 0)
+            {
+                return;
+            }
+
             foreach (var entry in entries)
             {
                 if (entry.Entity is AuditLog) continue;

@@ -2,12 +2,18 @@
 
 @{
     ViewData["Title"] = "Abonelik Yönetimi";
+    var currentPathAndQuery = Context.Request.Path + Context.Request.QueryString;
 }
 
 <br />
 
 <div class="card shadow-sm border-0 destination-card">
     <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h1 class="h4 mb-0">Abonelik Yönetimi</h1>
             <a class="btn btn-primary btn-sm" asp-action="Create">Yeni Kayıt</a>
@@ -30,6 +36,10 @@
                     <th>E-posta</th>
                     <th>Talep</th>
                     <th>Son Geçerlilik</th>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <th class="text-end text-nowrap">İşlem</th>
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -41,13 +51,30 @@
                         <td>@item.Email</td>
                         <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td>@(item.ConfirmationExpiresAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <td class="text-end text-nowrap">
+                                <div class="d-inline-flex gap-2">
+                                    <form asp-controller="Subscribers" asp-action="Approve" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="returnUrl" value="@currentPathAndQuery" />
+                                        <button type="submit" class="btn btn-sm btn-success">Onayla</button>
+                                    </form>
+                                    <form asp-controller="Subscribers" asp-action="Reject" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="returnUrl" value="@currentPathAndQuery" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                                    </form>
+                                </div>
+                            </td>
+                        }
                     </tr>
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="3" class="text-muted">Kayıt yok.</td>
+                    <td colspan="@(User.IsInRole("Admin") ? 4 : 3)" class="text-muted">Kayıt yok.</td>
                 </tr>
             }
             </tbody>
@@ -158,6 +185,10 @@
                     <th>Yorum</th>
                     <th>Puan</th>
                     <th class="text-nowrap">Zaman</th>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <th class="text-nowrap text-end">İşlem</th>
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -171,13 +202,30 @@
                         <td style="max-width:420px; white-space:normal; word-break:break-word;">@item.Comment</td>
                         <td>@item.Rating</td>
                         <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <td class="text-end text-nowrap">
+                                <div class="d-inline-flex gap-2">
+                                    <form asp-controller="Reviews" asp-action="Approve" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="returnUrl" value="@currentPathAndQuery" />
+                                        <button type="submit" class="btn btn-sm btn-success">Onayla</button>
+                                    </form>
+                                    <form asp-controller="Reviews" asp-action="Reject" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="returnUrl" value="@currentPathAndQuery" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                                    </form>
+                                </div>
+                            </td>
+                        }
                     </tr>
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="5" class="text-muted">Bekleyen yorum yok.</td>
+                    <td colspan="@(User.IsInRole("Admin") ? 6 : 5)" class="text-muted">Bekleyen yorum yok.</td>
                 </tr>
             }
             </tbody>

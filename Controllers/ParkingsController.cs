@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,7 @@ namespace Roma.Controllers
         }
 
         // GET: Parkings/Create
+        [Authorize]
         public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
@@ -50,6 +52,7 @@ namespace Roma.Controllers
         // POST: Parkings/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsPaid,Fee,HourlyRate,DestinationId")] Parking parking)
         {
             ModelState.Remove("Destination");
@@ -71,6 +74,7 @@ namespace Roma.Controllers
         }
 
         // GET: Parkings/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -85,6 +89,7 @@ namespace Roma.Controllers
         // POST: Parkings/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Capacity,IsPaid,Fee,HourlyRate,DestinationId")] Parking parking)
         {
             if (id != parking.Id) return NotFound();
@@ -109,6 +114,7 @@ namespace Roma.Controllers
         }
 
         // GET: Parkings/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -124,6 +130,7 @@ namespace Roma.Controllers
         // POST: Parkings/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var parking = await _context.Parkings!.FindAsync(id);

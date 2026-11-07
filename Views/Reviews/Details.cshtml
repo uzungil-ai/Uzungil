@@ -10,21 +10,21 @@
     <h4>Review</h4>
     <hr />
     <dl class="row">
-        <dt class="col-sm-2">Comment</dt>
+        <dt class="col-sm-2">Yorum</dt>
         <dd class="col-sm-10">@Model.Comment</dd>
 
-        <dt class="col-sm-2">Rating</dt>
+        <dt class="col-sm-2">Puan</dt>
         <dd class="col-sm-10">
             @Html.RatingBadge(Model.Rating)
         </dd>
 
-        <dt class="col-sm-2">Created At</dt>
+        <dt class="col-sm-2">Oluşturulma</dt>
         <dd class="col-sm-10">@Model.CreatedAt</dd>
 
-        <dt class="col-sm-2">User</dt>
+        <dt class="col-sm-2">Kullanıcı</dt>
         <dd class="col-sm-10">@Model.User?.UserName</dd>
 
-        <dt class="col-sm-2">Attraction</dt>
+        <dt class="col-sm-2">Cazibe Noktası</dt>
         <dd class="col-sm-10">@Model.Attraction?.Name</dd>
 
         <dt class="col-sm-2">Onay</dt>

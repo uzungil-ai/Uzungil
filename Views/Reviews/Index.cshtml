@@ -1,63 +1,57 @@
 @model IEnumerable<Roma.Models.Review>
 
 @{
-    ViewData["Title"] = "Reviews";
+    ViewData["Title"] = "Yorumlar";
+    var isAdmin = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
 }
-
-<h1>Reviews</h1>
+<br />
+<h4>Yorumlar</h4>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
-<p>
-    <a class="btn btn-primary" asp-action="Create">Create New</a>
-</p>
+@if (isAdmin)
+{
+    <p>
+        <a class="btn btn-primary" asp-action="Create">Yeni Yorum</a>
+    </p>
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Comment</th>
-            <th>Rating</th>
-            <th>Created At</th>
-            <th>User</th>
-            <th>Attraction</th>
-            <th>Onay</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var item in Model)
+<div class="mt-4">
+    @if (Model == null || !Model.Any())
     {
-        <tr>
-            <td>@item.Comment</td>
-            <td>
-                @Html.RatingBadge(item.Rating)
-            </td>
-            <td>@item.CreatedAt</td>
-            <td>@item.User?.UserName</td>
-            <td>@item.Attraction?.Name</td>
-            <td>
-                @if (item.IsRejected)
-                {
-                    <span class="badge bg-danger">Reddedildi</span>
-                }
-                else if (item.IsApproved)
-                {
-                    <span class="badge bg-success">Onaylı</span>
-                }
-                else
-                {
-                    <span class="badge bg-warning text-dark">Bekliyor</span>
-                }
-            </td>
-            <td>
-                <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+        <div class="alert alert-warning">Bu sayfada gösterilecek onaylı yorum bulunmuyor.</div>
     }
-    </tbody>
-</table>
+    else
+    {
+        <div class="row g-3">
+            @foreach (var item in Model)
+            {
+                <div class="col-12">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex flex-nowrap align-items-center gap-3 mb-2 small overflow-auto">
+                                <div class="fw-semibold text-nowrap">Destinasyon: @(item.Attraction?.Name ?? "Cazibe noktası belirtilmedi")</div>
+                                <div>@Html.RatingBadge(item.Rating)</div>
+                                <div class="text-muted text-nowrap">@item.CreatedAt</div>
+                                <div class="text-nowrap"><strong>Kullanıcı:</strong> @item.User?.UserName</div>
+                            </div>
+                            <p class="card-text mb-3">@item.Comment</p>
+
+                            @if (isAdmin)
+                            {
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                                    <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
+                                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

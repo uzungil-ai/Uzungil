@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Roma.Data;
 using System.Threading.Channels;
 using Roma.Models;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Identity;
@@ -25,9 +26,26 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+var webServerConnection = builder.Configuration.GetConnectionString("WebServerConnection");
+var connectionString = builder.Environment.IsDevelopment()
+    ? defaultConnection
+    : (string.IsNullOrWhiteSpace(webServerConnection) ? defaultConnection : webServerConnection);
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string not found. Configure 'DefaultConnection' or 'WebServerConnection'.");
+}
+
+builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+        sqlOptions.CommandTimeout(60);
+    }));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
@@ -88,12 +106,34 @@ builder.Services.AddDefaultIdentity<User>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    builder.Services
+        .AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
+}
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+});
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options =>
+{
+    // Legacy /Account/LoginWith2fa URL'ine düşen yönlendirmeler için alias route.
+    options.Conventions.AddAreaPageRoute("Identity", "/Account/LoginWith2fa", "/Account/LoginWith2fa");
+});
 // Destination image saving service
 builder.Services.AddScoped<Roma.Services.IDestinationImageService, Roma.Services.DestinationImageService>();
 
@@ -123,6 +163,21 @@ else
 }
 
 app.UseHttpsRedirection();
+
+// Türkçe klavye ile yanlışlıkla "ı/İ" içeren URL yazımlarını normalize et.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value;
+    if (!string.IsNullOrEmpty(path) && (path.Contains('ı') || path.Contains('İ')))
+    {
+        var normalizedPath = path.Replace('ı', 'i').Replace('İ', 'I');
+        context.Response.Redirect($"{normalizedPath}{context.Request.QueryString}", permanent: false);
+        return;
+    }
+
+    await next();
+});
+
 app.UseRouting();
 
 // Use response compression early
@@ -192,6 +247,9 @@ app.MapPost("/api/chat", async (HttpContext context, Roma.Services.IOpenAiQaServ
             var userManager = services.GetRequiredService<UserManager<User>>();
             var configuration = services.GetRequiredService<IConfiguration>();
             var dbContext = services.GetRequiredService<ApplicationDbContext>();
+            var logger = services.GetService<ILogger<Program>>();
+
+            dbContext.Database.Migrate();
 
             var adminRole = "Admin";
             var editorRole = "Editor";
@@ -216,12 +274,45 @@ app.MapPost("/api/chat", async (HttpContext context, Roma.Services.IOpenAiQaServ
                 {
                     adminUser = new User { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
                     var createResult = userManager.CreateAsync(adminUser, adminPassword).GetAwaiter().GetResult();
-                    // ignore failures here; they will be logged
+                    if (!createResult.Succeeded)
+                    {
+                        logger?.LogError("Admin user oluşturulamadı ({Email}): {Errors}", adminEmail, string.Join(" | ", createResult.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    // If configured admin password has changed, reset it to match configuration.
+                    var isCurrentPasswordValid = userManager.CheckPasswordAsync(adminUser, adminPassword).GetAwaiter().GetResult();
+                    if (!isCurrentPasswordValid)
+                    {
+                        var resetToken = userManager.GeneratePasswordResetTokenAsync(adminUser).GetAwaiter().GetResult();
+                        var resetResult = userManager.ResetPasswordAsync(adminUser, resetToken, adminPassword).GetAwaiter().GetResult();
+                        if (!resetResult.Succeeded)
+                        {
+                            logger?.LogError("Admin şifresi güncellenemedi ({Email}): {Errors}", adminEmail, string.Join(" | ", resetResult.Errors.Select(e => e.Description)));
+                        }
+                    }
+                }
+
+                if (adminUser != null)
+                {
+                    adminUser.EmailConfirmed = true;
+                    adminUser.LockoutEnd = null;
+                    adminUser.AccessFailedCount = 0;
+                    var updateResult = userManager.UpdateAsync(adminUser).GetAwaiter().GetResult();
+                    if (!updateResult.Succeeded)
+                    {
+                        logger?.LogError("Admin kullanıcı güncellemesi başarısız ({Email}): {Errors}", adminEmail, string.Join(" | ", updateResult.Errors.Select(e => e.Description)));
+                    }
                 }
 
                 if (adminUser != null && roleManager != null && !userManager.IsInRoleAsync(adminUser, adminRole).GetAwaiter().GetResult())
                 {
-                    userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                    var addRoleResult = userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                    if (!addRoleResult.Succeeded)
+                    {
+                        logger?.LogError("Admin rol ataması başarısız ({Email}): {Errors}", adminEmail, string.Join(" | ", addRoleResult.Errors.Select(e => e.Description)));
+                    }
                 }
             }
 

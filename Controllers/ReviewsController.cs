@@ -23,8 +23,10 @@ namespace Roma.Controllers
         {
             var reviews = await _context.Reviews!
                 .AsNoTracking()
+                .Where(r => r.IsApproved && !r.IsRejected)
                 .Include(r => r.Attraction)
                 .Include(r => r.User)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
             return View(reviews);
         }
@@ -54,18 +56,10 @@ namespace Roma.Controllers
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isUserLocked = User.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(currentUserId);
 
-            if (!isUserLocked)
-            {
-                var users = await _context.Users
-                    .AsNoTracking()
-                    .OrderBy(u => u.UserName)
-                    .ToListAsync();
-                ViewData["UserId"] = new SelectList(users, "Id", "UserName");
-            }
-
             ViewData["AttractionId"] = new SelectList(attractions, "Id", "Name", attractionId);
             ViewBag.UserLocked = isUserLocked;
             ViewBag.CurrentUserId = currentUserId;
+            ViewBag.GuestEmail = string.Empty;
             ViewBag.ReturnToAttraction = attractionId.HasValue;
             ViewBag.AttractionId = attractionId;
 
@@ -82,16 +76,43 @@ namespace Roma.Controllers
         // POST: Reviews/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Comment,Rating,UserId,AttractionId")] Review review, bool returnToAttraction = false)
+        public async Task<IActionResult> Create([Bind("Id,Comment,Rating,UserId,AttractionId")] Review review, string? guestEmail, bool returnToAttraction = false)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (User.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(currentUserId))
             {
                 review.UserId = currentUserId;
             }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(guestEmail))
+                {
+                    ModelState.AddModelError("guestEmail", "Yorum eklemek için kayıtlı e-posta adresinizi giriniz.");
+                }
+                else
+                {
+                    var normalizedEmail = guestEmail.Trim().ToUpperInvariant();
+                    var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
+                    if (existingUser == null)
+                    {
+                        ModelState.AddModelError("guestEmail", "Bu e-posta ile kayıtlı kullanıcı bulunamadı.");
+                    }
+                    else
+                    {
+                        review.UserId = existingUser.Id;
+                    }
+                }
+            }
 
+            ModelState.Remove(nameof(Review.UserId));
+            ModelState.Remove(nameof(Review.AttractionId));
             ModelState.Remove(nameof(Review.User));
             ModelState.Remove(nameof(Review.Attraction));
+
+            if (review.AttractionId <= 0)
+            {
+                ModelState.AddModelError(nameof(Review.AttractionId), "Lütfen bir cazibe noktası seçiniz.");
+            }
 
             if (review.Rating < 1 || review.Rating > 5)
             {
@@ -119,18 +140,11 @@ namespace Roma.Controllers
                 .ToListAsync() ?? Task.FromResult(new List<Attraction>()));
 
             var isUserLocked = User.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(currentUserId);
-            if (!isUserLocked)
-            {
-                var users = await _context.Users
-                    .AsNoTracking()
-                    .OrderBy(u => u.UserName)
-                    .ToListAsync();
-                ViewData["UserId"] = new SelectList(users, "Id", "UserName", review.UserId);
-            }
 
             ViewData["AttractionId"] = new SelectList(attractions, "Id", "Name", review.AttractionId);
             ViewBag.UserLocked = isUserLocked;
             ViewBag.CurrentUserId = currentUserId;
+            ViewBag.GuestEmail = guestEmail;
             ViewBag.ReturnToAttraction = returnToAttraction;
             ViewBag.AttractionId = review.AttractionId;
             return View(review);

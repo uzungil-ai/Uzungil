@@ -4,114 +4,96 @@
     ViewData["Title"] = "Fotografia ile - Keşfet";
 }
 
-<section class="home-hero home-hero-turquoise py-5 py-lg-6 @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
-    <div class="container">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-8 col-xl-7">
-                <span class="badge rounded-pill text-bg-light mb-3">Yapay zeka destekli. Seyahat Planlama</span>
-                <h1 class="display-5 fw-bold mb-3">Fotografia ile daha hızlı, daha net seyahat planı oluşturun</h1>
-                <p class="lead mb-4">Öne çıkan destinasyonları görün, sohbet botundan öneri alın ve güncellemeleri takip edin.</p>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <a class="btn btn-light btn-lg hero-explore-btn" href="#explore">Destinasyonları Gör</a>
-                    <a class="btn btn-outline-light btn-lg" href="/Chat">Sohbet Botu</a>
-                    <a class="btn btn-warning text-dark btn-lg app-yellow-cta" href="/OpenAiSoruCevap">OpenAI Soru-Cevap</a>
-                    <button type="button" class="btn btn-warning btn-lg app-yellow-cta" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="hero-pill">Hızlı keşif</span>
-                    <span class="hero-pill">Mobil uyumlu</span>
-                    <span class="hero-pill">Canlı güncelleme</span>
-                </div>
+<section class="container destination-top-search-wrap" aria-label="Destinasyon arama">
+    <form method="get" class="destination-top-search-form">
+        <div class="hero-search-grid destination-top-search-grid">
+            <div class="hero-search-field">
+                <input id="hero-search" name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
             </div>
-        </div>
-    </div>
-</section>
-
-<div class="home-under-hero-bg">
-<section class="container my-4 home-stats-section @(Model.HasActiveSearch ? "search-disabled-section" : string.Empty)" aria-disabled="@(Model.HasActiveSearch ? "true" : "false")">
-    <div class="row g-2 g-md-3">
-        <div class="col-6 col-lg-3">
-            <div class="quick-stat-box">
-                <div class="small text-muted">Öne çıkan</div>
-                <div class="h4 mb-0">@Model.Featured.Count</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="quick-stat-box">
-                <div class="small text-muted">En yeni</div>
-                <div class="h4 mb-0">@Model.Latest.Count</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="quick-stat-box">
-                <div class="small text-muted">Yardım aracı</div>
-                <div class="h6 mb-0">Sohbet Botu hazır</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="quick-stat-box">
-                <div class="small text-muted">Hızlı işlem</div>
-                <a href="/OpenAiSoruCevap" class="fw-semibold text-decoration-none">OpenAI ile soru sor →</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section id="explore" class="container my-5 home-explore-section">
-    @* <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h2 class="mb-0 section-title" style="text-decoration-color:mediumblue">Destinasyonları keşfedin</h2>
-        <span class="text-muted small">Öne çıkan: @Model.Featured.Count • Yeni: @Model.Latest.Count</span>
-    </div> *@
-
-    <form method="get" class="card border-0 shadow-sm mb-4 discover-filter-card">
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-5">
-                  <label for="name" class="form-label">Destinasyon Adı</label>
-                    <input id="name" name="name" class="form-control" placeholder="Örn: Kapadokya" />
-                </div>
-                <div class="col-12 col-md-5">
-                   <label for="country" class="form-label">Ülke</label>
-                    <input id="country" name="country" class="form-control" placeholder="Örn: Türkiye" />
-                </div>
-                <div class="col-12 col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary btn-modern">Ara</button>
-                </div>
+            <div class="hero-search-action destination-top-search-action">
+                <button type="submit" class="home-tab-btn home-action-link home-action-yellow" aria-label="Ara">
+                    Ara
+                </button>
             </div>
         </div>
     </form>
+</section>
 
-    <div class="home-tabs mb-4" role="tablist" aria-label="Destinasyon sekmeleri">
-        <button type="button" class="home-tab-btn active" data-target="featured-list" aria-selected="true">Öne Çıkanlar</button>
+<div class="home-under-hero-bg">
+<section class="container hero-search-slider-wrap">
+    <div class="hero-search-card shadow-sm">
+        <div class="home-tabs home-actions mb-4" aria-label="Hızlı işlemler">
+            <button type="button" class="home-tab-btn home-action-link active home-navbar-theme-btn" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
+            <a class="home-tab-btn home-action-link home-action-yellow" href="/Chat">Chat</a>
+            <a class="home-tab-btn home-action-link home-action-yellow" href="/OpenAiSoruCevap">Aİ-Sor</a>
+            <a class="home-tab-btn home-action-link home-action-yellow" href="/Planlarim">Seyahat Planı</a>
+        </div>
+
+        <div class="hero-featured-strip-wrap mb-4">
+            <button type="button" class="btn btn-sm btn-outline-primary hero-scroll-btn hero-scroll-btn-left js-hero-scroll" data-direction="left" aria-label="Sola kaydır">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path fill-rule="evenodd" d="M8.354 1.646a.5.5 0 0 1 0 .708L2.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
+                    <path fill-rule="evenodd" d="M12.354 1.646a.5.5 0 0 1 0 .708L6.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
+                </svg>
+            </button>
+
+            <div id="heroFeaturedStrip" class="hero-featured-strip" role="region" aria-label="Öne çıkan destinasyon görselleri">
+                @if (Model.Featured.Any())
+                {
+                    @for (var i = 0; i < Math.Min(8, Model.Featured.Count); i++)
+                    {
+                        var d = Model.Featured[i];
+                        var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                        <a class="hero-featured-item" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" aria-label="@d.Name detaylarını görüntüle">
+                            <img src="@img" alt="@d.Name" loading="lazy" decoding="async" />
+                            <span>@d.Name</span>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-light border mb-0 w-100">Henüz öne çıkan içerik bulunmuyor.</div>
+                }
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-primary hero-scroll-btn hero-scroll-btn-right js-hero-scroll" data-direction="right" aria-label="Sağa kaydır">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path fill-rule="evenodd" d="M3.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L9.293 8 3.646 2.354a.5.5 0 0 1 0-.708" />
+                    <path fill-rule="evenodd" d="M7.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L13.293 8 7.646 2.354a.5.5 0 0 1 0-.708" />
+                </svg>
+            </button>
+        </div>
+
+    </div>
+</section>
+
+<section id="explore" class="container mt-0 mb-5 home-explore-section">
+
+    <div class="home-tabs mb-3" role="tablist" aria-label="Destinasyon sekmeleri">
+        <button type="button" class="home-tab-btn active home-navbar-theme-btn" data-target="featured-list" aria-selected="true">Öne Çıkanlar</button>
         <button type="button" class="home-tab-btn" data-target="latest-list" aria-selected="false">En Yeniler</button>
+        <a class="home-tab-btn home-action-yellow" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
     </div>
 
     <div id="featured-list" class="home-tab-panel">
-        <div class="row">
+        <div class="row g-2">
             @for (var i = 0; i < Model.Featured.Count; i++)
             {
                 var d = Model.Featured[i];
                 var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
                 var srcset = Model.BuildSrcSet(img);
-                var hiddenClass = i >= 9 ? "d-none" : string.Empty;
-                <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
+                var hiddenClass = i >= 6 ? "d-none" : string.Empty;
+                <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
                     <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
-                        <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
+                        <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
                                     <source srcset="@srcset" type="image/webp" />
                                 }
-                                <img class="card-img-top destination-image" src="@img" loading="lazy" alt="@d.Name" />
+                                <img class="card-img-top destination-image" src="@img" loading="lazy" decoding="async" alt="@d.Name" />
                             </picture>
+                            <span class="destination-image-title">@d.Name</span>
                         </a>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                <h5 class="card-title mb-1">@d.Name</h5>
-                                <span class="badge text-bg-light">@d.Country</span>
-                            </div>
-                            <p class="small text-muted mb-3">@((d.Description?.Length>120)?d.Description.Substring(0,120)+"...":d.Description)</p>
-                            <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Detayları Gör</a>
-                        </div>
                     </div>
                 </div>
             }
@@ -122,45 +104,35 @@
                 </div>
             }
         </div>
-        @if (Model.Featured.Count > 9)
+        @if (Model.Featured.Count > 6)
         {
-            <div class="text-center mb-3">
-                <button type="button"
-                        class="btn btn-outline-primary js-load-more"
-                        data-panel-id="featured-list"
-                        data-step="9">
-                    Daha Fazla Göster
+            <div class="text-center mt-3 mb-3">
+                <button type="button" id="featuredLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="featured-list" data-step="6">
+                    Daha Fazla
                 </button>
             </div>
         }
     </div>
 
     <div id="latest-list" class="home-tab-panel d-none">
-        <div class="row">
+        <div class="row g-2">
             @for (var i = 0; i < Model.Latest.Count; i++)
             {
                 var d = Model.Latest[i];
                 var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
                 var srcset = Model.BuildSrcSet(img);
-                var hiddenClass = i >= 9 ? "d-none" : string.Empty;
-                <div class="col-12 col-sm-6 col-md-4 mb-4 js-destination-item @hiddenClass">
+                var hiddenClass = i >= 6 ? "d-none" : string.Empty;
+                <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
                     <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
-                        <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
+                        <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
                                     <source srcset="@srcset" type="image/webp" />
                                 }
-                                <img class="card-img-top destination-image" src="@img" loading="lazy" alt="@d.Name" />
+                                <img class="card-img-top destination-image" src="@img" loading="lazy" decoding="async" alt="@d.Name" />
                             </picture>
+                            <span class="destination-image-title">@d.Name</span>
                         </a>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                <h5 class="card-title mb-1">@d.Name</h5>
-                                <span class="badge text-bg-light">@d.Country</span>
-                            </div>
-                            <p class="small text-muted mb-3">@((d.Description?.Length>120)?d.Description.Substring(0,120)+"...":d.Description)</p>
-                            <a asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Detayları Gör</a>
-                        </div>
                     </div>
                 </div>
             }
@@ -171,87 +143,122 @@
                 </div>
             }
         </div>
-        @if (Model.Latest.Count > 9)
+    </div>
+
+    <div id="all-list" class="home-tab-panel d-none">
+        <div class="row g-2">
+            @for (var i = 0; i < Model.Featured.Count; i++)
+            {
+                var d = Model.Featured[i];
+                var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                var srcset = Model.BuildSrcSet(img);
+                var hiddenClass = i >= 6 ? "d-none" : string.Empty;
+                <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
+                    <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
+                        <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
+                            <picture>
+                                @if(!string.IsNullOrEmpty(srcset)){
+                                    <source srcset="@srcset" type="image/webp" />
+                                }
+                                <img class="card-img-top destination-image" src="@img" loading="lazy" decoding="async" alt="@d.Name" />
+                            </picture>
+                            <span class="destination-image-title">@d.Name</span>
+                        </a>
+                    </div>
+                </div>
+            }
+            @if(!Model.Featured.Any())
+            {
+                <div class="col-12">
+                    <div class="alert alert-light border">Henüz destinasyon bulunmuyor.</div>
+                </div>
+            }
+        </div>
+        @if (Model.Latest.Count > 6)
         {
-            <div class="text-center mb-3">
-                <button type="button"
-                        class="btn btn-outline-primary js-load-more"
-                        data-panel-id="latest-list"
-                        data-step="9">
-                    Daha Fazla Göster
+            <div class="text-center mt-3 mb-3">
+                <button type="button" id="latestLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="latest-list" data-step="6">
+                    Daha Fazla
                 </button>
             </div>
         }
     </div>
-</section>
 
-<section class="container pb-5">
-    <div class="row g-3">
-        <div class="col-md-4">
-            <a href="#explore" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box feature-step-card h-100 reveal-up">
-                    <div class="feature-step-icon" aria-hidden="true">🧭</div>
-                    <h3 class="h6">1. Keşfet</h3>
-                    <p class="mb-0 text-muted">Öne çıkan noktaları incele ve görsellerle hızlı karşılaştır.</p>
-                    <span class="feature-step-link">Destinasyonları aç →</span>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="/Chat" class="text-decoration-none text-reset d-block h-100">
-                <div class="feature-box feature-step-card h-100 reveal-up">
-                    <div class="feature-step-icon" aria-hidden="true">🗺️</div>
-                    <h3 class="h6">2. Planla</h3>
-                    <p class="mb-0 text-muted">Sohbet botu ile tercihine göre öneri ve rota al.</p>
-                    <span class="feature-step-link">Sohbet botunu aç →</span>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4">
-            <button type="button" class="feature-box feature-step-card h-100 reveal-up text-start w-100 border-0" data-bs-toggle="modal" data-bs-target="#subscribeModal">
-                <div class="feature-step-icon" aria-hidden="true">🔔</div>
-                <h3 class="h6">3. Takip Et</h3>
-                <p class="mb-0 text-muted">Bülten ile yeni destinasyonları ve güncellemeleri öğren.</p>
-                <span class="feature-step-link">Bültene katıl →</span>
-            </button>
-        </div>
+    <div id="homeEndActions" class="d-flex flex-wrap justify-content-center gap-2 mt-3 mb-2 d-none">
+        <a class="btn btn-navbar-yellow-theme" href="javascript:history.back()">Geri</a>
+        <a class="btn btn-navbar-theme" asp-page="/Index">Home</a>
     </div>
 </section>
+
 </div>
 
 @section Scripts {
     <script>
         (function(){
-            var tabButtons = document.querySelectorAll('.home-tab-btn');
-            var loadMoreButtons = document.querySelectorAll('.js-load-more');
+            var tabButtons = document.querySelectorAll('.home-tabs[role="tablist"] .home-tab-btn');
+            var loadMoreButtons = document.querySelectorAll('.js-load-more[data-target-panel]');
+            var heroScrollButtons = document.querySelectorAll('.js-hero-scroll');
+            var heroFeaturedStrip = document.getElementById('heroFeaturedStrip');
+            var homeEndActions = document.getElementById('homeEndActions');
 
-            function updateLoadMoreButton(button) {
-                var panelId = button.getAttribute('data-panel-id');
-                var panel = panelId ? document.getElementById(panelId) : null;
-                if (!panel) return;
+            function getActivePanel() {
+                return document.querySelector('.home-tab-panel:not(.d-none)');
+            }
 
-                var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
-                if (hiddenItems.length === 0) {
-                    button.classList.add('d-none');
+            function updateLoadMoreButtons() {
+                loadMoreButtons.forEach(function (button) {
+                    var panelId = button.getAttribute('data-target-panel');
+                    var panel = panelId ? document.getElementById(panelId) : null;
+
+                    if (!panel || panel.classList.contains('d-none')) {
+                        button.classList.add('d-none');
+                        return;
+                    }
+
+                    var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
+                    if (hiddenItems.length === 0) {
+                        button.classList.add('d-none');
+                    } else {
+                        button.classList.remove('d-none');
+                    }
+                });
+
+                updateEndActions();
+            }
+
+            function updateEndActions() {
+                if (!homeEndActions) return;
+
+                var panel = getActivePanel();
+                if (!panel) {
+                    homeEndActions.classList.add('d-none');
+                    return;
+                }
+
+                var totalItems = panel.querySelectorAll('.js-destination-item').length;
+                var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none').length;
+
+                if (totalItems > 0 && hiddenItems === 0) {
+                    homeEndActions.classList.remove('d-none');
+                } else {
+                    homeEndActions.classList.add('d-none');
                 }
             }
 
             loadMoreButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
-                    var panelId = button.getAttribute('data-panel-id');
+                    var panelId = button.getAttribute('data-target-panel');
                     var panel = panelId ? document.getElementById(panelId) : null;
                     if (!panel) return;
 
-                    var step = parseInt(button.getAttribute('data-step') || '9', 10);
+                    var step = parseInt(button.getAttribute('data-step') || '6', 10);
                     var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
                     for (var i = 0; i < Math.min(step, hiddenItems.length); i++) {
                         hiddenItems[i].classList.remove('d-none');
                     }
 
-                    updateLoadMoreButton(button);
+                    updateLoadMoreButtons();
                 });
-
-                updateLoadMoreButton(button);
             });
 
             tabButtons.forEach(function (tab) {
@@ -273,8 +280,26 @@
                     if (target) {
                         target.classList.remove('d-none');
                     }
+
+                    updateLoadMoreButtons();
                 });
             });
+
+            heroScrollButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    if (!heroFeaturedStrip) return;
+
+                    var direction = button.getAttribute('data-direction') === 'left' ? -1 : 1;
+                    var scrollAmount = Math.max(220, Math.round(heroFeaturedStrip.clientWidth * 0.6));
+
+                    heroFeaturedStrip.scrollBy({
+                        left: direction * scrollAmount,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            updateLoadMoreButtons();
 
         })();
     </script>

@@ -205,6 +205,64 @@ namespace Roma.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Approve(int id, string? returnUrl = null)
+        {
+            var subscriber = await _context.Subscribers!
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (subscriber == null)
+            {
+                return NotFound();
+            }
+
+            subscriber.ConsentGiven = true;
+            subscriber.IsConfirmed = true;
+            subscriber.ConfirmationToken = null;
+            subscriber.ConfirmationExpiresAt = null;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Abonelik onaylandı.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reject(int id, string? returnUrl = null)
+        {
+            var subscriber = await _context.Subscribers!
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (subscriber == null)
+            {
+                return NotFound();
+            }
+
+            subscriber.ConsentGiven = false;
+            subscriber.IsConfirmed = false;
+            subscriber.ConfirmationToken = null;
+            subscriber.ConfirmationExpiresAt = null;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Abonelik reddedildi.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private bool SubscriberExists(int id)
         {
             return _context.Subscribers!.Any(e => e.Id == id);

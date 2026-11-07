@@ -5,7 +5,7 @@
     <div class="col-12 col-md-8 col-lg-5">
         <h2 class="mb-4">Giriş</h2>
 
-        <form method="post" class="border rounded p-4 bg-light">
+        <form method="post" asp-route-returnUrl="@Model.ReturnUrl" class="border rounded p-4 bg-light">
             <div class="mb-3">
                 <label asp-for="Input.Email" class="form-label">Kullanıcı adı (E-posta)</label>
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" />
@@ -26,6 +26,20 @@
             @if (Model.ErrorMessage != null)
             {
                 <div class="text-danger mt-3">@Model.ErrorMessage</div>
+            }
+        </form>
+
+        <div class="text-center my-3 text-muted">veya</div>
+
+        <form method="post" asp-area="Identity" asp-page="/Account/ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" class="border rounded p-4">
+            <button type="submit" name="provider" value="Google" class="btn btn-outline-danger w-100" disabled="@(!Model.HasGoogleLogin)">
+                Google ile giriş yap
+            </button>
+            @if (!Model.HasGoogleLogin)
+            {
+                <div class="small text-muted mt-2">
+                    Google giriş yapılandırması eksik (ClientId/ClientSecret).
+                </div>
             }
         </form>
     </div>

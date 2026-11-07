@@ -19,6 +19,7 @@
     <PackageReference Include="AutoGen.OpenAI" Version="0.2.3" />
     <PackageReference Include="DotEnv.Microsoft.Extensions.Configuration" Version="1.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
