@@ -2,7 +2,71 @@
 @model Roma.Pages.IndexModel
 @{
     ViewData["Title"] = "Fotografia ile - Keşfet";
+    var firstFeatured = Model.Featured.FirstOrDefault();
+    var firstFeaturedImage = firstFeatured?.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+    var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
 }
+
+@section Head {
+    <style>
+        #homeSplash {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity .35s ease, visibility .35s ease;
+        }
+
+        #homeSplash.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        #homeSplash img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+
+        #homeSplash .home-splash-title {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: clamp(2rem, 6vw, 3.2rem);
+            text-align: center;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, .75);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        #homeSplash .home-splash-subtitle {
+            position: absolute;
+            left: 50%;
+            top: calc(50% + 3.25rem);
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 2rem;
+            text-align: center;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, .75);
+            font-weight: 600;
+            margin: 0;
+        }
+    </style>
+}
+
+<div id="homeSplash" aria-hidden="true">
+    <img src="@firstFeaturedImage" alt="@firstFeaturedName" fetchpriority="high" decoding="async" />
+    <h1 class="home-splash-title">fotografia.com.tr</h1>
+    <h2 class="home-splash-subtitle">Hoşgeldiniz</h2>
+</div>
 
 <section class="container destination-top-search-wrap" aria-label="Destinasyon arama">
     <form method="get" class="destination-top-search-form">
@@ -44,8 +108,13 @@
                     {
                         var d = Model.Featured[i];
                         var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                        var isFirstSlideImage = i == 0;
                         <a class="hero-featured-item" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" aria-label="@d.Name detaylarını görüntüle">
-                            <img src="@img" alt="@d.Name" loading="lazy" decoding="async" />
+                            <img src="@img"
+                                 alt="@d.Name"
+                                 loading="@(isFirstSlideImage ? "eager" : "lazy")"
+                                 fetchpriority="@(isFirstSlideImage ? "high" : "auto")"
+                                 decoding="async" />
                             <span>@d.Name</span>
                         </a>
                     }
@@ -300,6 +369,30 @@
             });
 
             updateLoadMoreButtons();
+
+            var splashHidden = false;
+
+            function hideSplashWithDelay() {
+                if (splashHidden) return;
+
+                var splash = document.getElementById('homeSplash');
+                if (!splash) return;
+
+                splashHidden = true;
+                setTimeout(function () {
+                    splash.classList.add('is-hidden');
+                    setTimeout(function () { splash.remove(); }, 450);
+                }, 3000);
+            }
+
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                hideSplashWithDelay();
+            } else {
+                document.addEventListener('DOMContentLoaded', hideSplashWithDelay, { once: true });
+                window.addEventListener('load', hideSplashWithDelay, { once: true });
+            }
+
+            setTimeout(hideSplashWithDelay, 8000);
 
         })();
     </script>
