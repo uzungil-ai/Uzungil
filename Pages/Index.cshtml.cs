@@ -10,6 +10,7 @@ namespace Roma.Pages
     {
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly Dictionary<string, string> _srcSetCache = new(StringComparer.OrdinalIgnoreCase);
 
         public IndexModel(ApplicationDbContext db, IWebHostEnvironment env)
         {
@@ -51,6 +52,7 @@ namespace Roma.Pages
 
             var baseQuery = _db.Destinations!
                 .Include(d => d.Images)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (Search is not null)
@@ -75,18 +77,23 @@ namespace Roma.Pages
 
             Featured = await baseQuery
                 .OrderBy(d => d.Name)
-                .Take(60)
+                .Take(24)
                 .ToListAsync();
 
             Latest = await baseQuery
                 .OrderByDescending(d => d.Id)
-                .Take(60)
+                .Take(24)
                 .ToListAsync();
         }
 
         public string BuildSrcSet(string? imageUrl)
         {
             if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
+
+            if (_srcSetCache.TryGetValue(imageUrl, out var cachedSrcSet))
+            {
+                return cachedSrcSet;
+            }
 
             // imageUrl like /uploads/destinations/{id}/{file}
             try
@@ -117,7 +124,9 @@ namespace Roma.Pages
                     parts.Add($"{relPath} 640w");
                 }
 
-                return string.Join(", ", parts);
+                var srcSet = string.Join(", ", parts);
+                _srcSetCache[imageUrl] = srcSet;
+                return srcSet;
             }
             catch
             {
