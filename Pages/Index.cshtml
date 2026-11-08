@@ -79,11 +79,14 @@
 
         #homeSplash .home-splash-search .form-control {
             border-radius: 999px;
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         #homeSplash .home-splash-search .btn {
             border-radius: 999px;
             white-space: nowrap;
+            flex: 0 0 auto;
         }
 
         #homeSplash .home-splash-actions {
@@ -151,8 +154,13 @@
 
             #homeSplash .home-splash-search {
                 top: calc(50% + 3.8rem);
-                width: min(94vw, 560px);
+                width: min(calc(94vw * 0.8), 448px);
                 padding: .4rem;
+            }
+
+            #homeSplash .home-splash-search .form-control:focus {
+                width: 100%;
+                transform: none;
             }
 
             #homeSplash .home-splash-actions {
@@ -178,8 +186,6 @@
         <a class="splash-cta splash-cta-chat" href="/Chat">Nereye gitmek istersiniz</a>
         <a class="splash-cta splash-cta-ai" href="/OpenAiSoruCevap">Yapay zekaya sor</a>
         <a class="splash-cta splash-cta-plan" href="/SeyahatPlanla">Seyahat planla</a>
-        <a class="splash-cta splash-cta-review" href="/Reviews/Create">Yorumunuzu yazınız</a>
-        <a class="splash-cta splash-cta-brand" href="/">fotografia.com.tr</a>
         <a class="splash-cta splash-cta-whatsapp" href="https://wa.me/?text=Fotografia%20-%20https%3A%2F%2Ffotografia.com.tr" target="_blank" rel="noopener noreferrer">What-up ile paylaş</a>
         <a class="splash-cta splash-cta-about" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
     </div>
@@ -501,7 +507,7 @@
                 setTimeout(function () {
                     splash.classList.add('is-hidden');
                     setTimeout(function () { splash.remove(); }, 450);
-                }, 6000);
+                }, 4000);
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -511,7 +517,7 @@
                 window.addEventListener('load', hideSplashWithDelay, { once: true });
             }
 
-            setTimeout(hideSplashWithDelay, 8000);
+            setTimeout(hideSplashWithDelay, 4000);
 
         })();
     </script>
