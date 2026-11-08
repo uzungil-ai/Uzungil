@@ -76,7 +76,7 @@ namespace Roma.Pages
             }
 
             Featured = await baseQuery
-                .OrderBy(d => d.Name)
+                .OrderBy(_ => Guid.NewGuid())
                 .Take(24)
                 .ToListAsync();
 

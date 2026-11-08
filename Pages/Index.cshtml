@@ -37,10 +37,10 @@
         #homeSplash .home-splash-title {
             position: absolute;
             left: 50%;
-            top: 50%;
+            top: calc(50% - 7.2rem);
             transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: clamp(2rem, 6vw, 3.2rem);
+            color: #b45309;
+            font-size: clamp(4rem, 10.4vw, 5.6rem);
             text-align: center;
             text-shadow: 0 3px 10px rgba(0, 0, 0, .75);
             font-weight: 700;
@@ -50,22 +50,116 @@
         #homeSplash .home-splash-subtitle {
             position: absolute;
             left: 50%;
-            top: calc(50% + 3.25rem);
+            top: calc(50% - 3.8rem);
             transform: translateX(-50%);
-            color: #fff;
-            font-size: 2rem;
+            color: #b45309;
+            font-size: clamp(4rem, 10.4vw, 5.6rem);
             text-align: center;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, .75);
-            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+            font-weight: 700;
             margin: 0;
+        }
+
+        #homeSplash .home-splash-search {
+            position: absolute;
+            left: 50%;
+            top: calc(50% + 4.5rem);
+            transform: translateX(-50%);
+            width: min(92vw, 660px);
+            display: flex;
+            gap: .5rem;
+            padding: .5rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .45);
+            border: 1px solid rgba(255,255,255,.35);
+            backdrop-filter: blur(4px);
+        }
+
+        #homeSplash .home-splash-search .form-control {
+            border-radius: 999px;
+        }
+
+        #homeSplash .home-splash-search .btn {
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        #homeSplash .home-splash-actions {
+            position: absolute;
+            left: 50%;
+            bottom: 9vh;
+            transform: translateX(-50%);
+            width: min(92vw, 980px);
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            justify-content: center;
+        }
+
+        #homeSplash .splash-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .6rem .95rem;
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: .01em;
+            border: 1px solid rgba(255,255,255,.45);
+            backdrop-filter: blur(3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, .28);
+        }
+
+        #homeSplash .splash-cta-chat { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+        #homeSplash .splash-cta-ai { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
+        #homeSplash .splash-cta-plan { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        #homeSplash .splash-cta-review { background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); }
+        #homeSplash .splash-cta-brand { background: var(--navbar-theme-gradient); }
+        #homeSplash .splash-cta-about { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+
+        @@media (max-width: 768px) {
+            #homeSplash .home-splash-subtitle {
+                top: calc(50% - 2.6rem);
+            }
+
+            #homeSplash .home-splash-title {
+                top: calc(50% - 5.6rem);
+            }
+
+            #homeSplash .home-splash-search {
+                top: calc(50% + 3.8rem);
+                width: min(94vw, 560px);
+                padding: .4rem;
+            }
+
+            #homeSplash .home-splash-actions {
+                bottom: 7vh;
+                gap: .45rem;
+            }
+
+            #homeSplash .splash-cta {
+                font-size: .9rem;
+                padding: .5rem .8rem;
+            }
         }
     </style>
 }
 
 <div id="homeSplash" aria-hidden="true">
     <img src="@firstFeaturedImage" alt="@firstFeaturedName" fetchpriority="high" decoding="async" />
-    <h1 class="home-splash-title">fotografia.com.tr</h1>
-    <h2 class="home-splash-subtitle">Hoşgeldiniz</h2>
+    <form method="get" class="home-splash-search" aria-label="Ana sayfa arama">
+        <input name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
+        <button type="submit" class="btn btn-warning text-dark fw-semibold">Ara</button>
+    </form>
+    <div class="home-splash-actions" aria-label="Hızlı işlemler">
+        <a class="splash-cta splash-cta-chat" href="/Chat">Chat</a>
+        <a class="splash-cta splash-cta-ai" href="/OpenAiSoruCevap">Yapay zekaya sor</a>
+        <a class="splash-cta splash-cta-plan" href="/SeyahatPlanla">Seyahat planla</a>
+        <a class="splash-cta splash-cta-review" href="/Reviews/Create">Yorumunuzu yazınız</a>
+        <a class="splash-cta splash-cta-brand" href="/">fotografia.com.tr</a>
+        <a class="splash-cta splash-cta-about" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
+    </div>
 </div>
 
 <section class="container destination-top-search-wrap" aria-label="Destinasyon arama">
@@ -382,7 +476,7 @@
                 setTimeout(function () {
                     splash.classList.add('is-hidden');
                     setTimeout(function () { splash.remove(); }, 450);
-                }, 3000);
+                }, 5000);
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {

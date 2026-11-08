@@ -4,6 +4,31 @@
     ViewData["Title"] = "Yorumlar";
     var isAdmin = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
 }
+
+@functions {
+    private static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "-";
+        }
+
+        var parts = email.Split('@', 2);
+        var localPart = parts[0];
+        var domainPart = parts.Length > 1 ? parts[1] : string.Empty;
+
+        if (localPart.Length == 1)
+        {
+            return $"{localPart[0]}*@{domainPart}";
+        }
+
+        var starCount = Math.Max(1, localPart.Length - 2);
+        var maskedLocal = $"{localPart[0]}{new string('*', starCount)}{localPart[^1]}";
+
+        return string.IsNullOrEmpty(domainPart) ? maskedLocal : $"{maskedLocal}@{domainPart}";
+    }
+}
+
 <br />
 <h4>Yorumlar</h4>
 
@@ -36,7 +61,7 @@
                                 <div class="fw-semibold text-nowrap">Destinasyon: @(item.Attraction?.Name ?? "Cazibe noktası belirtilmedi")</div>
                                 <div>@Html.RatingBadge(item.Rating)</div>
                                 <div class="text-muted text-nowrap">@item.CreatedAt</div>
-                                <div class="text-nowrap"><strong>Kullanıcı:</strong> @item.User?.UserName</div>
+                                <div class="text-nowrap"><strong>E-posta:</strong> @MaskEmail(item.User?.Email)</div>
                             </div>
                             <p class="card-text mb-3">@item.Comment</p>
 

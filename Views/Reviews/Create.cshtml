@@ -1,10 +1,10 @@
 @model Roma.Models.Review
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Yorumunuz";
 }
 
-<h1>Create</h1>
+<h1>Yorumunuz</h1>
 
 <form asp-action="Create" method="post">
     <input type="hidden" name="returnToAttraction" value="@((ViewBag.ReturnToAttraction == true).ToString().ToLowerInvariant())" />
@@ -47,7 +47,7 @@
         </div>
     }
     <div class="form-group mt-3">
-        <input type="submit" value="Create" class="btn btn-primary" />
+        <input type="submit" value="Ekle" class="btn btn-primary" />
         @if (ViewBag.ReturnToAttraction == true && ViewBag.AttractionId != null)
         {
             <a class="btn btn-secondary" asp-controller="Attractions" asp-action="Details" asp-route-id="@ViewBag.AttractionId">Geri Dön</a>
