@@ -788,6 +788,10 @@ form input[type="button"] {
   color: #1877f2;
 }
 
+.social-link[aria-label="WhatsApp"] {
+  color: #25d366;
+}
+
 .footer-cta-link:hover,
 .footer-cta-link:focus {
   background: rgba(255, 255, 255, 0.2);

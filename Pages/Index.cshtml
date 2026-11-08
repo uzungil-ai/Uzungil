@@ -116,6 +116,7 @@
         #homeSplash .splash-cta-plan { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
         #homeSplash .splash-cta-review { background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); }
         #homeSplash .splash-cta-brand { background: var(--navbar-theme-gradient); }
+        #homeSplash .splash-cta-whatsapp { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); }
         #homeSplash .splash-cta-about { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
 
         @@media (max-width: 768px) {
@@ -153,11 +154,12 @@
         <button type="submit" class="btn btn-warning text-dark fw-semibold">Ara</button>
     </form>
     <div class="home-splash-actions" aria-label="Hızlı işlemler">
-        <a class="splash-cta splash-cta-chat" href="/Chat">Chat</a>
+        <a class="splash-cta splash-cta-chat" href="/Chat">Nereye gitmek istersiniz</a>
         <a class="splash-cta splash-cta-ai" href="/OpenAiSoruCevap">Yapay zekaya sor</a>
         <a class="splash-cta splash-cta-plan" href="/SeyahatPlanla">Seyahat planla</a>
         <a class="splash-cta splash-cta-review" href="/Reviews/Create">Yorumunuzu yazınız</a>
         <a class="splash-cta splash-cta-brand" href="/">fotografia.com.tr</a>
+        <a class="splash-cta splash-cta-whatsapp" href="https://wa.me/?text=Fotografia%20-%20https%3A%2F%2Ffotografia.com.tr" target="_blank" rel="noopener noreferrer">What-up ile paylaş</a>
         <a class="splash-cta splash-cta-about" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
     </div>
 </div>
@@ -476,7 +478,7 @@
                 setTimeout(function () {
                     splash.classList.add('is-hidden');
                     setTimeout(function () { splash.remove(); }, 450);
-                }, 5000);
+                }, 6000);
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
