@@ -18,16 +18,20 @@ namespace Roma.Pages.Admin
         [BindProperty]
         public int BatchSize { get; set; } = 50;
 
+        public int WebpFileCount { get; set; }
+
         public ImageBatchOptimizerService.BatchResult? Result { get; set; }
 
         public void OnGet()
         {
+            WebpFileCount = _optimizer.GetUploadsWebpFileCount();
         }
 
         public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
         {
             BatchSize = Math.Clamp(BatchSize, 1, 500);
             Result = await _optimizer.OptimizeUploadsBatchAsync(BatchSize, cancellationToken);
+            WebpFileCount = _optimizer.GetUploadsWebpFileCount();
             return Page();
         }
     }

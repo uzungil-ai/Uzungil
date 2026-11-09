@@ -18,6 +18,21 @@ namespace Roma.Services
             _logger = logger;
         }
 
+        public int GetUploadsWebpFileCount()
+        {
+            var webRoot = string.IsNullOrWhiteSpace(_env.WebRootPath)
+                ? Path.Combine(_env.ContentRootPath, "wwwroot")
+                : _env.WebRootPath;
+
+            var uploadsRoot = Path.Combine(webRoot, "uploads");
+            if (!Directory.Exists(uploadsRoot))
+            {
+                return 0;
+            }
+
+            return Directory.EnumerateFiles(uploadsRoot, "*.webp", SearchOption.AllDirectories).Count();
+        }
+
         public sealed class BatchResult
         {
             public int Requested { get; set; }

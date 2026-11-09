@@ -1,6 +1,6 @@
 ﻿@{
     var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
-    var isAdmin = isAuthenticated && User.IsInRole("Admin");
+    var isAdmin = isAuthenticated && (User?.IsInRole("Admin") ?? false);
     var userName = User?.Identity?.Name ?? "Kullanıcı";
 }
 <ul class="navbar-nav">

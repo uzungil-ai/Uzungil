@@ -11,6 +11,10 @@
     eksik WebP varyantlarını üretir: <code>-320.webp</code>, <code>-640.webp</code>, <code>-1024.webp</code>.
 </p>
 
+<div class="alert alert-secondary">
+    <strong>Yüklü WebP dosya sayısı:</strong> @Model.WebpFileCount
+</div>
+
 <form method="post" class="mb-3">
     <label asp-for="BatchSize">Tek seferde işlenecek dosya sayısı</label>
     <input asp-for="BatchSize" type="number" min="1" max="500" />

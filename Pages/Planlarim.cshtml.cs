@@ -32,7 +32,7 @@ namespace Roma.Pages
                 return RedirectToPage();
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
             {
                 return RedirectToPage();
@@ -70,7 +70,7 @@ namespace Roma.Pages
                 return;
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
             {
                 Items = new();

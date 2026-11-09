@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-Roma-1c1afdbb-e87c-4fcf-8bdd-b11bf723c48b</UserSecretsId>
-  </PropertyGroup>
-
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>aspnet-Roma-1c1afdbb-e87c-4fcf-8bdd-b11bf723c48b</UserSecretsId>
+	</PropertyGroup>
   <ItemGroup>
     <Content Remove="Properties\Secret.json" />
   </ItemGroup>
@@ -37,7 +35,7 @@
     <PackageReference Include="OpenAI.ChatGPT.Modules.Translator" Version="4.1.0" />
     <PackageReference Include="OpenAI.Net.Client" Version="1.0.21" />
     <PackageReference Include="Standard.AI.OpenAI" Version="0.6.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.2.0" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
   <ItemGroup>
