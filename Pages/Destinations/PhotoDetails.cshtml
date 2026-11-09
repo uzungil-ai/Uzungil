@@ -184,14 +184,31 @@
 
     @if (Model.Destination.Images != null && Model.Destination.Images.Count > 0)
     {
+        var orderedImages = Model.Destination.Images.OrderBy(x => x.Order).ToList();
         <div class="row g-3">
-            @foreach (var img in Model.Destination.Images.OrderBy(i => i.Order))
+            @for (var i = 0; i < orderedImages.Count; i++)
             {
+                var img = orderedImages[i];
+                var srcSet = Model.BuildSrcSet(img.Url);
+                var isPriorityImage = i < 2;
                 <!-- Mobilde tam ekran (col-12), tablet ve üstünde 3'lü dizilim (col-md-4) -->
                 <div class="col-12 col-sm-6 col-md-4">
                     <div class="card shadow-sm photo-card destination-card border-0 reveal-up">
                         <div class="photo-frame">
-                            <img src="@img.Url" alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)" class="card-img-top" loading="lazy" decoding="async" />
+                            <picture>
+                                @if (!string.IsNullOrEmpty(srcSet))
+                                {
+                                    <source srcset="@srcSet" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                }
+                                <img src="@img.Url"
+                                     srcset="@srcSet"
+                                     sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+                                     alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)"
+                                     class="card-img-top"
+                                     loading="@(isPriorityImage ? "eager" : "lazy")"
+                                     fetchpriority="@(isPriorityImage ? "high" : "auto")"
+                                     decoding="async" />
+                            </picture>
                             @if (!string.IsNullOrWhiteSpace(img.AltText))
                             {
                                 <span class="photo-alt-overlay">@img.AltText.Trim()</span>

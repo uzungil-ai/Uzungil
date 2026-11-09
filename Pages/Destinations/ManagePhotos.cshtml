@@ -107,8 +107,102 @@
             });
         });
 
+        function optimizeImage(file) {
+            return new Promise(function (resolve) {
+                try {
+                    if (!file || !file.type || !file.type.startsWith('image/')) {
+                        resolve(file);
+                        return;
+                    }
+
+                    // GIF animasyonunu bozmayalım.
+                    if (file.type === 'image/gif') {
+                        resolve(file);
+                        return;
+                    }
+
+                    var objectUrl = URL.createObjectURL(file);
+                    var image = new Image();
+                    image.onload = function () {
+                        try {
+                            var maxDimension = 1920;
+                            var width = image.naturalWidth || image.width;
+                            var height = image.naturalHeight || image.height;
+
+                            if (!width || !height) {
+                                URL.revokeObjectURL(objectUrl);
+                                resolve(file);
+                                return;
+                            }
+
+                            var scale = Math.min(1, maxDimension / Math.max(width, height));
+                            var targetWidth = Math.max(1, Math.round(width * scale));
+                            var targetHeight = Math.max(1, Math.round(height * scale));
+
+                            var canvas = document.createElement('canvas');
+                            canvas.width = targetWidth;
+                            canvas.height = targetHeight;
+
+                            var ctx = canvas.getContext('2d');
+                            if (!ctx) {
+                                URL.revokeObjectURL(objectUrl);
+                                resolve(file);
+                                return;
+                            }
+
+                            ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+                            var preferredType = 'image/webp';
+                            var quality = 0.82;
+
+                            canvas.toBlob(function (blob) {
+                                URL.revokeObjectURL(objectUrl);
+                                if (!blob) {
+                                    resolve(file);
+                                    return;
+                                }
+
+                                // Boyut avantajı yoksa orijinali gönder.
+                                if (blob.size >= file.size) {
+                                    resolve(file);
+                                    return;
+                                }
+
+                                var ext = blob.type === 'image/webp' ? '.webp' : '.jpg';
+                                var baseName = file.name.replace(/\.[^/.]+$/, '');
+                                var optimized = new File([blob], baseName + ext, {
+                                    type: blob.type,
+                                    lastModified: Date.now()
+                                });
+
+                                resolve(optimized);
+                            }, preferredType, quality);
+                        } catch {
+                            URL.revokeObjectURL(objectUrl);
+                            resolve(file);
+                        }
+                    };
+                    image.onerror = function () {
+                        URL.revokeObjectURL(objectUrl);
+                        resolve(file);
+                    };
+                    image.src = objectUrl;
+                } catch {
+                    resolve(file);
+                }
+            });
+        }
+
+        async function optimizeFiles(files) {
+            var optimizedFiles = [];
+            for (var i = 0; i < files.length; i++) {
+                optimizedFiles.push(await optimizeImage(files[i]));
+            }
+            return optimizedFiles;
+        }
+
         if (btnUpload && uploadForm) {
-            btnUpload.addEventListener('click', function () {
+            btnUpload.addEventListener('click', async function () {
                 var files = fileInput.files;
                 if (!files || files.length === 0) {
                     alert('Lütfen yüklemek için dosya seçin.');
@@ -116,13 +210,14 @@
                 }
 
                 var formData = new FormData();
-                Array.from(files).forEach(function (f) { formData.append('Uploads', f); });
+                var optimizedFiles = await optimizeFiles(Array.from(files));
+                optimizedFiles.forEach(function (f) { formData.append('Uploads', f); });
 
                 var tokenInput = uploadForm.querySelector('input[name="__RequestVerificationToken"]');
                 if (tokenInput) formData.append('__RequestVerificationToken', tokenInput.value);
 
                 btnUpload.disabled = true;
-                btnUpload.textContent = 'Yükleniyor...';
+                btnUpload.textContent = 'Optimize edilip yükleniyor...';
 
                 fetch('/api/TestUpload/@Model.Destination?.Id', {
                     method: 'POST',

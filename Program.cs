@@ -189,10 +189,15 @@ app.UseStaticFiles(new StaticFileOptions
     OnPrepareResponse = ctx =>
     {
         var path = ctx.Context.Request.Path.Value ?? string.Empty;
-        // Cache static assets for 30 days
-        if (path.StartsWith("/lib/") || path.StartsWith("/css/") || path.StartsWith("/js/") || path.StartsWith("/uploads/"))
+        // Cache static framework assets for 30 days
+        if (path.StartsWith("/lib/") || path.StartsWith("/css/") || path.StartsWith("/js/"))
         {
             ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=2592000"; // 30 days
+        }
+        // User uploaded files use GUID file names, so long immutable cache is safe.
+        else if (path.StartsWith("/uploads/"))
+        {
+            ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=31536000,immutable"; // 1 year
         }
         else
         {

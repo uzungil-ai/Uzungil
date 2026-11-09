@@ -4,11 +4,12 @@
     ViewData["Title"] = "Fotografia ile - Keşfet";
     var firstFeatured = Model.Featured.FirstOrDefault();
     var firstFeaturedImage = firstFeatured?.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+    var firstFeaturedSrcSet = Model.BuildSrcSet(firstFeaturedImage);
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
 }
 
 @section Head {
-    <link rel="preload" as="image" href="@firstFeaturedImage" fetchpriority="high" />
+    <link rel="preload" as="image" href="@firstFeaturedImage" imagesrcset="@firstFeaturedSrcSet" imagesizes="100vw" fetchpriority="high" />
 
     <style>
         #homeSplash {
@@ -177,7 +178,7 @@
 }
 
 <div id="homeSplash" aria-hidden="true">
-    <img src="@firstFeaturedImage" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
+    <img src="@firstFeaturedImage" srcset="@firstFeaturedSrcSet" sizes="100vw" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
     <form method="get" class="home-splash-search" aria-label="Ana sayfa arama">
         <input name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
         <button type="submit" class="btn btn-warning text-dark fw-semibold">Ara</button>
@@ -231,13 +232,22 @@
                     {
                         var d = Model.Featured[i];
                         var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                        var heroSrcSet = Model.BuildSrcSet(img);
                         var isFirstSlideImage = i == 0;
                         <a class="hero-featured-item" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" aria-label="@d.Name detaylarını görüntüle">
-                            <img src="@img"
-                                 alt="@d.Name"
-                                 loading="@(isFirstSlideImage ? "eager" : "lazy")"
-                                 fetchpriority="@(isFirstSlideImage ? "high" : "auto")"
-                                 decoding="async" />
+                            <picture>
+                                @if (!string.IsNullOrEmpty(heroSrcSet))
+                                {
+                                    <source srcset="@heroSrcSet" sizes="(max-width: 768px) 40vw, 220px" type="image/webp" />
+                                }
+                                <img src="@img"
+                                     srcset="@heroSrcSet"
+                                     sizes="(max-width: 768px) 40vw, 220px"
+                                     alt="@d.Name"
+                                     loading="@(isFirstSlideImage ? "eager" : "lazy")"
+                                     fetchpriority="@(isFirstSlideImage ? "high" : "auto")"
+                                     decoding="async" />
+                            </picture>
                             <span>@d.Name</span>
                         </a>
                     }
@@ -281,9 +291,9 @@
                         <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
-                                    <source srcset="@srcset" type="image/webp" />
+                                    <source srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
                                 }
-                                <img class="card-img-top destination-image" src="@img" loading="@(isPriorityImage ? "eager" : "lazy")" fetchpriority="@(isPriorityImage ? "high" : "auto")" decoding="async" alt="@d.Name" />
+                                <img class="card-img-top destination-image" src="@img" srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" loading="@(isPriorityImage ? "eager" : "lazy")" fetchpriority="@(isPriorityImage ? "high" : "auto")" decoding="async" alt="@d.Name" />
                             </picture>
                             <span class="destination-image-title">@d.Name</span>
                         </a>
@@ -321,9 +331,9 @@
                         <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
-                                    <source srcset="@srcset" type="image/webp" />
+                                    <source srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
                                 }
-                                <img class="card-img-top destination-image" src="@img" loading="@(isPriorityImage ? "eager" : "lazy")" fetchpriority="@(isPriorityImage ? "high" : "auto")" decoding="async" alt="@d.Name" />
+                                <img class="card-img-top destination-image" src="@img" srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" loading="@(isPriorityImage ? "eager" : "lazy")" fetchpriority="@(isPriorityImage ? "high" : "auto")" decoding="async" alt="@d.Name" />
                             </picture>
                             <span class="destination-image-title">@d.Name</span>
                         </a>
@@ -352,9 +362,9 @@
                         <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
                             <picture>
                                 @if(!string.IsNullOrEmpty(srcset)){
-                                    <source srcset="@srcset" type="image/webp" />
+                                    <source srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
                                 }
-                                <img class="card-img-top destination-image" src="@img" loading="lazy" decoding="async" alt="@d.Name" />
+                                <img class="card-img-top destination-image" src="@img" srcset="@srcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" loading="lazy" decoding="async" alt="@d.Name" />
                             </picture>
                             <span class="destination-image-title">@d.Name</span>
                         </a>
