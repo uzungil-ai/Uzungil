@@ -78,6 +78,7 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(opts => opts.Level 
 builder.Services.Configure<GzipCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);
 // Image processing service
 builder.Services.AddSingleton<Roma.Services.ImageProcessingService>();
+builder.Services.AddSingleton<Roma.Services.ImageBatchOptimizerService>();
 // AI services (demo implementations)
 builder.Services.AddSingleton<Roma.Services.IAiService, Roma.Services.DemoAiService>();
 builder.Services.AddSingleton<Roma.Services.IVisionService, Roma.Services.DemoVisionService>();

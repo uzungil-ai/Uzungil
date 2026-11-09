@@ -37,6 +37,7 @@
     <PackageReference Include="OpenAI.ChatGPT.Modules.Translator" Version="4.1.0" />
     <PackageReference Include="OpenAI.Net.Client" Version="1.0.21" />
     <PackageReference Include="Standard.AI.OpenAI" Version="0.6.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
   <ItemGroup>
