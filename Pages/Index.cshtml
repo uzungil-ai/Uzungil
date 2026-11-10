@@ -4,12 +4,11 @@
     ViewData["Title"] = "Fotografia ile - Keşfet";
     var firstFeatured = Model.Featured.FirstOrDefault();
     var firstFeaturedImage = firstFeatured?.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
-    var firstFeaturedSrcSet = Model.BuildSrcSet(firstFeaturedImage);
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
 }
 
 @section Head {
-    <link rel="preload" as="image" href="@firstFeaturedImage" imagesrcset="@firstFeaturedSrcSet" imagesizes="100vw" fetchpriority="high" />
+    <link rel="preload" as="image" href="@firstFeaturedImage" fetchpriority="high" />
 
     <style>
         #homeSplash {
@@ -23,6 +22,10 @@
             opacity: 1;
             visibility: visible;
             transition: opacity .35s ease, visibility .35s ease;
+        }
+
+        html.home-splash-seen #homeSplash {
+            display: none !important;
         }
 
         #homeSplash.is-hidden {
@@ -177,8 +180,19 @@
     </style>
 }
 
+<script>
+    (function () {
+        try {
+            if (localStorage.getItem('homeSplashSeen') === '1') {
+                document.documentElement.classList.add('home-splash-seen');
+            }
+        } catch {
+        }
+    })();
+</script>
+
 <div id="homeSplash" aria-hidden="true">
-    <img src="@firstFeaturedImage" srcset="@firstFeaturedSrcSet" sizes="100vw" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
+    <img src="@firstFeaturedImage" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
     <form method="get" class="home-splash-search" aria-label="Ana sayfa arama">
         <input name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
         <button type="submit" class="btn btn-warning text-dark fw-semibold">Ara</button>
@@ -505,6 +519,25 @@
 
             updateLoadMoreButtons();
 
+            var hasSeenSplash = false;
+            try {
+                hasSeenSplash = localStorage.getItem('homeSplashSeen') === '1';
+            } catch {
+            }
+
+            if (hasSeenSplash) {
+                var existingSplash = document.getElementById('homeSplash');
+                if (existingSplash) {
+                    existingSplash.remove();
+                }
+                return;
+            }
+
+            try {
+                localStorage.setItem('homeSplashSeen', '1');
+            } catch {
+            }
+
             var splashHidden = false;
 
             function hideSplashWithDelay() {
@@ -517,7 +550,7 @@
                 setTimeout(function () {
                     splash.classList.add('is-hidden');
                     setTimeout(function () { splash.remove(); }, 450);
-                }, 4000);
+                }, 6000);
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -527,7 +560,7 @@
                 window.addEventListener('load', hideSplashWithDelay, { once: true });
             }
 
-            setTimeout(hideSplashWithDelay, 4000);
+            setTimeout(hideSplashWithDelay, 6000);
 
         })();
     </script>
