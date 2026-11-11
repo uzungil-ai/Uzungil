@@ -1,0 +1,89 @@
+@page
+@model Roma.Pages.Admin.ImageOptimizeModel
+@{
+    ViewData["Title"] = "Toplu Görsel Optimizasyonu";
+}
+
+<h2>Toplu Görsel Optimizasyonu</h2>
+
+<p>
+    Bu araç, <code>wwwroot/uploads</code> altındaki <strong>png/jpg/jpeg</strong> dosyalar için
+    eksik WebP varyantlarını üretir: <code>-320.webp</code>, <code>-640.webp</code>, <code>-1024.webp</code>.
+</p>
+
+<div class="alert alert-secondary">
+    <strong>Yüklü WebP dosya sayısı:</strong> @Model.WebpFileCount
+</div>
+
+<form method="post" class="mb-3">
+    <label asp-for="BatchSize">Tek seferde işlenecek dosya sayısı</label>
+    <input asp-for="BatchSize" type="number" min="1" max="500" />
+    <button type="submit" class="btn btn-primary">Başlat</button>
+</form>
+
+@if (Model.Result != null)
+{
+    var processed = Math.Max(1, Model.Result.ProcessedFiles);
+    var convertedPct = (int)Math.Round((double)Model.Result.ConvertedVariants / processed * 100);
+    var skippedPct = (int)Math.Round((double)Model.Result.SkippedVariants / processed * 100);
+    var failedPct = (int)Math.Round((double)Model.Result.FailedFiles / processed * 100);
+
+    <div class="alert alert-info">
+        <div><strong>Durum:</strong> @Model.Result.Message</div>
+        <div><strong>İstenen batch:</strong> @Model.Result.Requested</div>
+        <div><strong>İşlenen dosya:</strong> @Model.Result.ProcessedFiles</div>
+        <div><strong>Üretilen varyant:</strong> @Model.Result.ConvertedVariants</div>
+        <div><strong>Atlanan varyant:</strong> @Model.Result.SkippedVariants</div>
+        <div><strong>Hatalı dosya:</strong> @Model.Result.FailedFiles</div>
+        <div><strong>Kalan tahmini dosya:</strong> @Model.Result.RemainingFilesEstimate</div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h6 class="mb-3">İlerleme Çubukları</h6>
+
+            <div class="mb-2 d-flex justify-content-between">
+                <span>Başarılı (üretilen varyant)</span>
+                <strong>@convertedPct%</strong>
+            </div>
+            <div class="progress mb-3" role="progressbar" aria-label="Başarılı">
+                <div class="progress-bar bg-success" style="width: @convertedPct%">@Model.Result.ConvertedVariants</div>
+            </div>
+
+            <div class="mb-2 d-flex justify-content-between">
+                <span>Atlanan</span>
+                <strong>@skippedPct%</strong>
+            </div>
+            <div class="progress mb-3" role="progressbar" aria-label="Atlanan">
+                <div class="progress-bar bg-warning text-dark" style="width: @skippedPct%">@Model.Result.SkippedVariants</div>
+            </div>
+
+            <div class="mb-2 d-flex justify-content-between">
+                <span>Hatalı</span>
+                <strong>@failedPct%</strong>
+            </div>
+            <div class="progress mb-3" role="progressbar" aria-label="Hatalı">
+                <div class="progress-bar bg-danger" style="width: @failedPct%">@Model.Result.FailedFiles</div>
+            </div>
+
+            @{
+                var remaining = Model.Result.RemainingFilesEstimate;
+                var doneEstimate = Model.Result.ProcessedFiles;
+                var totalEstimate = Math.Max(1, remaining + doneEstimate);
+                var donePct = (int)Math.Round((double)doneEstimate / totalEstimate * 100);
+            }
+            <div class="mb-2 d-flex justify-content-between">
+                <span>Genel Tamamlanma (tahmini)</span>
+                <strong>@donePct%</strong>
+            </div>
+            <div class="progress" role="progressbar" aria-label="Genel Tamamlanma">
+                <div class="progress-bar" style="width: @donePct%">@doneEstimate / @totalEstimate</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Result.RemainingFilesEstimate > 0)
+    {
+        <p>Aynı işlemi tekrar çalıştırarak kalan dosyaları kademeli şekilde dönüştürebilirsiniz.</p>
+    }
+}

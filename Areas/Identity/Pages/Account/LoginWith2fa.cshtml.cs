@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using QRCoder;
 using Roma.Models;
 
 namespace Roma.Areas.Identity.Pages.Account
@@ -11,7 +10,6 @@ namespace Roma.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class LoginWith2faModel : PageModel
     {
-        private const string AuthenticatorIssuer = "Roma";
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
 
@@ -26,8 +24,6 @@ namespace Roma.Areas.Identity.Pages.Account
 
         public bool RememberMe { get; set; }
         public string ReturnUrl { get; set; } = string.Empty;
-        public string QrCodeUrl { get; set; } = string.Empty;
-        public string SharedKey { get; set; } = string.Empty;
 
         public class InputModel
         {
@@ -49,7 +45,6 @@ namespace Roma.Areas.Identity.Pages.Account
 
             RememberMe = rememberMe;
             ReturnUrl = returnUrl ?? Url.Content("~/");
-            await LoadQrAsync(user);
             return Page();
         }
 
@@ -59,11 +54,6 @@ namespace Roma.Areas.Identity.Pages.Account
 
             if (!ModelState.IsValid)
             {
-                var invalidUser = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-                if (invalidUser != null)
-                {
-                    await LoadQrAsync(invalidUser);
-                }
                 RememberMe = rememberMe;
                 ReturnUrl = returnUrl;
                 return Page();
@@ -75,7 +65,15 @@ namespace Roma.Areas.Identity.Pages.Account
                 return RedirectToPage("/Account/Login", new { area = "" });
             }
 
-            var authenticatorCode = (Input.TwoFactorCode ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);
+            var authenticatorCode = NormalizeVerificationCode(Input.TwoFactorCode);
+            if (authenticatorCode.Length != 6)
+            {
+                ModelState.AddModelError(string.Empty, "6 haneli authenticator kodu girin.");
+                RememberMe = rememberMe;
+                ReturnUrl = returnUrl;
+                return Page();
+            }
+
             var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, rememberMe, Input.RememberMachine);
 
             if (result.Succeeded)
@@ -113,67 +111,19 @@ namespace Roma.Areas.Identity.Pages.Account
             }
 
             ModelState.AddModelError(string.Empty, "Geçersiz authenticator kodu.");
-            await LoadQrAsync(user);
             RememberMe = rememberMe;
             ReturnUrl = returnUrl;
             return Page();
         }
 
-        private async Task LoadQrAsync(User user)
+        private static string NormalizeVerificationCode(string? code)
         {
-            var key = await _userManager.GetAuthenticatorKeyAsync(user);
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(code))
             {
-                await _userManager.ResetAuthenticatorKeyAsync(user);
-                key = await _userManager.GetAuthenticatorKeyAsync(user);
+                return string.Empty;
             }
 
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                QrCodeUrl = string.Empty;
-                SharedKey = string.Empty;
-                return;
-            }
-
-            SharedKey = FormatKey(key);
-            var email = await _userManager.GetEmailAsync(user);
-            var accountName = string.IsNullOrWhiteSpace(email) ? user.UserName ?? user.Id : email;
-            var otpauth = GenerateQrCodeUri(accountName, key);
-            QrCodeUrl = BuildLocalQrCodeDataUrl(otpauth);
-        }
-
-        private static string BuildLocalQrCodeDataUrl(string payload)
-        {
-            using var generator = new QRCodeGenerator();
-            using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
-            var pngQr = new PngByteQRCode(data);
-            var bytes = pngQr.GetGraphic(20);
-            return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
-        }
-
-        private static string GenerateQrCodeUri(string accountName, string unformattedKey)
-        {
-            var encodedIssuer = Uri.EscapeDataString(AuthenticatorIssuer);
-            var encodedAccountName = Uri.EscapeDataString(accountName);
-            return $"otpauth://totp/{encodedIssuer}:{encodedAccountName}?secret={unformattedKey}&issuer={encodedIssuer}&digits=6&period=30&algorithm=SHA1";
-        }
-
-        private static string FormatKey(string unformattedKey)
-        {
-            var result = new System.Text.StringBuilder();
-            int currentPosition = 0;
-            while (currentPosition + 4 < unformattedKey.Length)
-            {
-                result.Append(unformattedKey.Substring(currentPosition, 4)).Append(' ');
-                currentPosition += 4;
-            }
-
-            if (currentPosition < unformattedKey.Length)
-            {
-                result.Append(unformattedKey.Substring(currentPosition));
-            }
-
-            return result.ToString().ToUpperInvariant();
+            return new string(code.Where(char.IsDigit).ToArray());
         }
     }
 }

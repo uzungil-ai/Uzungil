@@ -10,6 +10,7 @@ namespace Roma.Pages
     {
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly Dictionary<string, string> _srcSetCache = new(StringComparer.OrdinalIgnoreCase);
 
         public IndexModel(ApplicationDbContext db, IWebHostEnvironment env)
         {
@@ -33,6 +34,7 @@ namespace Roma.Pages
         public string? Conutry { get; set; }
 
         public bool HasActiveSearch =>
+            !string.IsNullOrWhiteSpace(Search) ||
             !string.IsNullOrWhiteSpace(Name) ||
             !string.IsNullOrWhiteSpace(Country);
 
@@ -43,11 +45,6 @@ namespace Roma.Pages
             Country = string.IsNullOrWhiteSpace(Country) ? null : Country.Trim();
             Conutry = string.IsNullOrWhiteSpace(Conutry) ? null : Conutry.Trim();
 
-            if (Name is null && Search is not null)
-            {
-                Name = Search;
-            }
-
             if (Country is null && Conutry is not null)
             {
                 Country = Conutry;
@@ -55,7 +52,16 @@ namespace Roma.Pages
 
             var baseQuery = _db.Destinations!
                 .Include(d => d.Images)
+                .AsNoTracking()
                 .AsQueryable();
+
+            if (Search is not null)
+            {
+                var pattern = $"%{Search}%";
+                baseQuery = baseQuery.Where(d =>
+                    (d.Name != null && EF.Functions.Like(d.Name, pattern)) ||
+                    (d.Country != null && EF.Functions.Like(d.Country, pattern)));
+            }
 
             if (Name is not null)
             {
@@ -70,19 +76,24 @@ namespace Roma.Pages
             }
 
             Featured = await baseQuery
-                .OrderBy(d => d.Name)
-                .Take(100)
+                .OrderBy(_ => Guid.NewGuid())
+                .Take(24)
                 .ToListAsync();
 
             Latest = await baseQuery
                 .OrderByDescending(d => d.Id)
-                .Take(100)
+                .Take(24)
                 .ToListAsync();
         }
 
         public string BuildSrcSet(string? imageUrl)
         {
             if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
+
+            if (_srcSetCache.TryGetValue(imageUrl, out var cachedSrcSet))
+            {
+                return cachedSrcSet;
+            }
 
             // imageUrl like /uploads/destinations/{id}/{file}
             try
@@ -113,7 +124,9 @@ namespace Roma.Pages
                     parts.Add($"{relPath} 640w");
                 }
 
-                return string.Join(", ", parts);
+                var srcSet = string.Join(", ", parts);
+                _srcSetCache[imageUrl] = srcSet;
+                return srcSet;
             }
             catch
             {

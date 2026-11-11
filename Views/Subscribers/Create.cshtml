@@ -1,53 +1,53 @@
 @model Roma.Models.Subscriber
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Abone Oluştur";
 }
 
-<h1>Create</h1>
+<h1>Abone Oluştur</h1>
 
-<h4>Subscriber</h4>
+<h4>Abone</h4>
 <hr />
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
+                <label asp-for="Email" class="control-label">E-posta</label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ConsentGiven" class="control-label"></label>
+                <label asp-for="ConsentGiven" class="control-label">Açık Rıza Verildi</label>
                 <input asp-for="ConsentGiven" class="form-check-input ms-2" />
             </div>
             <div class="form-group">
-                <label asp-for="IsConfirmed" class="control-label"></label>
+                <label asp-for="IsConfirmed" class="control-label">Doğrulandı</label>
                 <input asp-for="IsConfirmed" class="form-check-input ms-2" />
             </div>
             <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
+                <label asp-for="CreatedAt" class="control-label">Oluşturulma Tarihi</label>
                 <input asp-for="CreatedAt" class="form-control" />
                 <span asp-validation-for="CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ConfirmationToken" class="control-label"></label>
+                <label asp-for="ConfirmationToken" class="control-label">Doğrulama Kodu</label>
                 <input asp-for="ConfirmationToken" class="form-control" />
                 <span asp-validation-for="ConfirmationToken" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ConfirmationExpiresAt" class="control-label"></label>
+                <label asp-for="ConfirmationExpiresAt" class="control-label">Doğrulama Bitiş Zamanı</label>
                 <input asp-for="ConfirmationExpiresAt" class="form-control" />
                 <span asp-validation-for="ConfirmationExpiresAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="UnsubscribeToken" class="control-label"></label>
+                <label asp-for="UnsubscribeToken" class="control-label">Abonelikten Ayrılma Kodu</label>
                 <input asp-for="UnsubscribeToken" class="form-control" />
                 <span asp-validation-for="UnsubscribeToken" class="text-danger"></span>
             </div>
             <div class="form-group mt-3">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a class="btn btn-secondary" asp-action="Index">Back to List</a>
+                <input type="submit" value="Oluştur" class="btn btn-primary" />
+                <a class="btn btn-secondary" asp-action="Index">Listeye Dön</a>
             </div>
         </form>
     </div>

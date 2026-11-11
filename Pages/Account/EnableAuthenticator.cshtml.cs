@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 using QRCoder;
 using Roma.Models;
 using System.Linq;
@@ -23,6 +24,18 @@ namespace Roma.Pages.Account
         public string SharedKey { get; set; } = null!;
         public string QrCodeUrl { get; set; } = null!;
         public string? ErrorMessage { get; set; }
+        public string? SuccessMessage { get; set; }
+        public IReadOnlyList<string> RecoveryCodes { get; set; } = Array.Empty<string>();
+
+        [BindProperty]
+        public InputModel Input { get; set; } = new();
+
+        public class InputModel
+        {
+            [Required(ErrorMessage = "Kod gerekli.")]
+            [Display(Name = "Doğrulama Kodu")]
+            public string Code { get; set; } = string.Empty;
+        }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -33,7 +46,7 @@ namespace Roma.Pages.Account
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(string Code)
+        public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
@@ -45,7 +58,7 @@ namespace Roma.Pages.Account
                 return Page();
             }
 
-            var normalizedCode = NormalizeVerificationCode(Code);
+            var normalizedCode = NormalizeVerificationCode(Input.Code);
             if (string.IsNullOrWhiteSpace(normalizedCode) || normalizedCode.Length != 6)
             {
                 ErrorMessage = "Lütfen Authenticator uygulamasındaki 6 haneli kodu girin.";
@@ -76,7 +89,12 @@ namespace Roma.Pages.Account
                 return Page();
             }
 
-            return RedirectToPage("/Index");
+            RecoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10))?.ToArray()
+                ?? Array.Empty<string>();
+            SuccessMessage = "Authenticator başarıyla etkinleştirildi. Aşağıdaki recovery code'ları güvenli bir yerde saklayın.";
+
+            await LoadSharedKeyAndQrCodeUriAsync(user);
+            return Page();
         }
 
         private static string FormatKey(string unformattedKey)

@@ -3,17 +3,23 @@
 @{
     ViewData["Title"] = "Fotoğraf Detayı";
     var canAdd = User?.Identity?.IsAuthenticated == true;
+    var isAdmin = User?.IsInRole("Admin") == true;
 }
 
 @section Head {
     <style>
-        .photo-card,
         .info-card {
             height: 100%;
         }
 
         .info-card {
             transition: transform .15s ease, box-shadow .15s ease;
+            border: 0 !important;
+            background: var(--bs-card-bg, #fff) !important;
+        }
+
+        .photo-details-page .info-card .card-footer {
+            border-top: 0 !important;
         }
 
         .info-card:hover {
@@ -29,40 +35,213 @@
         .photo-card .photo-frame {
             aspect-ratio: 4 / 3;
             background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 14px !important;
+            position: relative;
+
+            display: block;
+            padding: 0;
+
+        }
+
+        .photo-card .photo-frame picture {
+            display: block;
         }
 
         .photo-card .photo-frame img {
             width: 100%;
-            height: 100%;
+            height: auto;
             object-fit: contain;
+            display: block;
+            border-radius: 14px !important;
+        }
+
+        .photo-card {
+            height: auto !important;
+        }
+
+        .details-top-offset {
+            margin-top: 1rem;
+        }
+
+        .details-plain-text {
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .details-plain-text::first-letter {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .details-value-line {
+            text-align: left;
+            margin: 0;
+            padding-right: 0;
+        }
+
+        .details-name-align {
+            padding-left: var(--space-3);
+        }
+
+        .photo-details-page .destination-card .card-body,
+        .photo-card .card-body {
+            padding-left: var(--space-3) !important;
+            padding-right: var(--space-3) !important;
+        }
+
+        .photo-details-page,
+        .photo-details-page .card-title,
+        .photo-details-page .fw-semibold,
+        .photo-details-page .small,
+        .photo-details-page h4,
+        .photo-details-page h5 {
+            text-align: left;
+        }
+
+        .details-value-line::first-letter {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .photo-alt-overlay {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: .55rem;
+            padding: 0.45rem 0.6rem;
+            text-align: center;
+            color: #fff;
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.03) 0%, rgba(15, 23, 42, 0.86) 100%);
+            border-radius: 999px;
+            width: calc(100% - 1.2rem);
+            max-width: calc(100% - 1.2rem);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+
+        .details-section-title {
+            font-weight: 700;
+            color: #1f4fd6;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-comment-gradient {
+            color: #fff !important;
+            border: none;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%);
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+        }
+
+        .btn-comment-gradient:hover,
+        .btn-comment-gradient:focus {
+            color: #fff !important;
+            background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+        }
+
+        .attraction-name-link {
+            transition: color .15s ease, text-decoration-color .15s ease;
+        }
+
+        .attraction-name-link:hover,
+        .attraction-name-link:focus {
+            color: #1f4fd6 !important;
+            text-decoration: underline !important;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 2px;
+        }
+
+        @@media (max-width: 767.98px) {
+            .mobile-three-cards {
+                flex-wrap: wrap;
+            }
+
+            .mobile-three-cards > [class*="col-"] {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
         }
 
     </style>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@Model.Destination?.Name</h2>
-    <a asp-page="/Index" class="btn btn-outline-secondary">Ana Sayfa</a>
-</div>
-
+<div class="photo-details-page">
+<br />
+<br />
 @if (Model.Destination != null)
 {
+    var firstImageItem = Model.Destination.Images?.OrderBy(x => x.Order).FirstOrDefault();
+    var firstImage = firstImageItem?.Url ?? string.Empty;
+    var firstImageAltText = string.IsNullOrWhiteSpace(firstImageItem?.AltText)
+        ? Model.Destination.Name
+        : firstImageItem!.AltText!.Trim();
+    var sharePageUrl = $"https://www.fotografia.com.tr/Destinations/PhotoDetails/{Model.Destination.Id}";
+    var imageUrlAbsolute = string.IsNullOrWhiteSpace(firstImage)
+        ? string.Empty
+        : ((firstImage.StartsWith("http://") || firstImage.StartsWith("https://"))
+            ? firstImage
+            : $"https://www.fotografia.com.tr{firstImage}");
+
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-2"><strong>Ülke:</strong> @Model.Destination.Country</div>
-                <div class="col-md-10"><strong>Açıklama:</strong> @Model.Destination.Description</div>
+                <div class="col-12 details-plain-text">@Model.Destination.Description</div>
             </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const shareBtn = document.getElementById('whatsAppShareBtn');
+            if (!shareBtn) return;
+
+            shareBtn.addEventListener('click', async function () {
+                const shareUrl = shareBtn.dataset.shareUrl || '';
+                const imageUrl = shareBtn.dataset.imageUrl || '';
+                const imageAlt = shareBtn.dataset.imageAlt || '';
+                const shareText = imageAlt
+                    ? `${imageAlt}\n\nDetay linki:\n${shareUrl}`
+                    : `Detay linki:\n${shareUrl}`;
+
+                try {
+                    if (imageUrl) {
+                        const response = await fetch(imageUrl);
+                        const blob = await response.blob();
+                        const extension = (blob.type && blob.type.includes('/')) ? blob.type.split('/')[1] : 'jpg';
+                        const file = new File([blob], `destination-photo.${extension}`, { type: blob.type || 'image/jpeg' });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+                            await navigator.share({
+                                text: shareText,
+                                files: [file]
+                            });
+                            return;
+                        }
+                    }
+                } catch {
+                }
+
+                window.open('https://wa.me/?text=' + encodeURIComponent(shareText), '_blank', 'noopener');
+            });
+        })();
+    </script>
+}
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">Fotoğraflar (@(Model.Destination.Images?.Count ?? 0))</h4>
+    <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+        <button type="button"
+                id="whatsAppShareBtn"
+                class="btn btn-sm btn-outline-success"
+                data-share-url="@sharePageUrl"
+                data-image-url="@imageUrlAbsolute"
+                data-image-alt="@firstImageAltText"
+                title="WhatsApp ile paylaş">
+            <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> WhatsApp ile paylaş
+        </button>
         @if (canAdd)
         {
             <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
@@ -71,18 +250,39 @@
 
     @if (Model.Destination.Images != null && Model.Destination.Images.Count > 0)
     {
+        var orderedImages = Model.Destination.Images.OrderBy(x => x.Order).ToList();
         <div class="row g-3">
-            @foreach (var img in Model.Destination.Images.OrderBy(i => i.Order))
+            @for (var i = 0; i < orderedImages.Count; i++)
             {
+                var img = orderedImages[i];
+                var srcSet = Model.BuildSrcSet(img.Url);
+                var isPriorityImage = i < 2;
                 <!-- Mobilde tam ekran (col-12), tablet ve üstünde 3'lü dizilim (col-md-4) -->
                 <div class="col-12 col-sm-6 col-md-4">
                     <div class="card shadow-sm photo-card destination-card border-0 reveal-up">
-                        <div class="photo-frame" style="border-radius:5px">
-                            <img src="@img.Url" alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)" class="card-img-top" />
+                        <div class="photo-frame">
+                            <picture>
+                                @if (!string.IsNullOrEmpty(srcSet))
+                                {
+                                    <source srcset="@srcSet" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                }
+                                <img src="@img.Url"
+                                     srcset="@srcSet"
+                                     sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+                                     alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)"
+                                     width="600"
+                                     height="400"
+                                     class="card-img-top"
+                                     loading="@(isPriorityImage ? "eager" : "lazy")"
+                                     fetchpriority="@(isPriorityImage ? "high" : "auto")"
+                                     decoding="async" />
+                            </picture>
+                            @if (!string.IsNullOrWhiteSpace(img.AltText))
+                            {
+                                <span class="photo-alt-overlay">@img.AltText.Trim()</span>
+                            }
                         </div>
-                        <div class="card-body p-2">
-                            <div class="fw-semibold small">@(string.IsNullOrWhiteSpace(img.AltText) ? "Alt text yok" : img.AltText.Trim())</div>
-                        </div>
+
                     </div>
                 </div>
             }
@@ -98,25 +298,42 @@
     @if (Model.Destination.Attractions?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Cazibe Noktaları (@Model.Destination.Attractions.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Cazibe Noktaları</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
             {
-                <div class="col-12 col-md-6 col-lg-4">
+                var googleQuery = $"{item.Name} {Model.Destination.Name}";
+                var googleSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(googleQuery)}";
+                var googleMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(googleQuery)}";
+                <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <h5 class="card-title mb-2">@item.Name</h5>
-                            <div class="small text-muted mb-1">Kategori: @(string.IsNullOrWhiteSpace(item.Category) ? "-" : item.Category)</div>
-                            <div class="small text-muted mb-2">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
-                            <div>@Html.RatingBadge(item.AverageRating)</div>
+                            <h5 class="card-title mb-2 d-flex align-items-center gap-2">
+                                <a href="@googleSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @googleQuery">
+                                    @item.Name
+                                </a>
+                                <a href="@googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @googleQuery" aria-label="Haritada aç: @googleQuery">
+                                    📍
+                                </a>
+                            </h5>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0">
-                            <a class="btn btn-sm btn-info" asp-controller="Attractions" asp-action="Details" asp-route-id="@item.Id">Detay</a>
+                            <div class="d-flex align-items-center gap-2">
+                                <div>@Html.RatingBadge(item.AverageRating)</div>
+                                <a class="btn btn-sm btn-comment-gradient" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id">Yorum Ekle</a>
+                                <div class="d-flex gap-2">
+                                    @if (isAdmin)
+                                    {
+                                        <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -127,23 +344,26 @@
     @if (Model.Destination.Hotels?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Konaklama (@Model.Destination.Hotels.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Konaklama</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Hotels)
             {
+                var hotelQuery = $"{item.Name} {Model.Destination.Name} {Model.Destination.Country}";
+                var hotelSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(hotelQuery)}";
+                var hotelMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(hotelQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
-                            <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(item.Phone) ? "-" : item.Phone)</div>
-                            <div class="small text-muted">
-                                Website:
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@hotelSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @hotelQuery">@item.Name</a>
+                                <a href="@hotelMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @hotelQuery" aria-label="Haritada aç: @hotelQuery">📍</a>
+                            </div>
+                            <div class="small text-muted details-value-line">
                                 @if (!string.IsNullOrWhiteSpace(item.Website))
                                 {
                                     var websiteUrl = item.Website.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -151,8 +371,8 @@
                                         ? item.Website
                                         : $"https://{item.Website}";
 
-                                    <a href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
-                                        <span class="text-decoration-underline">www</span>
+                                    <a class="btn btn-sm btn-navbar-theme" href="@websiteUrl" target="_blank" rel="noopener noreferrer" title="Otel web sitesini aç">
+                                        Link
                                     </a>
                                 }
                                 else
@@ -170,22 +390,25 @@
     @if (Model.Destination.Meals?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Yemekler (@Model.Destination.Meals.Count)</h4>
+            <h5 class="mb-0 details-section-title">Yemekler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Meals)
             {
+                var mealQuery = $"{item.Name} {Model.Destination.Name}";
+                var mealSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(mealQuery)}";
+                var mealMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(mealQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Adres: @(string.IsNullOrWhiteSpace(item.Address) ? "-" : item.Address)</div>
-                            <div class="small text-muted mb-1">Telefon: @(string.IsNullOrWhiteSpace(item.Phone) ? "-" : item.Phone)</div>
-                            <div class="small text-muted">Fiyat: @(item.Price.HasValue ? item.Price.Value.ToString("C") : "-")</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @mealQuery">@item.Name</a>
+                                <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -197,21 +420,25 @@
     @if (Model.Destination.Flavors?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Lezzetler (@Model.Destination.Flavors.Count)</h4>
+            <h5 class="mb-0 details-section-title">Lezzetler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Flavors)
             {
+                var flavorQuery = $"{item.Name} {Model.Destination.Name}";
+                var flavorSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(flavorQuery)}";
+                var flavorMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(flavorQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <span class="badge text-bg-warning-subtle border text-dark mini-label mb-2">Yerel Lezzet</span>
-                            <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted">Bu destinasyona özgü önerilen tat.</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @flavorQuery">@item.Name</a>
+                                <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -225,29 +452,24 @@
     @if (Model.Destination.Parkings?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h4 class="mb-0">Otoparklar (@Model.Destination.Parkings.Count)</h4>
+            <h5 class="mb-0 details-name-align details-section-title">Otoparklar</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Parkings)
             {
+                var parkingQuery = $"{item.Name} {Model.Destination.Name}";
+                var parkingSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(parkingQuery)}";
+                var parkingMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(parkingQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
-                    <div class="card h-100 shadow-sm info-card">
+                    <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
-                            <div class="small text-muted mb-1">Kapasite: @(item.Capacity?.ToString() ?? "-")</div>
-                            <div>
-                                @if (item.IsPaid)
-                                {
-                                    <span class="badge text-bg-warning">Ücretli</span>
-                                }
-                                else
-                                {
-                                    <span class="badge text-bg-success">Ücretsiz</span>
-                                }
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @parkingQuery">@item.Name</a>
+                                <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
                             </div>
                         </div>
                     </div>
@@ -255,4 +477,10 @@
             }
         </div>
     }
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-4">
+        <a class="btn btn-navbar-yellow-theme" href="javascript:history.back()">Önceki Sayfa</a>
+        <a class="btn btn-navbar-theme" asp-page="/Index">Ana Sayfa</a>
+    </div>
 }
+</div>

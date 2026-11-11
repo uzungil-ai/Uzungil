@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Roma.Models;
 using Roma.Services;
@@ -33,6 +34,7 @@ namespace Roma.Data
         public DbSet<AuditLog>? AuditLogs { get; set; }
         public DbSet<Subscriber>? Subscribers { get; set; }
         public DbSet<FailedEmail>? FailedEmails { get; set; }
+        public DbSet<SentEmail>? SentEmails { get; set; }
         public DbSet<Feedback>? Feedbacks { get; set; }
         public DbSet<TwoFactorCode>? TwoFactorCodes { get; set; }
         public DbSet<DemoChatService>? DemoChatServices { get; set; }
@@ -57,6 +59,7 @@ namespace Roma.Data
             modelBuilder.Entity<Subscriber>().HasIndex(s => s.Email).IsUnique();
 
             modelBuilder.Entity<FailedEmail>().HasIndex(f => f.CreatedAt);
+            modelBuilder.Entity<SentEmail>().HasIndex(s => s.SentAt);
             modelBuilder.Entity<Subscriber>().Property(s => s.UnsubscribeToken).HasMaxLength(100);
             modelBuilder.Entity<Feedback>().HasIndex(f => f.CreatedAt);
 
@@ -90,10 +93,10 @@ namespace Roma.Data
 
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            // after save, send notifications for added destinations (fire-and-forget)
+            // after save, send notifications for added destinations
             if (_emailQueue != null && addedDestinations.Count > 0)
             {
-                _ = NotifySubscribersAsync(addedDestinations);
+                await NotifySubscribersAsync(addedDestinations);
             }
 
             return result;
@@ -101,12 +104,28 @@ namespace Roma.Data
 
         private async Task NotifySubscribersAsync(List<Destination> newDestinations)
         {
+            var tokensUpdated = false;
+
             try
             {
                 var subscribers = await Subscribers!.Where(s => s.IsConfirmed && s.ConsentGiven).ToListAsync();
                 if (subscribers.Count == 0) return;
 
                 var baseUrl = _configuration?[("App:BaseUrl")]?.TrimEnd('/') ?? string.Empty;
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
+                string? destinationTemplate = null;
+                if (File.Exists(templatePath))
+                {
+                    try
+                    {
+                        destinationTemplate = await File.ReadAllTextAsync(templatePath);
+                    }
+                    catch
+                    {
+                        destinationTemplate = null;
+                    }
+                }
+
                 foreach (var dest in newDestinations)
                 {
                     var subject = $"Yeni destinasyon eklendi: {dest.Name}";
@@ -119,9 +138,8 @@ namespace Roma.Data
                             if (string.IsNullOrEmpty(sub.UnsubscribeToken))
                             {
                                 sub.UnsubscribeToken = System.Guid.NewGuid().ToString("N");
-                                // persist token
                                 this.Subscribers!.Update(sub);
-                                await this.SaveChangesAsync();
+                                tokensUpdated = true;
                             }
 
                             var unsubscribeLink = string.IsNullOrEmpty(baseUrl)
@@ -133,7 +151,7 @@ namespace Roma.Data
                                 : $"{baseUrl}/Destinations/Details/{dest.Id}";
 
                             // Compose email: prefer IEmailComposer when available, otherwise use template or fallback HTML/plain text
-                            string body = null;
+                            string? body = null;
                             if (_emailComposer != null)
                             {
                                 try
@@ -149,14 +167,12 @@ namespace Roma.Data
 
                             if (string.IsNullOrEmpty(body))
                             {
-                                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "destination.html");
-                                if (File.Exists(templatePath))
+                                if (!string.IsNullOrEmpty(destinationTemplate))
                                 {
                                     try
                                     {
-                                        var tpl = File.ReadAllText(templatePath);
                                         var logoUrl = string.IsNullOrEmpty(baseUrl) ? "/images/logo.svg" : $"{baseUrl}/images/logo.svg";
-                                        var replaced = tpl.Replace("{{LogoUrl}}", logoUrl)
+                                        var replaced = destinationTemplate.Replace("{{LogoUrl}}", logoUrl)
                                                           .Replace("{{DestName}}", System.Net.WebUtility.HtmlEncode(dest.Name))
                                                           .Replace("{{DestDesc}}", System.Net.WebUtility.HtmlEncode(dest.Description ?? string.Empty))
                                                           .Replace("{{DestLink}}", destLink)
@@ -187,7 +203,7 @@ namespace Roma.Data
 
                             if (_emailQueue != null)
                             {
-                                await _emailQueue.EnqueueAsync(new Services.EmailMessage(sub.Email, subject, body));
+                                await _emailQueue.EnqueueAsync(new Services.EmailMessage(sub.Email, subject, body ?? string.Empty));
                             }
                         }
                         catch
@@ -201,13 +217,24 @@ namespace Roma.Data
             {
                 // don't throw from DbContext notification
             }
+
+            if (tokensUpdated)
+            {
+                // Unsubscribe token güncellemeleri tek seferde kaydedilir (bildirim/audit tekrarını önler)
+                await base.SaveChangesAsync();
+            }
         }
 
         private async Task AddAuditLogs()
         {
             var auditLogs = new List<AuditLog>();
 
-            var entries = ChangeTracker.Entries().Where(e => e.State != EntityState.Detached && e.State != EntityState.Unchanged);
+            var entries = ChangeTracker.Entries().Where(e => e.State != EntityState.Detached && e.State != EntityState.Unchanged).ToList();
+            if (entries.Count == 0)
+            {
+                return;
+            }
+
             foreach (var entry in entries)
             {
                 if (entry.Entity is AuditLog) continue;

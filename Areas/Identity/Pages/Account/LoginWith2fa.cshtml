@@ -5,19 +5,7 @@
 }
 
 <h2>İki Adımlı Doğrulama</h2>
-<p>Bu sayfada QR kod da gösterilir. Authenticator uygulamasıyla tarayabilir veya mevcut kurulumunuzdan 6 haneli kodu girebilirsiniz.</p>
-
-@if (!string.IsNullOrWhiteSpace(Model.QrCodeUrl))
-{
-    <div class="mb-3">
-        <img src="@Model.QrCodeUrl" alt="Authenticator QR" width="200" height="200" />
-    </div>
-}
-
-@if (!string.IsNullOrWhiteSpace(Model.SharedKey))
-{
-    <p>Manuel anahtar: <strong>@Model.SharedKey</strong></p>
-}
+<p>Authenticator uygulamanızda görünen 6 haneli anlık kodu girin.</p>
 
 <form method="post" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe">
     @Html.AntiForgeryToken()
@@ -25,7 +13,7 @@
 
     <div class="mb-2">
         <label asp-for="Input.TwoFactorCode"></label>
-        <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="one-time-code" inputmode="numeric" maxlength="7" />
+        <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="one-time-code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" />
         <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
     </div>
 
@@ -36,3 +24,8 @@
 
     <button type="submit" class="btn btn-primary">Doğrula</button>
 </form>
+
+<p class="mt-3">
+    Authenticator cihazınıza erişemiyorsanız
+    <a asp-area="Identity" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">recovery code ile giriş yapın</a>.
+</p>

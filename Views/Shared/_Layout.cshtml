@@ -1,17 +1,34 @@
 ﻿@{
     var showPendingReviewsPopup = User?.Identity?.IsAuthenticated == true
-        && User.IsInRole("Admin")
-        && string.Equals(TempData["ShowPendingReviewsPopup"]?.ToString(), "1", StringComparison.Ordinal);
+        && User.IsInRole("Admin");
 
     var currentPathAndQuery = Context.Request.Path + Context.Request.QueryString;
+    var pageTitle = ViewData["Title"]?.ToString();
+    var seoTitle = string.IsNullOrWhiteSpace(pageTitle) ? "Fotografia | Seyahat Rehberi" : $"{pageTitle} | Fotografia";
+    var seoDescription = ViewData["MetaDescription"]?.ToString() ?? "Fotografia ile gezi rotaları, destinasyon önerileri ve seyahat ipuçlarını keşfedin.";
+    var seoKeywords = ViewData["MetaKeywords"]?.ToString() ?? "seyahat, gezi rehberi, destinasyon, tatil, fotografia";
+    var canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}";
+    var whatsAppShareText = Uri.EscapeDataString($"Fotografia - {canonicalUrl}");
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Roma</title>
+    <title>@seoTitle</title>
+    <meta name="description" content="@seoDescription" />
+    <meta name="keywords" content="@seoKeywords" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@canonicalUrl" />
+    <meta property="og:title" content="@seoTitle" />
+    <meta property="og:description" content="@seoDescription" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@canonicalUrl" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@seoTitle" />
+    <meta name="twitter:description" content="@seoDescription" />
     @RenderSection("Head", required: false)
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -20,9 +37,9 @@
 </head>
 <body>
     <header class="site-header">
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark navbar-turquoise border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Fotografia.com.tr</a>
+                <a class="navbar-brand navbar-openai-text" asp-area="" asp-controller="Home" asp-action="Index">Fotografia</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -30,28 +47,28 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Hakkında</a>
-                        </li>
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Subscribers" asp-action="Index">Abonelik</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Destinations" asp-action="Index">Index</a>
+                            </li>
+                        }
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Yönetim</a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                                    <li><a class="dropdown-item" asp-page="/Admin/Destinations/Index">Destinasyonlar</a></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Index">Fotograf Yönetimi</a></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="DestinationImages" asp-action="Create">Yeni Fotograf Ekle</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Subscribers" asp-action="Index">Aboneler</a></li>
-                                     <li><a class="dropdown-item" asp-area="" asp-controller="BackgroundEmailSenders" asp-action="Index">Background Email Senders</a></li>
-                                     <li><a class="dropdown-item" asp-area="" asp-controller="DemoChatServices" asp-action="Index">Demo Chat Services</a></li>
-                                </ul>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Admin/ContentEditor">Toplu Düzenleme</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Admin/ImageOptimize">Görsel Optimize</a>
                             </li>
                         }
                     </ul>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
@@ -71,53 +88,101 @@
 
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content subscribe-modal-card">
                 <div class="modal-header">
-                    <h2 class="modal-title h5 mb-0" id="subscribeModalLabel">Yeni önerileri kaçırmayın</h2>
+                    <h2 class="modal-title h5 mb-0 subscribe-title-accent" id="subscribeModalLabel">Yeni önerileri kaçırmayın</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Bültene abone olun, yeni destinasyon ve içerik güncellemelerini e-posta ile alın.</p>
+                    <p class="text-muted small mb-3">E-posta ile siteye kayıt olun, yeni eklenen içeriklerden haberiniz olsun.</p>
                     <form id="subscribeForm" method="post" asp-page="/Subscribe">
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
-                            <label for="subEmail" class="form-label">E-posta</label>
-                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" />
+                            <input type="email" id="subEmail" name="Email" placeholder="ornek@mail.com" class="form-control" autocomplete="email" maxlength="254" required />
                         </div>
+                        <br />
                         <div class="form-check mb-3">
-                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" />
+                            <input type="checkbox" id="subConsent" name="Consent" class="form-check-input" required />
                             <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
                         </div>
-                        <button type="button" id="subBtn" class="btn btn-primary w-100">Abone Ol</button>
                     </form>
-                    <div id="subMessage" class="mt-2 small"></div>
+                    <div id="subMessage" class="mt-2"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" id="subDeleteBtn" class="btn btn-danger">Abonelik Sil</button>
+                    <button type="button" id="subBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Abone Ol</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Roma - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="site-footer simple-footer mt-3">
+        <div class="container py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <div class="small text-muted">Fotografia • Seyahat rehberi</div>
+                <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center">
+                    <a asp-area="" asp-controller="Home" asp-action="Hakkında" class="simple-footer-link">Hakkında</a>
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy" class="simple-footer-link">Gizlilik</a>
+                    <a href="mailto:info@fotografia.com.tr" class="simple-footer-link">İletişim</a>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Bültene Katıl</button>
+                </div>
+            </div>
+            <div class="social-links justify-content-center mt-2" aria-label="Sosyal medya bağlantıları">
+                <a class="social-link" aria-label="Instagram" href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25h-8.5Zm8.9 1.6a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
+                </a>
+                <a class="social-link" aria-label="Facebook" href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5H16V5.1c-.2 0-1-.1-2-.1-2.1 0-3.5 1.2-3.5 3.5V11H8v3h2.5v7h3Z"/></svg>
+                </a>
+                <a class="social-link" aria-label="YouTube" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21.8 8.5a2.9 2.9 0 0 0-2-2.1C18 6 12 6 12 6s-6 0-7.8.4a2.9 2.9 0 0 0-2 2.1A30 30 0 0 0 2 12a30 30 0 0 0 .2 3.5 2.9 2.9 0 0 0 2 2.1C6 18 12 18 12 18s6 0 7.8-.4a2.9 2.9 0 0 0 2-2.1A30 30 0 0 0 22 12a30 30 0 0 0-.2-3.5ZM10 14.8V9.2l5 2.8-5 2.8Z"/></svg>
+                </a>
+                <a class="social-link" aria-label="X" href="https://x.com" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.9 3H22l-6.8 7.8L23 21h-6.2l-4.8-6.2L6.6 21H3.5l7.3-8.3L1 3h6.3l4.3 5.6L18.9 3Zm-1.1 16h1.7L6.3 4.9H4.5L17.8 19Z"/></svg>
+                </a>
+                <a class="social-link" aria-label="WhatsApp" href="https://wa.me/?text=@whatsAppShareText" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 3.5A11 11 0 0 0 3.6 17.2L2 22l5-1.5A11 11 0 1 0 20.5 3.5Zm-8.5 18a9 9 0 0 1-4.6-1.3l-.3-.2-3 .9 1-2.9-.2-.3A9 9 0 1 1 12 21.5Zm5-6.7c-.3-.1-1.7-.8-1.9-.9-.3-.1-.4-.1-.6.1l-.9 1c-.2.2-.3.2-.6.1-1.9-.9-3.2-2.8-3.3-3-.2-.3 0-.4.1-.6l.4-.5.3-.4c.1-.2.1-.3 0-.5-.1-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.2 2 3 4.9 4.1.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.1-1.4-.1-.1-.3-.2-.6-.3Z"/></svg>
+                </a>
+            </div>
+            <hr class="my-2" />
+            <div class="text-center small text-muted">
+                &copy; @DateTime.UtcNow.Year Fotografia Tüm hakları saklıdır.
+            </div>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" defer></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
     <script>
         (function () {
             var btn = document.getElementById('subBtn');
+            var deleteBtn = document.getElementById('subDeleteBtn');
             var email = document.getElementById('subEmail');
             var consent = document.getElementById('subConsent');
             var msg = document.getElementById('subMessage');
             var form = document.getElementById('subscribeForm');
 
-            if (!btn || !email || !consent || !msg || !form) return;
+            if (!btn || !deleteBtn || !email || !consent || !msg || !form) return;
 
-            btn.addEventListener('click', function () {
-                msg.textContent = '';
-                if (!email.value) { msg.textContent = 'E-posta giriniz.'; return; }
-                if (!consent.checked) { msg.textContent = 'Lütfen rıza veriniz.'; return; }
+            function setMessage(text, type) {
+                msg.textContent = text || '';
+                msg.className = 'mt-2';
+                if (!text) return;
+
+                if (type === 'success') {
+                    msg.classList.add('alert', 'alert-success', 'fw-bold', 'border-2', 'border-success', 'shadow-sm');
+                } else if (type === 'error') {
+                    msg.classList.add('alert', 'alert-danger');
+                } else {
+                    msg.classList.add('alert', 'alert-warning');
+                }
+            }
+
+            function submitSubscription() {
+                setMessage('', 'info');
+                if (!email.value) { setMessage('E-posta giriniz.', 'error'); return; }
+                if (!consent.checked) { setMessage('Lütfen rıza veriniz.', 'error'); return; }
 
                 var data = new FormData();
                 data.append('Email', email.value);
@@ -126,7 +191,7 @@
                 var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
                 if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
 
-                btn.disabled = true; btn.textContent = 'Gönderiliyor...';
+                btn.disabled = true; deleteBtn.disabled = true; btn.textContent = 'Gönderiliyor...';
 
                 fetch(form.action, {
                     method: 'POST',
@@ -140,14 +205,61 @@
                     try { payload = await resp.json(); } catch {}
 
                     if (!resp.ok) {
-                        msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik işlemi başarısız oldu.';
+                        setMessage((payload && payload.message) ? payload.message : 'Abonelik işlemi başarısız oldu.', 'error');
                         return;
                     }
 
-                    msg.textContent = (payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.';
+                    setMessage((payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.', 'success');
                     form.reset();
-                }).catch(function () { msg.textContent = 'Hata oluştu.'; })
-                    .finally(function () { btn.disabled = false; btn.textContent = 'Abone Ol'; });
+                }).catch(function () { setMessage('Hata oluştu.', 'error'); })
+                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; btn.textContent = 'Abone Ol'; });
+            }
+
+            function submitUnsubscribe() {
+                setMessage('', 'info');
+                if (!email.value) { setMessage('Silmek için e-posta giriniz.', 'error'); return; }
+
+                var data = new FormData();
+                data.append('Email', email.value);
+
+                var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
+
+                btn.disabled = true; deleteBtn.disabled = true; deleteBtn.textContent = 'Siliniyor...';
+
+                fetch(form.action + '?handler=Unsubscribe', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: data
+                }).then(async function (resp) {
+                    var payload = null;
+                    try { payload = await resp.json(); } catch {}
+
+                    if (!resp.ok) {
+                        setMessage((payload && payload.message) ? payload.message : 'Abonelik silme işlemi başarısız oldu.', 'error');
+                        return;
+                    }
+
+                    setMessage((payload && payload.message) ? payload.message : 'Abonelik kaydınız silindi.', 'success');
+                    form.reset();
+                }).catch(function () { setMessage('Hata oluştu.', 'error'); })
+                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; deleteBtn.textContent = 'Abonelik Sil'; });
+            }
+
+            btn.addEventListener('click', function () {
+                submitSubscription();
+            });
+
+            deleteBtn.addEventListener('click', function () {
+                submitUnsubscribe();
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                submitSubscription();
             });
         })();
     </script>
