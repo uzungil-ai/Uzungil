@@ -110,6 +110,7 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" id="subDeleteBtn" class="btn btn-danger">Abonelik Sil</button>
                     <button type="button" id="subBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Abone Ol</button>
                 </div>
             </div>
@@ -156,12 +157,13 @@
     <script>
         (function () {
             var btn = document.getElementById('subBtn');
+            var deleteBtn = document.getElementById('subDeleteBtn');
             var email = document.getElementById('subEmail');
             var consent = document.getElementById('subConsent');
             var msg = document.getElementById('subMessage');
             var form = document.getElementById('subscribeForm');
 
-            if (!btn || !email || !consent || !msg || !form) return;
+            if (!btn || !deleteBtn || !email || !consent || !msg || !form) return;
 
             function setMessage(text, type) {
                 msg.textContent = text || '';
@@ -189,7 +191,7 @@
                 var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
                 if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
 
-                btn.disabled = true; btn.textContent = 'Gönderiliyor...';
+                btn.disabled = true; deleteBtn.disabled = true; btn.textContent = 'Gönderiliyor...';
 
                 fetch(form.action, {
                     method: 'POST',
@@ -210,11 +212,49 @@
                     setMessage((payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.', 'success');
                     form.reset();
                 }).catch(function () { setMessage('Hata oluştu.', 'error'); })
-                    .finally(function () { btn.disabled = false; btn.textContent = 'Abone Ol'; });
+                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; btn.textContent = 'Abone Ol'; });
+            }
+
+            function submitUnsubscribe() {
+                setMessage('', 'info');
+                if (!email.value) { setMessage('Silmek için e-posta giriniz.', 'error'); return; }
+
+                var data = new FormData();
+                data.append('Email', email.value);
+
+                var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
+
+                btn.disabled = true; deleteBtn.disabled = true; deleteBtn.textContent = 'Siliniyor...';
+
+                fetch(form.action + '?handler=Unsubscribe', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: data
+                }).then(async function (resp) {
+                    var payload = null;
+                    try { payload = await resp.json(); } catch {}
+
+                    if (!resp.ok) {
+                        setMessage((payload && payload.message) ? payload.message : 'Abonelik silme işlemi başarısız oldu.', 'error');
+                        return;
+                    }
+
+                    setMessage((payload && payload.message) ? payload.message : 'Abonelik kaydınız silindi.', 'success');
+                    form.reset();
+                }).catch(function () { setMessage('Hata oluştu.', 'error'); })
+                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; deleteBtn.textContent = 'Abonelik Sil'; });
             }
 
             btn.addEventListener('click', function () {
                 submitSubscription();
+            });
+
+            deleteBtn.addEventListener('click', function () {
+                submitUnsubscribe();
             });
 
             form.addEventListener('submit', function (e) {

@@ -115,6 +115,7 @@ select.form-select {
 html {
   position: relative;
   min-height: 100%;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -900,9 +901,12 @@ form input[type="button"] {
 .home-under-hero-bg > .container,
 .home-under-hero-bg > section.container,
 .home-under-hero-bg > div.container {
-  max-width: 100%;
-  padding-left: 0;
-  padding-right: 0;
+  width: 100%;
+  max-width: min(100%, 1320px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+  padding-right: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
 }
 
 .home-hero::after {
@@ -1011,6 +1015,20 @@ form input[type="button"] {
   background-color: #ffffff;
   border-color: #ffffff;
   color: #111827;
+}
+
+.subscribe-modal-card #subDeleteBtn {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+  font-weight: 700;
+}
+
+.subscribe-modal-card #subDeleteBtn:hover,
+.subscribe-modal-card #subDeleteBtn:focus {
+  background-color: #bb2d3b;
+  border-color: #b02a37;
+  color: #fff;
 }
 
 @media (max-width: 575.98px) {

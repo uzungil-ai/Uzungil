@@ -120,6 +120,38 @@ namespace Roma.Pages
             return RedirectToPage("/Index");
         }
 
+        public async Task<IActionResult> OnPostUnsubscribeAsync()
+        {
+            var isAjax = HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            var normalizedEmail = NormalizeEmail(Email);
+
+            if (string.IsNullOrWhiteSpace(normalizedEmail) || !IsValidEmail(normalizedEmail))
+            {
+                if (isAjax)
+                {
+                    return BadRequest(new { success = false, message = "Geçerli bir e-posta adresi giriniz." });
+                }
+
+                ModelState.AddModelError("", "Geçerli bir e-posta adresi giriniz.");
+                return Page();
+            }
+
+            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email.ToLower() == normalizedEmail.ToLower());
+            if (existing != null)
+            {
+                existing.ConsentGiven = false;
+                existing.IsConfirmed = false;
+                await _db.SaveChangesAsync();
+            }
+
+            if (isAjax)
+            {
+                return new JsonResult(new { success = true, message = "Abonelik kaydınız silindi." });
+            }
+
+            return RedirectToPage("/Index");
+        }
+
         private static string NormalizeEmail(string? email)
         {
             return (email ?? string.Empty).Trim();

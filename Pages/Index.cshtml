@@ -133,6 +133,31 @@
             contain-intrinsic-size: 320px;
         }
 
+        .hero-scroll-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            color: #fff !important;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .2);
+        }
+
+        .hero-scroll-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .hero-scroll-btn:hover,
+        .hero-scroll-btn:focus {
+            color: #fff !important;
+            border-color: #fff;
+            background: rgba(0, 0, 0, .35);
+        }
+
         @@media (max-width: 768px) {
             #homeSplash {
                 background: transparent;
@@ -286,12 +311,12 @@
 <section id="explore" class="container mt-0 mb-5 home-explore-section">
 
     <div class="home-tabs mb-3" role="tablist" aria-label="Destinasyon sekmeleri">
-        <button type="button" class="home-tab-btn active home-navbar-theme-btn" data-target="featured-list" aria-selected="true">Öne Çıkanlar</button>
-        <button type="button" class="home-tab-btn" data-target="latest-list" aria-selected="false">En Yeniler</button>
+        <button type="button" class="home-tab-btn home-navbar-theme-btn" data-target="featured-list" aria-selected="false">Öne Çıkanlar</button>
+        <button type="button" class="home-tab-btn active" data-target="latest-list" aria-selected="true">En Yeniler</button>
         <a class="home-tab-btn home-action-yellow" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
     </div>
 
-    <div id="featured-list" class="home-tab-panel">
+    <div id="featured-list" class="home-tab-panel d-none">
         <div class="row g-2">
             @for (var i = 0; i < Model.Featured.Count; i++)
             {
@@ -331,7 +356,7 @@
         }
     </div>
 
-    <div id="latest-list" class="home-tab-panel d-none">
+    <div id="latest-list" class="home-tab-panel">
         <div class="row g-2">
             @for (var i = 0; i < Model.Latest.Count; i++)
             {
@@ -361,6 +386,14 @@
                 </div>
             }
         </div>
+        @if (Model.Latest.Count > 6)
+        {
+            <div class="text-center mt-3 mb-3">
+                <button type="button" id="latestLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="latest-list" data-step="6">
+                    Daha Fazla
+                </button>
+            </div>
+        }
     </div>
 
     <div id="all-list" class="home-tab-panel d-none">
@@ -392,14 +425,6 @@
                 </div>
             }
         </div>
-        @if (Model.Latest.Count > 6)
-        {
-            <div class="text-center mt-3 mb-3">
-                <button type="button" id="latestLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="latest-list" data-step="6">
-                    Daha Fazla
-                </button>
-            </div>
-        }
     </div>
 
     <div id="homeEndActions" class="d-flex flex-wrap justify-content-center gap-2 mt-3 mb-2 d-none">

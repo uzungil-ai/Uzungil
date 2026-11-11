@@ -290,10 +290,16 @@
         <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Hotels)
             {
+                var hotelQuery = $"{item.Name} {Model.Destination.Name} {Model.Destination.Country}";
+                var hotelSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(hotelQuery)}";
+                var hotelMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(hotelQuery)}";
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
-                            <div class="fw-semibold mb-2">@item.Name</div>
+                            <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <a href="@hotelSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @hotelQuery">@item.Name</a>
+                                <a href="@hotelMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @hotelQuery" aria-label="Haritada aç: @hotelQuery">📍</a>
+                            </div>
                             <div class="small text-muted details-value-line">
                                 @if (!string.IsNullOrWhiteSpace(item.Website))
                                 {
