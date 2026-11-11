@@ -191,6 +191,44 @@
             <div class="row">
                 <div class="col-12 details-plain-text">@Model.Destination.Description</div>
             </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const shareBtn = document.getElementById('whatsAppShareBtn');
+            if (!shareBtn) return;
+
+            shareBtn.addEventListener('click', async function () {
+                const shareUrl = shareBtn.dataset.shareUrl || '';
+                const imageUrl = shareBtn.dataset.imageUrl || '';
+                const imageAlt = shareBtn.dataset.imageAlt || '';
+                const shareText = imageAlt
+                    ? `${imageAlt}\n\nDetay linki:\n${shareUrl}`
+                    : `Detay linki:\n${shareUrl}`;
+
+                try {
+                    if (imageUrl) {
+                        const response = await fetch(imageUrl);
+                        const blob = await response.blob();
+                        const extension = (blob.type && blob.type.includes('/')) ? blob.type.split('/')[1] : 'jpg';
+                        const file = new File([blob], `destination-photo.${extension}`, { type: blob.type || 'image/jpeg' });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+                            await navigator.share({
+                                text: shareText,
+                                files: [file]
+                            });
+                            return;
+                        }
+                    }
+                } catch {
+                }
+
+                window.open('https://wa.me/?text=' + encodeURIComponent(shareText), '_blank', 'noopener');
+            });
+        })();
+    </script>
+}
         </div>
     </div>
 
@@ -202,7 +240,7 @@
                 data-image-url="@imageUrlAbsolute"
                 data-image-alt="@firstImageAltText"
                 title="WhatsApp ile paylaş">
-            WhatsApp
+            <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> WhatsApp ile paylaş
         </button>
         @if (canAdd)
         {
@@ -244,6 +282,28 @@
                                 <span class="photo-alt-overlay">@img.AltText.Trim()</span>
                             }
                         </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+
+
+    }
+    else
+    {
+        <div class="alert alert-light border">Bu destinasyon için henüz fotoğraf bulunmuyor.</div>
+    }
+
+    @if (Model.Destination.Attractions?.Any() == true)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+            <h5 class="mb-0 details-name-align details-section-title">Cazibe Noktaları</h5>
+            @if (canAdd)
+            {
+                <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
+            }
+        </div>
 
 @section Scripts {
     <script>
@@ -288,27 +348,6 @@
         })();
     </script>
 }
-                    </div>
-                </div>
-            }
-        </div>
-
-
-    }
-    else
-    {
-        <div class="alert alert-light border">Bu destinasyon için henüz fotoğraf bulunmuyor.</div>
-    }
-
-    @if (Model.Destination.Attractions?.Any() == true)
-    {
-        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0 details-name-align details-section-title">Cazibe Noktaları</h5>
-            @if (canAdd)
-            {
-                <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
-            }
-        </div>
         <div class="row g-3 mb-4 mobile-three-cards">
             @foreach (var item in Model.Destination.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
             {
