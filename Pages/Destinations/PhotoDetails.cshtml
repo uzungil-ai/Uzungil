@@ -155,6 +155,16 @@
             text-underline-offset: 2px;
         }
 
+        .social-icon-btn {
+            width: 34px;
+            min-width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
         @@media (max-width: 767.98px) {
             .mobile-three-cards {
                 flex-wrap: wrap;
@@ -185,6 +195,18 @@
         : ((firstImage.StartsWith("http://") || firstImage.StartsWith("https://"))
             ? firstImage
             : $"https://www.fotografia.com.tr{firstImage}");
+    var instagramUrl = string.IsNullOrWhiteSpace(Model.Destination.InstagramUrl)
+        ? string.Empty
+        : (Model.Destination.InstagramUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+           Model.Destination.InstagramUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? Model.Destination.InstagramUrl
+            : $"https://{Model.Destination.InstagramUrl}");
+    var facebookUrl = string.IsNullOrWhiteSpace(Model.Destination.FacebookUrl)
+        ? string.Empty
+        : (Model.Destination.FacebookUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+           Model.Destination.FacebookUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? Model.Destination.FacebookUrl
+            : $"https://{Model.Destination.FacebookUrl}");
 
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
         <div class="card-body">
@@ -233,19 +255,33 @@
     </div>
 
     <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
-        <button type="button"
-                id="whatsAppShareBtn"
-                class="btn btn-sm btn-outline-success"
-                data-share-url="@sharePageUrl"
-                data-image-url="@imageUrlAbsolute"
-                data-image-alt="@firstImageAltText"
-                title="WhatsApp ile paylaş">
-            <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> WhatsApp ile paylaş
-        </button>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
-        }
+        <div class="d-flex align-items-center gap-1">
+            @if (!string.IsNullOrWhiteSpace(instagramUrl))
+            {
+                <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-danger social-icon-btn" title="Instagram" aria-label="Instagram">
+                    <i class="bi bi-instagram" aria-hidden="true"></i>
+                </a>
+            }
+            @if (!string.IsNullOrWhiteSpace(facebookUrl))
+            {
+                <a href="@facebookUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary social-icon-btn" title="Facebook" aria-label="Facebook">
+                    <i class="bi bi-facebook" aria-hidden="true"></i>
+                </a>
+            }
+            <button type="button"
+                    id="whatsAppShareBtn"
+                    class="btn btn-sm btn-outline-success"
+                    data-share-url="@sharePageUrl"
+                    data-image-url="@imageUrlAbsolute"
+                    data-image-alt="@firstImageAltText"
+                    title="WhatsApp ile paylaş">
+                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> WhatsApp ile paylaş
+            </button>
+            @if (canAdd)
+            {
+                <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
+            }
+        </div>
     </div>
 
     @if (Model.Destination.Images != null && Model.Destination.Images.Count > 0)
@@ -298,7 +334,7 @@
     @if (Model.Destination.Attractions?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0 details-name-align details-section-title">Cazibe Noktaları</h5>
+            <h5 class="mb-0 details-name-align details-section-title">Gezilecek Yerler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -344,7 +380,7 @@
     @if (Model.Destination.Hotels?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0 details-name-align details-section-title">Konaklama</h5>
+            <h5 class="mb-0 details-name-align details-section-title">Otel, Pansiyon, Misafirhane</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -390,7 +426,7 @@
     @if (Model.Destination.Meals?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0 details-section-title">Yemekler</h5>
+            <h5 class="mb-0 details-section-title">Restoran, Cafe</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -406,8 +442,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @mealQuery">@item.Name</a>
                                 <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
+                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @mealQuery">@item.Name</a>
                             </div>
                         </div>
                     </div>
@@ -420,7 +456,7 @@
     @if (Model.Destination.Flavors?.Any() == true)
     {
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0 details-section-title">Lezzetler</h5>
+            <h5 class="mb-0 details-section-title">Yöresel Yemekler</h5>
             @if (canAdd)
             {
                 <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
@@ -436,8 +472,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @flavorQuery">@item.Name</a>
                                 <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
+                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @flavorQuery">@item.Name</a>
                             </div>
                         </div>
                     </div>

@@ -20,6 +20,8 @@ namespace Roma.Pages
 
         public List<Destination> Featured { get; set; } = new List<Destination>();
         public List<Destination> Latest { get; set; } = new List<Destination>();
+        public int TotalDestinationCount { get; set; }
+        public int TotalPhotoCount { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string? Name { get; set; }
@@ -40,6 +42,9 @@ namespace Roma.Pages
 
         public async Task OnGetAsync()
         {
+            TotalDestinationCount = await _db.Destinations!.CountAsync();
+            TotalPhotoCount = await _db.DestinationImages!.CountAsync();
+
             Name = string.IsNullOrWhiteSpace(Name) ? null : Name.Trim();
             Search = string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();
             Country = string.IsNullOrWhiteSpace(Country) ? null : Country.Trim();

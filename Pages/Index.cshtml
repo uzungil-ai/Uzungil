@@ -249,11 +249,17 @@
 <div class="home-under-hero-bg">
 <section class="container hero-search-slider-wrap">
     <div class="hero-search-card shadow-sm">
-        <div class="home-tabs home-actions mb-4" aria-label="Hızlı işlemler">
-            <button type="button" class="home-tab-btn home-action-link active home-navbar-theme-btn" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
-            <a class="home-tab-btn home-action-link home-action-yellow" href="/Chat">Chat</a>
-            <a class="home-tab-btn home-action-link home-action-yellow" href="/OpenAiSoruCevap">Aİ-Sor</a>
-                    <a class="home-tab-btn home-action-link home-action-yellow" href="/SeyahatPlanla">Seyahat Planı</a>
+        <div class="home-actions-bar mb-4" aria-label="Hızlı işlemler">
+            <div class="home-tabs home-actions">
+                <button type="button" class="home-tab-btn home-action-link active home-navbar-theme-btn" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
+                <a class="home-tab-btn home-action-link home-action-yellow" href="/Chat">Chat</a>
+                <a class="home-tab-btn home-action-link home-action-yellow" href="/OpenAiSoruCevap">Aİ-Sor</a>
+                <a class="home-tab-btn home-action-link home-action-yellow" href="/SeyahatPlanla">Seyahat Planı</a>
+            </div>
+            <div class="home-plan-stats-wrap" aria-label="Özet bilgiler">
+                <span class="home-plan-stat-box">Destinasyon @Model.TotalDestinationCount</span>
+                <span class="home-plan-stat-box">Fotoğraf @Model.TotalPhotoCount</span>
+            </div>
         </div>
 
         <div class="hero-featured-strip-wrap mb-4">
