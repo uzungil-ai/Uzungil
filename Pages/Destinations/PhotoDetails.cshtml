@@ -104,7 +104,7 @@
         }
 
         .details-value-line::first-letter {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
         }
 
@@ -130,17 +130,41 @@
             text-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
         }
 
-        .btn-comment-gradient {
-            color: #fff !important;
-            border: none;
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%);
-            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+        .btn-whatsapp-plain {
+            border: 0 !important;
+            background: transparent !important;
+            color: #16a34a !important;
+            box-shadow: none !important;
         }
 
-        .btn-comment-gradient:hover,
-        .btn-comment-gradient:focus {
+        .btn-whatsapp-plain:hover,
+        .btn-whatsapp-plain:focus {
+            color: #15803d !important;
+            text-decoration: underline;
+            text-decoration-thickness: 4px;
+            text-underline-offset: 2px;
+        }
+
+        .btn-comment-link {
+            border: 0 !important;
+            background: transparent !important;
+            color: #16a34a !important;
+            text-decoration: underline;
+            text-decoration-thickness: 4px;
+            text-underline-offset: 2px;
+            padding: 0 !important;
+            box-shadow: none !important;
+            transition: color .15s ease, text-decoration-thickness .15s ease;
+        }
+
+        .btn-comment-link:hover,
+        .btn-comment-link:focus {
             color: #fff !important;
-            background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #92400e 100%) !important;
+            border-radius: 8px;
+            padding: .2rem .45rem !important;
+            text-decoration: none;
+            box-shadow: 0 0 0 2px rgba(138, 95, 0, 0.22), 0 8px 18px rgba(138, 95, 0, 0.32);
         }
 
         .attraction-name-link {
@@ -151,18 +175,62 @@
         .attraction-name-link:focus {
             color: #1f4fd6 !important;
             text-decoration: underline !important;
-            text-decoration-thickness: 2px;
+            text-decoration-thickness: 4px;
             text-underline-offset: 2px;
         }
 
-        .social-icon-btn {
-            width: 34px;
-            min-width: 34px;
-            height: 34px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
+        .attraction-name-link,
+        .btn-comment-link,
+        .social-text-link,
+        .btn-whatsapp-plain {
+            transition: color .15s ease, text-decoration-thickness .15s ease;
+        }
+
+        .card-link-hover {
+            border-radius: 8px;
+            padding: .1rem .3rem;
+            transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+        }
+
+        .card-link-hover:hover,
+        .card-link-hover:focus {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #92400e 100%) !important;
+            color: #fff !important;
+            text-decoration: none !important;
+            box-shadow: 0 0 0 2px rgba(138, 95, 0, 0.22), 0 8px 18px rgba(138, 95, 0, 0.32);
+        }
+
+        .social-text-link {
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1;
+            transition: color .15s ease, text-decoration-thickness .15s ease;
+        }
+
+        .social-text-link.instagram-link {
+            color: #dc2626;
+        }
+
+        .social-text-link.facebook-link {
+            color: #2563eb;
+        }
+
+        .social-text-link:hover,
+        .social-text-link:focus {
+            text-decoration: underline;
+            text-decoration-thickness: 4px;
+            text-underline-offset: 2px;
+        }
+
+        .social-text-link.instagram-link:hover,
+        .social-text-link.instagram-link:focus {
+            color: #b91c1c;
+        }
+
+        .social-text-link.facebook-link:hover,
+        .social-text-link.facebook-link:focus {
+            color: #1d4ed8;
         }
 
         @@media (max-width: 767.98px) {
@@ -258,19 +326,19 @@
         <div class="d-flex align-items-center gap-1">
             @if (!string.IsNullOrWhiteSpace(instagramUrl))
             {
-                <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-danger social-icon-btn" title="Instagram" aria-label="Instagram">
-                    <i class="bi bi-instagram" aria-hidden="true"></i>
+                <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="social-text-link instagram-link" title="Instagram" aria-label="Instagram">
+                    Instagram
                 </a>
             }
             @if (!string.IsNullOrWhiteSpace(facebookUrl))
             {
-                <a href="@facebookUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary social-icon-btn" title="Facebook" aria-label="Facebook">
-                    <i class="bi bi-facebook" aria-hidden="true"></i>
+                <a href="@facebookUrl" target="_blank" rel="noopener noreferrer" class="social-text-link facebook-link" title="Facebook" aria-label="Facebook">
+                    Facebook
                 </a>
             }
             <button type="button"
                     id="whatsAppShareBtn"
-                    class="btn btn-sm btn-outline-success"
+                    class="btn btn-sm btn-whatsapp-plain"
                     data-share-url="@sharePageUrl"
                     data-image-url="@imageUrlAbsolute"
                     data-image-alt="@firstImageAltText"
@@ -351,10 +419,10 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <h5 class="card-title mb-2 d-flex align-items-center gap-2">
-                                <a href="@googleSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @googleQuery">
+                                <a href="@googleSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @googleQuery">
                                     @item.Name
                                 </a>
-                                <a href="@googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @googleQuery" aria-label="Haritada aç: @googleQuery">
+                                <a href="@googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @googleQuery" aria-label="Haritada aç: @googleQuery">
                                     📍
                                 </a>
                             </h5>
@@ -362,7 +430,7 @@
                         <div class="card-footer bg-transparent border-0 pt-0">
                             <div class="d-flex align-items-center gap-2">
                                 <div>@Html.RatingBadge(item.AverageRating)</div>
-                                <a class="btn btn-sm btn-comment-gradient" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id">Yorum Ekle</a>
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id">Yorum Ekle</a>
                                 <div class="d-flex gap-2">
                                     @if (isAdmin)
                                     {
@@ -396,8 +464,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@hotelSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @hotelQuery">@item.Name</a>
-                                <a href="@hotelMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @hotelQuery" aria-label="Haritada aç: @hotelQuery">📍</a>
+                                <a href="@hotelSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @hotelQuery">@item.Name</a>
+                                <a href="@hotelMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @hotelQuery" aria-label="Haritada aç: @hotelQuery">📍</a>
                             </div>
                             <div class="small text-muted details-value-line">
                                 @if (!string.IsNullOrWhiteSpace(item.Website))
@@ -442,8 +510,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
-                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @mealQuery">@item.Name</a>
+                                <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
+                                <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @mealQuery">@item.Name</a>
                             </div>
                         </div>
                     </div>
@@ -472,8 +540,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
-                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @flavorQuery">@item.Name</a>
+                                <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
+                                <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @flavorQuery">@item.Name</a>
                             </div>
                         </div>
                     </div>
@@ -504,8 +572,8 @@
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-                                <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link" title="Google'da ara: @parkingQuery">@item.Name</a>
-                                <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
+                                <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @parkingQuery">@item.Name</a>
+                                <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
                             </div>
                         </div>
                     </div>
@@ -515,8 +583,8 @@
     }
 
     <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-4">
-        <a class="btn btn-navbar-yellow-theme" href="javascript:history.back()">Önceki Sayfa</a>
-        <a class="btn btn-navbar-theme" asp-page="/Index">Ana Sayfa</a>
+        <a class="btn btn-soft-yellow-action" href="javascript:history.back()">Önceki Sayfa</a>
+        <a class="btn btn-soft-yellow-action" asp-page="/Index">Ana Sayfa</a>
     </div>
 }
 </div>

@@ -6,6 +6,27 @@
     var canAdd = User?.Identity?.IsAuthenticated == true;
 }
 
+<style>
+    .card-comment-link {
+        border: 0 !important;
+        background: transparent !important;
+        color: #16a34a !important;
+        text-decoration: underline;
+        text-decoration-thickness: 4px;
+        text-underline-offset: 2px;
+        padding: 0 !important;
+        box-shadow: none !important;
+        transition: color .15s ease, text-decoration-thickness .15s ease;
+    }
+
+    .card-comment-link:hover,
+    .card-comment-link:focus {
+        color: #15803d !important;
+        text-decoration: underline;
+        text-decoration-thickness: 4px;
+    }
+</style>
+
 <div class="mt-4">
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h3 class="mb-0">@Model.Name</h3>
@@ -87,7 +108,7 @@
         {
             <div class="p-2 text-center">
                 <a asp-controller="DestinationImages" asp-action="Details" asp-route-id="@img.Id">
-                    <img src="@img.Url" alt="@img.AltText" style="max-width:600px;max-height:400px;object-fit:cover;border:1px solid #ddd;padding:2px;" />
+                    <img src="@img.Url" alt="@img.AltText" class="img-fluid" style="width:100%;max-width:600px;height:auto;max-height:400px;object-fit:cover;border:1px solid #ddd;padding:2px;" />
                 </a>
                 <div class="small text-muted">@img.AltText</div>
                 @if (canAdd)
@@ -159,6 +180,8 @@ else
                         {
                             <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Detay</span>
                         }
+
+                        <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@a.Id">Yorum Ekle</a>
 
                         @if (canAdd)
                         {
