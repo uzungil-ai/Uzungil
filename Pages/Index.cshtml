@@ -319,7 +319,6 @@
     <div class="home-tabs mb-3" role="tablist" aria-label="Destinasyon sekmeleri">
         <button type="button" class="home-tab-btn home-tab-soft home-tab-featured" data-target="featured-list" aria-selected="false">Öne Çıkanlar</button>
         <button type="button" class="home-tab-btn home-tab-soft home-tab-latest active" data-target="latest-list" aria-selected="true">En Yeniler</button>
-        <a class="home-tab-btn home-action-yellow home-tab-comments" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
     </div>
 
     <div id="featured-list" class="home-tab-panel d-none">
@@ -352,14 +351,6 @@
                 </div>
             }
         </div>
-        @if (Model.Featured.Count > 6)
-        {
-            <div class="text-center mt-3 mb-3">
-                <button type="button" id="featuredLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="featured-list" data-step="6">
-                    Daha Fazla
-                </button>
-            </div>
-        }
     </div>
 
     <div id="latest-list" class="home-tab-panel">
@@ -392,14 +383,6 @@
                 </div>
             }
         </div>
-        @if (Model.Latest.Count > 6)
-        {
-            <div class="text-center mt-3 mb-3">
-                <button type="button" id="latestLoadMore" class="btn js-load-more btn-navbar-theme" data-target-panel="latest-list" data-step="6">
-                    Daha Fazla
-                </button>
-            </div>
-        }
     </div>
 
     <div class="text-center mt-2 mb-3">
@@ -491,6 +474,10 @@
                     var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
                     for (var i = 0; i < Math.min(step, hiddenItems.length); i++) {
                         hiddenItems[i].classList.remove('d-none');
+                    }
+
+                    if (heroSliderArea) {
+                        heroSliderArea.classList.add('d-none');
                     }
 
                     updateLoadMoreButtons();

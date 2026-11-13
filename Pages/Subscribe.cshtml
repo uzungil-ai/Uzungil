@@ -1,17 +1,41 @@
 @page
 @model Roma.Pages.SubscribeModel
 
-<h2>Bildirim Aboneliği</h2>
-<form method="post">
-    <div>
-        <label for="Email">E-posta</label>
-        <input id="Email" name="Email" />
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Bildirim Aboneliği</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Yeni içerikler ve güncellemeler için e-posta aboneliğinizi yönetin.</p>
+
+                    @if (TempData["SubscribeAlert"] is string subscribeAlert && !string.IsNullOrWhiteSpace(subscribeAlert))
+                    {
+                        <div class="alert alert-info" role="alert">@subscribeAlert</div>
+                    }
+
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">E-posta</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="ornek@domain.com" />
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="Consent" class="form-check-input" />
+                            <label asp-for="Consent" class="form-check-label">E-posta ile bildirim almak istiyorum (rızam var)</label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Abone Ol</button>
+                            <button type="submit" formaction="?handler=Unsubscribe" formmethod="post" class="btn btn-outline-secondary">Aboneliği İptal Et</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div>
-        <label>
-            <input type="checkbox" name="Consent" /> E-posta ile bildirim almak istiyorum (rızam var)
-        </label>
-    </div>
-    <button type="submit">Abone Ol</button>
-    <button type="submit" formaction="?handler=Unsubscribe" formmethod="post">Aboneliği İptal Et</button>
-</form>
+</div>

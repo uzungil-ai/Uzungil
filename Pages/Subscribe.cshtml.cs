@@ -27,8 +27,9 @@ namespace Roma.Pages
         [BindProperty]
         public bool Consent { get; set; }
 
-        public void OnGet()
+        public void OnGet(string? email = null)
         {
+            Email = NormalizeEmail(email);
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -90,7 +91,10 @@ namespace Roma.Pages
                     return new JsonResult(new { success = true, message = resentConfirmation ? "Bu e-posta zaten kayıtlı. Onay e-postasını tekrar gönderdik." : "Bu e-posta zaten onaylı şekilde kayıtlı." });
                 }
 
-                return RedirectToPage("/Index");
+                TempData["SubscribeAlert"] = resentConfirmation
+                    ? "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz."
+                    : "Bu e-posta zaten onaylı abonedir. Yorum ekleyebilirsiniz.";
+                return RedirectToPage("/Subscribe");
             }
 
             var tokenNew = System.Guid.NewGuid().ToString("N");
@@ -117,7 +121,8 @@ namespace Roma.Pages
                 return new JsonResult(new { success = true, message = "Abonelik isteğiniz alındı. Onay için e-postanızı kontrol edin." });
             }
 
-            return RedirectToPage("/Index");
+            TempData["SubscribeAlert"] = "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz.";
+            return RedirectToPage("/Subscribe");
         }
 
         public async Task<IActionResult> OnPostUnsubscribeAsync()
@@ -149,7 +154,8 @@ namespace Roma.Pages
                 return new JsonResult(new { success = true, message = "Abonelik kaydınız silindi." });
             }
 
-            return RedirectToPage("/Index");
+            TempData["SubscribeAlert"] = "Aboneliğiniz iptal edildi.";
+            return RedirectToPage("/Subscribe");
         }
 
         private static string NormalizeEmail(string? email)

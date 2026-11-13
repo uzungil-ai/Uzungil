@@ -4,6 +4,33 @@
     ViewData["Title"] = "Details";
 }
 
+@functions {
+    private static string FormatTurkeyTime(DateTime dateTime)
+    {
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        }
+
+        if (dateTime.Kind == DateTimeKind.Utc)
+        {
+            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, tz).ToString("dd.MM.yyyy HH:mm");
+        }
+
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            return TimeZoneInfo.ConvertTime(dateTime, tz).ToString("dd.MM.yyyy HH:mm");
+        }
+
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), tz).ToString("dd.MM.yyyy HH:mm");
+    }
+}
+
 <h1>Details</h1>
 
 <div>
@@ -19,7 +46,7 @@
         </dd>
 
         <dt class="col-sm-2">Oluşturulma</dt>
-        <dd class="col-sm-10">@Model.CreatedAt</dd>
+        <dd class="col-sm-10">@FormatTurkeyTime(Model.CreatedAt)</dd>
 
         <dt class="col-sm-2">Kullanıcı</dt>
         <dd class="col-sm-10">@Model.User?.UserName</dd>

@@ -39,6 +39,8 @@ namespace Roma.Controllers
             var destination = await _context.Destinations!
                 .Include(d => d.Images)
                 .Include(d => d.Attractions)
+                    .ThenInclude(a => a.Reviews)
+                        .ThenInclude(r => r.User)
                 .Include(d => d.Hotels)
                 .Include(d => d.Meals)
                 .Include(d => d.Flavors)

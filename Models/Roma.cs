@@ -653,7 +653,7 @@
         public int Rating { get; set; }
 
         /// Yorumun oluşturulma zamanı.
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// Yorumun yönetici tarafından onaylanma durumu.
         public bool IsApproved { get; set; } = false;

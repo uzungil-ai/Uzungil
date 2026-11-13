@@ -4,6 +4,25 @@
     ViewData["Title"] = "Destinasyon Detayı";
     var canManage = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
     var canAdd = User?.Identity?.IsAuthenticated == true;
+    var isAuthenticated = User?.Identity?.IsAuthenticated == true;
+}
+
+@functions {
+    private static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "Misafir";
+        }
+
+        var clean = email.Trim();
+        if (clean.Length == 1)
+        {
+            return $"{clean[0]}***";
+        }
+
+        return $"{clean[0]}***{clean[^1]}";
+    }
 }
 
 <style>
@@ -128,7 +147,7 @@ else
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="mb-0">Cazibe Noktaları (@(Model.Attractions?.Count ?? 0))</h4>
+    <h4 class="mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -143,6 +162,10 @@ else
                 .OrderBy(i => i.Order)
                 .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.AltText) && i.AltText.Contains(a.Name, StringComparison.OrdinalIgnoreCase))
                 ?? Model.Images?.OrderBy(i => i.Order).FirstOrDefault();
+            var approvedReviews = a.Reviews?
+                .Where(r => r.IsApproved && !r.IsRejected)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList() ?? new List<Roma.Models.Review>();
 
             <div class="col">
                 <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
@@ -181,12 +204,47 @@ else
                             <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Detay</span>
                         }
 
-                        <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@a.Id">Yorum Ekle</a>
+                        <a class="btn btn-sm card-comment-link"
+                           data-bs-toggle="collapse"
+                           href="#attraction-reviews-@a.Id"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="attraction-reviews-@a.Id">Yorumlar (@approvedReviews.Count)</a>
+
+                        @if (isAuthenticated)
+                        {
+                            <a class="btn btn-sm card-comment-link"
+                               asp-controller="Reviews"
+                               asp-action="Create"
+                               asp-route-attractionId="@a.Id"
+                               asp-route-returnUrl="@($"/Destinations/Details/{Model.Id}")">Yorum Ekle</a>
+                        }
 
                         @if (canAdd)
                         {
                             <a class="btn btn-sm btn-outline-warning" asp-controller="Attractions" asp-action="Edit" asp-route-id="@a.Id">Düzenle</a>
                             <a class="btn btn-sm btn-outline-danger" asp-controller="Attractions" asp-action="Delete" asp-route-id="@a.Id">Sil</a>
+                        }
+                    </div>
+                    <div class="collapse mt-2 px-3 pb-3" id="attraction-reviews-@a.Id">
+                        @if (approvedReviews.Count == 0)
+                        {
+                            <div class="small text-muted">Bu yer için henüz onaylı yorum bulunmuyor.</div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var review in approvedReviews)
+                                {
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                            <span>@Html.RatingBadge(review.Rating)</span>
+                                        </div>
+                                        <div class="small">@review.Comment</div>
+                                    </div>
+                                }
+                            </div>
                         }
                     </div>
                 </div>
@@ -200,7 +258,7 @@ else
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Oteller (@(Model.Hotels?.Count ?? 0))</h3>
+    <h3 class="mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -239,6 +297,11 @@ else
                     </div>
                     <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-1">
                         <a class="btn btn-sm btn-info" asp-controller="Hotels" asp-action="Details" asp-route-id="@h.Id">Detay</a>
+                        <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
+                        @if (isAuthenticated)
+                        {
+                            <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@($"/Destinations/Details/{Model.Id}")">Yorum Ekle</a>
+                        }
                         @if (canAdd)
                         {
                             <a class="btn btn-sm btn-outline-warning" asp-controller="Hotels" asp-action="Edit" asp-route-id="@h.Id">Düzenle</a>
@@ -278,6 +341,11 @@ else
                     </div>
                     <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-1">
                         <a class="btn btn-sm btn-info" asp-controller="Parkings" asp-action="Details" asp-route-id="@p.Id">Detay</a>
+                        <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
+                        @if (isAuthenticated)
+                        {
+                            <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@($"/Destinations/Details/{Model.Id}")">Yorum Ekle</a>
+                        }
                         @if (canAdd)
                         {
                             <a class="btn btn-sm btn-outline-warning" asp-controller="Parkings" asp-action="Edit" asp-route-id="@p.Id">Düzenle</a>
@@ -295,7 +363,7 @@ else
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Lezzetler (@(Model.Flavors?.Count ?? 0))</h3>
+    <h3 class="mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -312,6 +380,11 @@ else
                         <h4 class="card-title mb-3">@f.Name</h4>
                         <div class="mt-auto d-flex flex-wrap gap-1">
                             <a class="btn btn-sm btn-info" asp-controller="Flavors" asp-action="Details" asp-route-id="@f.Id">Detay</a>
+                            <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
+                            @if (isAuthenticated)
+                            {
+                                <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@($"/Destinations/Details/{Model.Id}")">Yorum Ekle</a>
+                            }
                             @if (canAdd)
                             {
                                 <a class="btn btn-sm btn-outline-warning" asp-controller="Flavors" asp-action="Edit" asp-route-id="@f.Id">Düzenle</a>
@@ -330,7 +403,7 @@ else
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Yemek Mekanları (@(Model.Meals?.Count ?? 0))</h3>
+    <h3 class="mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -351,6 +424,11 @@ else
                     </div>
                     <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-1">
                         <a class="btn btn-sm btn-info" asp-controller="Meals" asp-action="Details" asp-route-id="@m.Id">Detay</a>
+                        <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Index">Yorumlar</a>
+                        @if (isAuthenticated)
+                        {
+                            <a class="btn btn-sm card-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@($"/Destinations/Details/{Model.Id}")">Yorum Ekle</a>
+                        }
                         @if (canAdd)
                         {
                             <a class="btn btn-sm btn-outline-warning" asp-controller="Meals" asp-action="Edit" asp-route-id="@m.Id">Düzenle</a>

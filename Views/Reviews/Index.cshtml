@@ -3,34 +3,61 @@
 @{
     ViewData["Title"] = "Yorumlar";
     var isAdmin = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+    var reviewList = Model?.ToList() ?? new List<Roma.Models.Review>();
+    var totalReviewCount = reviewList.Count;
+    var totalStarPoint = reviewList.Sum(x => x.Rating);
+    var averageStarPoint = totalReviewCount > 0 ? totalStarPoint / (double)totalReviewCount : 0;
 }
 
 @functions {
+    private static string FormatTurkeyTime(DateTime dateTime)
+    {
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        }
+
+        DateTime trTime;
+        if (dateTime.Kind == DateTimeKind.Utc)
+        {
+            trTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime, tz);
+        }
+        else if (dateTime.Kind == DateTimeKind.Local)
+        {
+            trTime = TimeZoneInfo.ConvertTime(dateTime, tz);
+        }
+        else
+        {
+            trTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), tz);
+        }
+
+        return trTime.ToString("dd.MM.yyyy HH:mm");
+    }
+
     private static string MaskEmail(string? email)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-            return "-";
+            return "Misafir";
         }
 
-        var parts = email.Split('@', 2);
-        var localPart = parts[0];
-        var domainPart = parts.Length > 1 ? parts[1] : string.Empty;
-
-        if (localPart.Length == 1)
+        var clean = email.Trim();
+        if (clean.Length == 1)
         {
-            return $"{localPart[0]}*@{domainPart}";
+            return $"{clean[0]}***";
         }
 
-        var starCount = Math.Max(1, localPart.Length - 2);
-        var maskedLocal = $"{localPart[0]}{new string('*', starCount)}{localPart[^1]}";
-
-        return string.IsNullOrEmpty(domainPart) ? maskedLocal : $"{maskedLocal}@{domainPart}";
+        return $"{clean[0]}***{clean[^1]}";
     }
 }
 
 <br />
-<h4>Yorumlar</h4>
+<h4>Destinasyon Derecesi</h4>
 
 @if (TempData["SuccessMessage"] != null)
 {
@@ -45,14 +72,28 @@
 }
 
 <div class="mt-4">
-    @if (Model == null || !Model.Any())
+    @if (totalReviewCount == 0)
     {
         <div class="alert alert-warning">Bu sayfada gösterilecek onaylı yorum bulunmuyor.</div>
     }
     else
     {
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body small">
+                <div><strong>(5/5):</strong> @reviewList.Count(x => x.Rating == 5)</div>
+                <div><strong>(4/5):</strong> @reviewList.Count(x => x.Rating == 4)</div>
+                <div><strong>(3/5):</strong> @reviewList.Count(x => x.Rating == 3)</div>
+                <div><strong>(2/5):</strong> @reviewList.Count(x => x.Rating == 2)</div>
+                <div><strong>(1/5):</strong> @reviewList.Count(x => x.Rating == 1)</div>
+                <hr class="my-2" />
+                <div><strong>Toplam Yıldız:</strong> @totalStarPoint</div>
+                <div><strong>Toplam Kayıt:</strong> @totalReviewCount</div>
+                <div class="d-flex align-items-center gap-2"><strong>Yıldız Puanı:</strong> <span>@averageStarPoint.ToString("0.00")/5</span> <span>@Html.RatingBadge(averageStarPoint)</span></div>
+            </div>
+        </div>
+
         <div class="row g-3">
-            @foreach (var item in Model)
+            @foreach (var item in reviewList)
             {
                 <div class="col-12">
                     <div class="card h-100 shadow-sm">
@@ -60,7 +101,7 @@
                             <div class="d-flex flex-nowrap align-items-center gap-3 mb-2 small overflow-auto">
                                 <div class="fw-semibold text-nowrap">Destinasyon: @(item.Attraction?.Name ?? "Cazibe noktası belirtilmedi")</div>
                                 <div>@Html.RatingBadge(item.Rating)</div>
-                                <div class="text-muted text-nowrap">@item.CreatedAt</div>
+                                <div class="text-muted text-nowrap">@FormatTurkeyTime(item.CreatedAt)</div>
                                 <div class="text-nowrap"><strong>E-posta:</strong> @MaskEmail(item.User?.Email)</div>
                             </div>
                             <p class="card-text mb-3">@item.Comment</p>

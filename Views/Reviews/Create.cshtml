@@ -1,56 +1,160 @@
 @model Roma.Models.Review
 
 @{
-    ViewData["Title"] = "Yorumunuz";
+    ViewData["Title"] = "Yeni Yorum";
+    var destinationName = ViewBag.DestinationName as string;
+    var selectedAttractionName = ViewBag.SelectedAttractionName as string;
+    var attractions = ViewBag.Attractions as List<Roma.Models.Attraction> ?? new List<Roma.Models.Attraction>();
+    var selectedAttractionIds = ViewBag.SelectedAttractionIds as List<int> ?? new List<int>();
+    var bulkReviews = ViewBag.BulkReviews as List<Roma.Models.ReviewBulkInput> ?? new List<Roma.Models.ReviewBulkInput>();
 }
 
-<h1>Yorumunuz</h1>
+<br />
+<h1>Yeni Yorum</h1>
 
 <form asp-action="Create" method="post">
     <input type="hidden" name="returnToAttraction" value="@((ViewBag.ReturnToAttraction == true).ToString().ToLowerInvariant())" />
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
     @if (ViewBag.UserLocked == true)
     {
         <input type="hidden" asp-for="UserId" value="@ViewBag.CurrentUserId" />
     }
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="form-group">
-        <label asp-for="Comment" class="control-label">Yorum</label>
-        <input asp-for="Comment" class="form-control" />
-        <span asp-validation-for="Comment" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Rating" class="control-label">Puan</label>
-        <input asp-for="Rating" class="form-control" type="number" min="1" max="5" step="1" />
-        <small class="form-text text-muted">1 - 5 arası giriniz.</small>
-        <span asp-validation-for="Rating" class="text-danger"></span>
-    </div>
+
+    @if (!string.IsNullOrWhiteSpace(destinationName))
+    {
+        <div class="form-group mb-3">
+            <label class="control-label">Destinasyon</label>
+            <input class="form-control" value="@destinationName" readonly />
+        </div>
+
+        @if (ViewBag.ReturnToAttraction == true && !string.IsNullOrWhiteSpace(selectedAttractionName))
+        {
+            <div class="form-group mb-3">
+                <label class="control-label">Başlık</label>
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>@selectedAttractionName</span>
+                        <span class="check-indicator-fixed">☑</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    @if (ViewBag.ReturnToAttraction == true)
+    {
+        <div class="form-group">
+            <label asp-for="Comment" class="control-label">Yeni Yorum</label>
+            <textarea asp-for="Comment" class="form-control js-auto-grow" rows="1" placeholder="Yorumunuzu yazınız"></textarea>
+            <span asp-validation-for="Comment" class="text-danger"></span>
+        </div>
+
+        <br />
+
+        <div class="form-group">
+            <label asp-for="Rating" class="control-label">Puan</label>
+            <div class="star-rating" role="radiogroup" aria-label="Puan">
+                @for (var star = 5; star >= 1; star--)
+                {
+                    var singleStarId = $"single-star-{star}";
+                    <input type="radio" asp-for="Rating" id="@singleStarId" value="@star" required />
+                    <label for="@singleStarId" title="@star yıldız">★</label>
+                }
+            </div>
+            <small class="form-text text-muted">Yıldız seçiniz (1-5).</small>
+            <span asp-validation-for="Rating" class="text-danger"></span>
+        </div>
+
+        <br />
+    }
     @if (ViewBag.UserLocked != true)
     {
         <div class="form-group">
             <label for="guestEmail" class="control-label">Kayıtlı E-posta</label>
             <input id="guestEmail" name="guestEmail" type="email" class="form-control" value="@ViewBag.GuestEmail" />
             @Html.ValidationMessage("guestEmail", null, new { @class = "text-danger" })
+            @if (ViewBag.ShowSubscribeButton == true)
+            {
+                <div class="mt-2">
+                    <a class="btn btn-outline-primary btn-sm" asp-page="/Subscribe">Abone Ol</a>
+                </div>
+            }
         </div>
     }
-    @if (ViewBag.ReturnToAttraction == true && ViewBag.AttractionId != null)
+    @if (ViewBag.ReturnToAttraction == true && ViewBag.ReturnAttractionId != null)
     {
-        <input type="hidden" asp-for="AttractionId" value="@ViewBag.AttractionId" />
+        <input type="hidden" asp-for="AttractionId" value="@ViewBag.ReturnAttractionId" />
     }
     else
     {
-        <div class="form-group">
-            <label asp-for="AttractionId" class="control-label">Cazibe Noktası</label>
-            <select asp-for="AttractionId" class="form-select" asp-items="ViewBag.AttractionId">
-                <option value="">Cazibe noktası seçiniz</option>
-            </select>
+        <div class="form-group mt-3">
+            <label class="control-label mb-2">Başlıklar (tek seferde hepsine gönderilir)</label>
+
+            @if (attractions.Count == 0)
+            {
+                <div class="alert alert-warning py-2">Bu destinasyon için başlık bulunamadı.</div>
+            }
+            else
+            {
+                <div class="list-group attraction-choice-list">
+                    @for (var i = 0; i < attractions.Count; i++)
+                    {
+                        var attraction = attractions[i];
+                        var optionId = $"attraction-option-{attraction.Id}";
+                        var existing = bulkReviews.FirstOrDefault(x => x.AttractionId == attraction.Id);
+                        var isChecked = existing?.IsSelected ?? (selectedAttractionIds.Count == 0 || selectedAttractionIds.Contains(attraction.Id));
+                        var itemComment = existing?.Comment ?? string.Empty;
+                        var itemRating = existing?.Rating is >= 1 and <= 5 ? existing.Rating : 5;
+
+                        <div class="list-group-item">
+                            <input type="hidden" name="bulkReviews[@i].AttractionId" value="@attraction.Id" />
+                            <input type="hidden" name="bulkReviews[@i].IsSelected" value="false" />
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <label class="mb-0 fw-semibold" for="@optionId">@attraction.Name</label>
+                                    <div class="small text-muted">@attraction.Category</div>
+                                </div>
+                                <div class="form-check m-0">
+                                    <input class="form-check-input" type="checkbox" id="@optionId" name="bulkReviews[@i].IsSelected" value="true" checked="@isChecked" />
+                                    <label class="form-check-label" for="@optionId">Seç</label>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label mb-1">Yorum</label>
+                                <textarea class="form-control js-auto-grow" name="bulkReviews[@i].Comment" rows="1" placeholder="@attraction.Name için yorum yazınız">@itemComment</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label mb-1">Puan</label>
+                                <div class="star-rating" role="radiogroup" aria-label="@attraction.Name puanı">
+                                    @for (var star = 5; star >= 1; star--)
+                                    {
+                                        var bulkStarId = $"bulk-{attraction.Id}-star-{star}";
+                                        <input type="radio" id="@bulkStarId" name="bulkReviews[@i].Rating" value="@star" checked="@(itemRating == star)" />
+                                        <label for="@bulkStarId" title="@star yıldız">★</label>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
             <span asp-validation-for="AttractionId" class="text-danger"></span>
         </div>
     }
     <div class="form-group mt-3">
         <input type="submit" value="Ekle" class="btn btn-primary" />
-        @if (ViewBag.ReturnToAttraction == true && ViewBag.AttractionId != null)
+        @if (ViewBag.ReturnToAttraction == true && ViewBag.ReturnAttractionId != null)
         {
-            <a class="btn btn-secondary" asp-controller="Attractions" asp-action="Details" asp-route-id="@ViewBag.AttractionId">Geri Dön</a>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.ReturnUrl as string))
+            {
+                <a class="btn btn-secondary" href="@ViewBag.ReturnUrl">Geri Dön</a>
+            }
+            else
+            {
+                <a class="btn btn-secondary" asp-controller="Attractions" asp-action="Details" asp-route-id="@ViewBag.ReturnAttractionId">Geri Dön</a>
+            }
         }
 
        @*  else
@@ -61,6 +165,78 @@
     </div>
 </form>
 
+<style>
+    .attraction-choice-list .check-indicator::before {
+        content: "☐";
+        color: #6c757d;
+        font-size: 1.05rem;
+    }
+
+    .attraction-choice-list .btn-check:checked + label {
+        border-color: #198754;
+        background-color: #f0fff4;
+    }
+
+    .attraction-choice-list .btn-check:checked + label .check-indicator::before {
+        content: "☑";
+        color: #198754;
+    }
+
+    .check-indicator-fixed {
+        color: #198754;
+        font-size: 1.05rem;
+    }
+
+    .star-rating {
+        display: inline-flex;
+        flex-direction: row-reverse;
+        gap: .15rem;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        font-size: 1.35rem;
+        line-height: 1;
+        color: #ced4da;
+        cursor: pointer;
+        transition: transform .12s ease, color .12s ease, text-shadow .12s ease;
+    }
+
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #f59e0b;
+        text-shadow: 0 0 10px rgba(245, 158, 11, .55);
+    }
+
+    .star-rating label:hover {
+        transform: translateY(-1px) scale(1.08);
+    }
+
+    .js-auto-grow {
+        overflow: hidden;
+        resize: none;
+    }
+</style>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function autoGrow(el) {
+                if (!el) return;
+                el.style.height = 'auto';
+                el.style.height = (el.scrollHeight) + 'px';
+            }
+
+            var areas = document.querySelectorAll('.js-auto-grow');
+            areas.forEach(function (el) {
+                autoGrow(el);
+                el.addEventListener('input', function () { autoGrow(el); });
+            });
+        })();
+    </script>
 }

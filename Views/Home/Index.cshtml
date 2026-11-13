@@ -117,28 +117,6 @@ else
                             </div>
                         }
 
-@section Scripts {
-    <script>
-        (function () {
-            var link = document.getElementById('chatLaunchLink');
-            if (!link) return;
-
-            var launched = false;
-            function launchChat() {
-                if (launched) return;
-                launched = true;
-                window.location.href = link.href;
-            }
-
-            link.addEventListener('mouseenter', launchChat);
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                launchChat();
-            });
-        })();
-    </script>
-}
-
                         <div class="small text-muted mb-3">
                             Cazibe noktası: @(item.Attractions?.Count ?? 0)
                         </div>

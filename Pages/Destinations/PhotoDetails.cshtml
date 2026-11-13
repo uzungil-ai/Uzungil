@@ -6,6 +6,53 @@
     var isAdmin = User?.IsInRole("Admin") == true;
 }
 
+@functions {
+    private static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "Misafir";
+        }
+
+        var clean = email.Trim();
+        if (clean.Length == 1)
+        {
+            return $"{clean[0]}***";
+        }
+
+        return $"{clean[0]}***{clean[^1]}";
+    }
+
+    private static string FormatTurkeyTime(DateTime dateTime)
+    {
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        }
+
+        DateTime trTime;
+        if (dateTime.Kind == DateTimeKind.Utc)
+        {
+            trTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime, tz);
+        }
+        else if (dateTime.Kind == DateTimeKind.Local)
+        {
+            trTime = TimeZoneInfo.ConvertTime(dateTime, tz);
+        }
+        else
+        {
+            trTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), tz);
+        }
+
+        return trTime.ToString("dd.MM.yyyy HH:mm");
+    }
+}
+
 @section Head {
     <style>
         .info-card {
@@ -275,9 +322,20 @@
            Model.Destination.FacebookUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             ? Model.Destination.FacebookUrl
             : $"https://{Model.Destination.FacebookUrl}");
+    var currentPhotoDetailsUrl = $"/Destinations/PhotoDetails/{Model.Destination.Id}";
+    var destinationApprovedReviews = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+        .SelectMany(a => (a.Reviews ?? new List<Roma.Models.Review>())
+            .Where(r => r.IsApproved && !r.IsRejected)
+            .Select(r => new { Review = r, AttractionName = a.Name }))
+        .OrderByDescending(x => x.Review.CreatedAt)
+        .ToList();
+    var destinationAverageRating = destinationApprovedReviews.Any()
+        ? destinationApprovedReviews.Average(x => x.Review.Rating)
+        : 0;
 
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
         <div class="card-body">
+            <h4 class="mb-3 details-section-title">@Model.Destination.Name</h4>
             <div class="row">
                 <div class="col-12 details-plain-text">@Model.Destination.Description</div>
             </div>
@@ -324,6 +382,15 @@
 
     <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
         <div class="d-flex align-items-center gap-1">
+            <span class="small text-muted me-2">Destinasyon: @Model.Destination.Name</span>
+            <span class="small text-muted me-2">Puan Ortalaması: @destinationAverageRating.ToString("0.00")/5</span>
+            <span class="me-2">@Html.RatingBadge(destinationAverageRating)</span>
+            <a class="btn btn-sm btn-comment-link"
+               data-bs-toggle="collapse"
+               href="#destination-reviews"
+               role="button"
+               aria-expanded="false"
+               aria-controls="destination-reviews">Yorum Listesi (@destinationApprovedReviews.Count)</a>
             @if (!string.IsNullOrWhiteSpace(instagramUrl))
             {
                 <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="social-text-link instagram-link" title="Instagram" aria-label="Instagram">
@@ -350,6 +417,28 @@
                 <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
             }
         </div>
+    </div>
+
+    <div class="collapse mb-3" id="destination-reviews">
+        @if (destinationApprovedReviews.Count == 0)
+        {
+            <div class="small text-muted">Bu destinasyon için henüz onaylı yorum bulunmuyor.</div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var item in destinationApprovedReviews)
+                {
+                    <div class="list-group-item px-0">
+                        <div class="small fw-semibold">@item.AttractionName</div>
+                        <div class="small"><strong>Yorum:</strong> @item.Review.Comment</div>
+                        <div class="small">@Html.RatingBadge(item.Review.Rating)</div>
+                        <div class="small text-muted"><strong>E-posta:</strong> @MaskEmail(item.Review.User?.Email)</div>
+                        <div class="small text-muted"><strong>Tarih:</strong> @FormatTurkeyTime(item.Review.CreatedAt)</div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 
     @if (Model.Destination.Images != null && Model.Destination.Images.Count > 0)
@@ -430,13 +519,47 @@
                         <div class="card-footer bg-transparent border-0 pt-0">
                             <div class="d-flex align-items-center gap-2">
                                 <div>@Html.RatingBadge(item.AverageRating)</div>
-                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id">Yorum Ekle</a>
+                                <a class="btn btn-sm btn-comment-link"
+                                   data-bs-toggle="collapse"
+                                   href="#attraction-reviews-@item.Id"
+                                   role="button"
+                                   aria-expanded="false"
+                                   aria-controls="attraction-reviews-@item.Id">Yorumlar (@(item.Reviews?.Count(r => r.IsApproved && !r.IsRejected) ?? 0))</a>
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
                                 <div class="d-flex gap-2">
                                     @if (isAdmin)
                                     {
                                         <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
                                     }
                                 </div>
+                            </div>
+                            <div class="collapse mt-2" id="attraction-reviews-@item.Id">
+                                @{
+                                    var approvedReviews = item.Reviews?
+                                        .Where(r => r.IsApproved && !r.IsRejected)
+                                        .OrderByDescending(r => r.CreatedAt)
+                                        .ToList() ?? new List<Roma.Models.Review>();
+                                }
+
+                                @if (approvedReviews.Count == 0)
+                                {
+                                    <div class="small text-muted">Bu yer için henüz onaylı yorum bulunmuyor.</div>
+                                }
+                                else
+                                {
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var review in approvedReviews)
+                                        {
+                                            <div class="list-group-item px-0">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                    <span>@Html.RatingBadge(review.Rating)</span>
+                                                </div>
+                                                <div class="small">@review.Comment</div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -460,6 +583,12 @@
                 var hotelQuery = $"{item.Name} {Model.Destination.Name} {Model.Destination.Country}";
                 var hotelSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(hotelQuery)}";
                 var hotelMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(hotelQuery)}";
+                var hotelAttraction = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+                    .FirstOrDefault(a => string.Equals(a.Name?.Trim(), item.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
+                var hotelApprovedReviews = hotelAttraction?.Reviews?
+                    .Where(r => r.IsApproved && !r.IsRejected)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList() ?? new List<Roma.Models.Review>();
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
@@ -485,6 +614,39 @@
                                 }
                             </div>
                         </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-comment-link"
+                               data-bs-toggle="collapse"
+                               href="#hotel-reviews-@item.Id"
+                               role="button"
+                               aria-expanded="false"
+                               aria-controls="hotel-reviews-@item.Id">Yorumlar (@hotelApprovedReviews.Count)</a>
+                            @if (hotelAttraction != null)
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@hotelAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                        </div>
+                        <div class="collapse mt-2 px-3 pb-3" id="hotel-reviews-@item.Id">
+                            @if (hotelApprovedReviews.Count == 0)
+                            {
+                                <div class="small text-muted">Bu konaklama için henüz onaylı yorum bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var review in hotelApprovedReviews)
+                                    {
+                                        <div class="list-group-item px-0">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                            </div>
+                                            <div class="small">@review.Comment</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             }
@@ -506,6 +668,12 @@
                 var mealQuery = $"{item.Name} {Model.Destination.Name}";
                 var mealSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(mealQuery)}";
                 var mealMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(mealQuery)}";
+                var mealAttraction = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+                    .FirstOrDefault(a => string.Equals(a.Name?.Trim(), item.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
+                var mealApprovedReviews = mealAttraction?.Reviews?
+                    .Where(r => r.IsApproved && !r.IsRejected)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList() ?? new List<Roma.Models.Review>();
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
@@ -513,6 +681,39 @@
                                 <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
                                 <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @mealQuery">@item.Name</a>
                             </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-comment-link"
+                               data-bs-toggle="collapse"
+                               href="#meal-reviews-@item.Id"
+                               role="button"
+                               aria-expanded="false"
+                               aria-controls="meal-reviews-@item.Id">Yorumlar (@mealApprovedReviews.Count)</a>
+                            @if (mealAttraction != null)
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@mealAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                        </div>
+                        <div class="collapse mt-2 px-3 pb-3" id="meal-reviews-@item.Id">
+                            @if (mealApprovedReviews.Count == 0)
+                            {
+                                <div class="small text-muted">Bu restoran/cafe için henüz onaylı yorum bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var review in mealApprovedReviews)
+                                    {
+                                        <div class="list-group-item px-0">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                            </div>
+                                            <div class="small">@review.Comment</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -536,6 +737,12 @@
                 var flavorQuery = $"{item.Name} {Model.Destination.Name}";
                 var flavorSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(flavorQuery)}";
                 var flavorMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(flavorQuery)}";
+                var flavorAttraction = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+                    .FirstOrDefault(a => string.Equals(a.Name?.Trim(), item.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
+                var flavorApprovedReviews = flavorAttraction?.Reviews?
+                    .Where(r => r.IsApproved && !r.IsRejected)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList() ?? new List<Roma.Models.Review>();
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
@@ -543,6 +750,39 @@
                                 <a href="@flavorMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @flavorQuery" aria-label="Haritada aç: @flavorQuery">📍</a>
                                 <a href="@flavorSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @flavorQuery">@item.Name</a>
                             </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-comment-link"
+                               data-bs-toggle="collapse"
+                               href="#flavor-reviews-@item.Id"
+                               role="button"
+                               aria-expanded="false"
+                               aria-controls="flavor-reviews-@item.Id">Yorumlar (@flavorApprovedReviews.Count)</a>
+                            @if (flavorAttraction != null)
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@flavorAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                        </div>
+                        <div class="collapse mt-2 px-3 pb-3" id="flavor-reviews-@item.Id">
+                            @if (flavorApprovedReviews.Count == 0)
+                            {
+                                <div class="small text-muted">Bu lezzet için henüz onaylı yorum bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var review in flavorApprovedReviews)
+                                    {
+                                        <div class="list-group-item px-0">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                            </div>
+                                            <div class="small">@review.Comment</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -568,6 +808,12 @@
                 var parkingQuery = $"{item.Name} {Model.Destination.Name}";
                 var parkingSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(parkingQuery)}";
                 var parkingMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(parkingQuery)}";
+                var parkingAttraction = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+                    .FirstOrDefault(a => string.Equals(a.Name?.Trim(), item.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
+                var parkingApprovedReviews = parkingAttraction?.Reviews?
+                    .Where(r => r.IsApproved && !r.IsRejected)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList() ?? new List<Roma.Models.Review>();
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
@@ -575,6 +821,39 @@
                                 <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @parkingQuery">@item.Name</a>
                                 <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
                             </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-comment-link"
+                               data-bs-toggle="collapse"
+                               href="#parking-reviews-@item.Id"
+                               role="button"
+                               aria-expanded="false"
+                               aria-controls="parking-reviews-@item.Id">Yorumlar (@parkingApprovedReviews.Count)</a>
+                            @if (parkingAttraction != null)
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@parkingAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                        </div>
+                        <div class="collapse mt-2 px-3 pb-3" id="parking-reviews-@item.Id">
+                            @if (parkingApprovedReviews.Count == 0)
+                            {
+                                <div class="small text-muted">Bu otopark için henüz onaylı yorum bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var review in parkingApprovedReviews)
+                                    {
+                                        <div class="list-group-item px-0">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                            </div>
+                                            <div class="small">@review.Comment</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
