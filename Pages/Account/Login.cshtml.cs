@@ -97,15 +97,12 @@ namespace Roma.Pages.Account
 
             if (signInResult.RequiresTwoFactor)
             {
-                _logger.LogInformation("Two-factor temporarily bypassed for user '{UserId}'.", user.Id);
-                await _signInManager.SignInAsync(user, Input.RememberMe);
-
-                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                _logger.LogInformation("Two-factor required for user '{UserId}'.", user.Id);
+                return RedirectToPage("/Account/VerifyAuthenticatorSignIn", new
                 {
-                    TempData["ShowPendingReviewsPopup"] = "1";
-                }
-
-                return LocalRedirect(safeReturnUrl!);
+                    returnUrl = safeReturnUrl,
+                    rememberMe = Input.RememberMe
+                });
             }
 
             if (signInResult.Succeeded)

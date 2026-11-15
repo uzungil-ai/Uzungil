@@ -23,28 +23,19 @@ namespace Roma.Pages.Account
         [BindProperty]
         public bool RememberMe { get; set; }
 
-        [BindProperty]
-        public string UserId { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
 
         public string? ErrorMessage { get; set; }
 
-        public void OnGet()
-        {
-            if (TempData.ContainsKey("TwoFactorUserId"))
-            {
-                UserId = TempData["TwoFactorUserId"] as string ?? string.Empty;
-            }
-
-            if (TempData.ContainsKey("RememberMe"))
-            {
-                bool.TryParse(TempData["RememberMe"] as string, out var remember);
-                RememberMe = remember;
-            }
-        }
+        public void OnGet() { }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (string.IsNullOrWhiteSpace(UserId))
+            var safeReturnUrl = Url.IsLocalUrl(ReturnUrl) ? ReturnUrl : Url.Content("~/");
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
             {
                 ErrorMessage = "İşlem süresi geçti. Lütfen tekrar giriş yapın.";
                 return Page();
@@ -57,27 +48,19 @@ namespace Roma.Pages.Account
                 return Page();
             }
 
-            var user = await _userManager.FindByIdAsync(UserId);
-            if (user == null)
-            {
-                ErrorMessage = "Kullanıcı bulunamadı.";
-                return Page();
-            }
-
-            // verify authenticator token
-            var valid = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, normalizedCode);
-            if (!valid)
+            var signInResult = await _signInManager.TwoFactorAuthenticatorSignInAsync(normalizedCode, RememberMe, rememberClient: false);
+            if (!signInResult.Succeeded)
             {
                 ErrorMessage = "Kod doğrulanamadı. Kodu yenileyip tekrar deneyin ve cihaz saatinin otomatik ayarlı olduğundan emin olun.";
                 return Page();
             }
 
-            await _signInManager.SignInAsync(user, RememberMe);
             if (await _userManager.IsInRoleAsync(user, "Admin"))
             {
                 TempData["ShowPendingReviewsPopup"] = "1";
             }
-            return LocalRedirect("/");
+
+            return LocalRedirect(safeReturnUrl!);
         }
 
         private static string NormalizeVerificationCode(string code)
