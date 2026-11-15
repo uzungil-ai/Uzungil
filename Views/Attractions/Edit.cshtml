@@ -84,24 +84,59 @@
                 'Piknik Alanı',
                 'Saraylar',
                 'Sinegog',
-                'Tapınak'
+                'Tapınak',
+                'Yemekler',
+                'Oteller',
+                'Misafirhane',
+                'Darulşifahane',
+                'Yöresel Yemekler',
+                'Otoparklar',
+                'Piknik Alanları',
+                'Üniversiteler',
+                'Tiyatrolar',
+                'Operalar',
+                'Kayak Tesisleri',
+                'Kaleler',
+                'Fast Food',
+                'Manastırlar',
+                'Kiralık Evler'
             ];
 
-            categories.forEach(function (item) {
-                const option = document.createElement('option');
-                option.value = item;
-                option.textContent = item;
-                categoryPresetSelect.appendChild(option);
-            });
+            const tr = 'tr-TR';
 
-            const currentValue = (categoryInput.value || '').trim();
-            if (currentValue && categories.includes(currentValue)) {
-                categoryPresetSelect.value = currentValue;
+            function renderCategoryOptions() {
+                const currentSelected = categoryPresetSelect.value;
+                categoryPresetSelect.innerHTML = '';
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Seçiniz';
+                categoryPresetSelect.appendChild(placeholder);
+
+                const sorted = [...categories].sort(function (a, b) {
+                    return a.localeCompare(b, tr);
+                });
+
+                sorted.forEach(function (item) {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    categoryPresetSelect.appendChild(option);
+                });
+
+                const inputValue = (categoryInput.value || '').trim();
+                const selectedValue = currentSelected || inputValue;
+                if (selectedValue && categories.includes(selectedValue)) {
+                    categoryPresetSelect.value = selectedValue;
+                }
             }
+
+            renderCategoryOptions();
 
             categoryPresetSelect.addEventListener('change', function () {
                 if (!categoryPresetSelect.value) return;
                 categoryInput.value = categoryPresetSelect.value;
+                renderCategoryOptions();
             });
         })();
     </script>

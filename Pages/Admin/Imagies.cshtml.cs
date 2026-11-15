@@ -20,7 +20,7 @@ namespace Roma.Pages.Admin
         }
 
         [BindProperty(SupportsGet = true)]
-        public int Page { get; set; } = 1;
+        public int CurrentPage { get; set; } = 1;
 
         [BindProperty(SupportsGet = true)]
         public int? DestinationId { get; set; }
@@ -57,7 +57,7 @@ namespace Roma.Pages.Admin
             {
                 Images = Array.Empty<WebpImageItem>();
                 TotalCount = 0;
-                Page = 1;
+                CurrentPage = 1;
                 return;
             }
 
@@ -67,7 +67,7 @@ namespace Roma.Pages.Admin
             {
                 Images = Array.Empty<WebpImageItem>();
                 TotalCount = 0;
-                Page = 1;
+                CurrentPage = 1;
                 return;
             }
 
@@ -106,11 +106,11 @@ namespace Roma.Pages.Admin
                 .ToList();
 
             TotalCount = allItems.Count;
-            Page = Math.Max(1, Page);
-            Page = Math.Min(Page, TotalPages);
+            CurrentPage = Math.Max(1, CurrentPage);
+            CurrentPage = Math.Min(CurrentPage, TotalPages);
 
             Images = allItems
-                .Skip((Page - 1) * PageSize)
+                .Skip((CurrentPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToList();
         }

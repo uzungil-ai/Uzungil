@@ -31,7 +31,7 @@ else
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div><strong>Toplam:</strong> @Model.TotalCount</div>
-        <div><strong>Sayfa:</strong> @Model.Page / @Model.TotalPages</div>
+        <div><strong>Sayfa:</strong> @Model.CurrentPage / @Model.TotalPages</div>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
@@ -57,24 +57,24 @@ else
 
     <nav class="mt-4" aria-label="Sayfalama">
         <ul class="pagination flex-wrap mb-0">
-            <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
-                <a class="page-link" asp-page="/Admin/Imagies" asp-route-page="@(Model.Page - 1)" asp-route-destinationId="@Model.DestinationId">Önceki</a>
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : null)">
+                <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@(Model.CurrentPage - 1)" asp-route-destinationId="@Model.DestinationId">Önceki</a>
             </li>
 
             @{
-                var startPage = Math.Max(1, Model.Page - 2);
-                var endPage = Math.Min(Model.TotalPages, Model.Page + 2);
+                var startPage = Math.Max(1, Model.CurrentPage - 2);
+                var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
             }
 
             @for (var p = startPage; p <= endPage; p++)
             {
-                <li class="page-item @(p == Model.Page ? "active" : null)">
-                    <a class="page-link" asp-page="/Admin/Imagies" asp-route-page="@p" asp-route-destinationId="@Model.DestinationId">@p</a>
+                <li class="page-item @(p == Model.CurrentPage ? "active" : null)">
+                    <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@p" asp-route-destinationId="@Model.DestinationId">@p</a>
                 </li>
             }
 
-            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
-                <a class="page-link" asp-page="/Admin/Imagies" asp-route-page="@(Model.Page + 1)" asp-route-destinationId="@Model.DestinationId">Sonraki</a>
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : null)">
+                <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@(Model.CurrentPage + 1)" asp-route-destinationId="@Model.DestinationId">Sonraki</a>
             </li>
         </ul>
     </nav>

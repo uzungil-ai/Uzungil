@@ -11,6 +11,40 @@ namespace Roma.Pages
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
         private readonly Dictionary<string, string> _srcSetCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly string[] ManualCategoryOptions =
+        {
+            "Anıtlar",
+            "Cami",
+            "Destinasyon",
+            "Doğa",
+            "Hanlar",
+            "Havra",
+            "Kervansaray",
+            "Kilise",
+            "Külliye",
+            "Mozole",
+            "Müzeler",
+            "Parklar",
+            "Piknik Alanı",
+            "Saraylar",
+            "Sinegog",
+            "Tapınak",
+            "Yemekler",
+            "Oteller",
+            "Misafirhane",
+            "Darulşifahane",
+            "Yöresel Yemekler",
+            "Otoparklar",
+            "Piknik Alanları",
+            "Üniversiteler",
+            "Tiyatrolar",
+            "Operalar",
+            "Kayak Tesisleri",
+            "Kaleler",
+            "Fast Food",
+            "Manastırlar",
+            "Kiralık Evler"
+        };
 
         public IndexModel(ApplicationDbContext db, IWebHostEnvironment env)
         {
@@ -20,6 +54,7 @@ namespace Roma.Pages
 
         public List<Destination> Featured { get; set; } = new List<Destination>();
         public List<Destination> Latest { get; set; } = new List<Destination>();
+        public List<string> CategoryOptions { get; set; } = new List<string>();
         public int TotalDestinationCount { get; set; }
         public int TotalPhotoCount { get; set; }
 
@@ -48,6 +83,19 @@ namespace Roma.Pages
         {
             TotalDestinationCount = await _db.Destinations!.CountAsync();
             TotalPhotoCount = await _db.DestinationImages!.CountAsync();
+
+            var dbCategoryOptions = await _db.Attractions!
+                .AsNoTracking()
+                .Where(a => a.Category != null && a.Category.Trim() != string.Empty)
+                .Select(a => a.Category.Trim())
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            CategoryOptions = ManualCategoryOptions
+                .Concat(dbCategoryOptions)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             Name = string.IsNullOrWhiteSpace(Name) ? null : Name.Trim();
             Search = string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();

@@ -9,7 +9,7 @@
         firstFeaturedImage = "/images/italya.jpg";
     }
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
-    var categoryOptions = new[] { "Anıtlar", "Cami", "Destinasyon", "Doğa", "Hanlar", "Havra", "Kervansaray", "Kilise", "Külliye", "Mozole", "Müzeler", "Parklar", "Piknik Alanı", "Saraylar", "Sinegog", "Tapınak" };
+    var categoryOptions = Model.CategoryOptions;
     var selectedCategory = Model.Category ?? string.Empty;
 }
 
