@@ -254,10 +254,16 @@ body {
 }
 
 .navbar-about-link {
-  font-size: 1.2rem !important;
+  font-size: 1.3rem !important;
   font-weight: 700;
   color: #f59e0b !important;
   background: transparent !important;
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1.2;
+  padding-top: 0;
+  padding-bottom: 0;
+  transform: translateY(5px);
 }
 
 .navbar-about-link:hover,
@@ -365,9 +371,93 @@ body {
   margin-top: 1rem;
 }
 
+.about-hero-card {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(10, 37, 105, 0.92) 0%, rgba(31, 79, 214, 0.9) 55%, rgba(93, 123, 240, 0.88) 100%);
+  color: #fff;
+}
+
+.about-hero-card .text-muted {
+  color: #dbeafe !important;
+}
+
+.about-hero-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffda6a;
+}
+
+.about-hero-card .btn {
+  font-weight: 700;
+  border-width: 2px;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.22);
+}
+
+.about-hero-card .btn-primary {
+  background: #ffc107 !important;
+  border-color: #ffc107 !important;
+  color: #1f2937 !important;
+}
+
+.about-hero-card .btn-outline-primary,
+.about-hero-card .btn-outline-secondary,
+.about-hero-card .btn-outline-dark {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #ffffff !important;
+  color: #1e3a8a !important;
+}
+
+.about-hero-card .btn:hover,
+.about-hero-card .btn:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.28);
+}
+
 .about-card {
   border-radius: var(--radius-lg);
   overflow: hidden;
+}
+
+.about-detail-jumbotron {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: linear-gradient(130deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 64, 175, 0.92) 58%, rgba(37, 99, 235, 0.9) 100%);
+  color: #e2e8f0;
+}
+
+.about-detail-image-wrap {
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.about-detail-body .about-page-title {
+  color: #ffda6a;
+}
+
+.about-detail-body p {
+  color: #e2e8f0;
+}
+
+.about-detail-social {
+  border-top-color: rgba(226, 232, 240, 0.32);
+}
+
+.about-detail-social h5 {
+  color: #ffda6a;
+}
+
+.about-detail-jumbotron .social-link {
+  border-color: rgba(226, 232, 240, 0.45);
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #1e3a8a;
+}
+
+.about-detail-jumbotron .social-link:hover,
+.about-detail-jumbotron .social-link:focus {
+  border-color: #fff;
+  color: #1d4ed8;
 }
 
 .about-image-wrap {
@@ -398,6 +488,67 @@ body {
   margin-top: auto !important;
   padding-top: 0.75rem;
   border-top: 1px solid #e2e8f0;
+}
+
+.team-page-header {
+  max-width: 680px;
+}
+
+.team-role-card {
+  border-radius: var(--radius-md);
+}
+
+.team-role-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.team-role-title {
+  color: #1e3a8a;
+  margin-bottom: 0.5rem;
+}
+
+.team-profile-card {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.team-profile-photo {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  min-height: 0;
+  object-fit: cover;
+  display: block;
+}
+
+.team-role-photo {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 767.98px) {
+  .team-page-section .row.g-0 > [class*="col-"] {
+    width: 100%;
+  }
+
+  .team-page-section .card-body {
+    padding: 1rem;
+  }
 }
 
 .hero-search-slider-wrap {

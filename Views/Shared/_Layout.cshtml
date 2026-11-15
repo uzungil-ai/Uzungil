@@ -50,6 +50,9 @@
                         <li class="nav-item">
                             <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Ekibimiz">Ekibimiz</a>
+                        </li>
                         @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
@@ -66,6 +69,9 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-page="/Admin/ImageOptimize">Görsel Optimize</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Admin/Imagies">Imagies</a>
                             </li>
                         }
                     </ul>
@@ -124,6 +130,7 @@
                 <div class="small text-muted">Fotografia • Seyahat rehberi</div>
                 <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center">
                     <a asp-area="" asp-controller="Home" asp-action="Hakkında" class="simple-footer-link">Hakkında</a>
+                    <a asp-area="" asp-controller="Home" asp-action="Ekibimiz" class="simple-footer-link">Ekibimiz</a>
                     <a asp-area="" asp-controller="Home" asp-action="Privacy" class="simple-footer-link">Gizlilik</a>
                     <a href="mailto:info@fotografia.com.tr" class="simple-footer-link">İletişim</a>
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Bültene Katıl</button>

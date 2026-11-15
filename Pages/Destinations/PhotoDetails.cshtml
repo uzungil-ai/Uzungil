@@ -22,35 +22,6 @@
 
         return $"{clean[0]}***{clean[^1]}";
     }
-
-    private static string FormatTurkeyTime(DateTime dateTime)
-    {
-        TimeZoneInfo tz;
-        try
-        {
-            tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-        }
-
-        DateTime trTime;
-        if (dateTime.Kind == DateTimeKind.Utc)
-        {
-            trTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime, tz);
-        }
-        else if (dateTime.Kind == DateTimeKind.Local)
-        {
-            trTime = TimeZoneInfo.ConvertTime(dateTime, tz);
-        }
-        else
-        {
-            trTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), tz);
-        }
-
-        return trTime.ToString("dd.MM.yyyy HH:mm");
-    }
 }
 
 @section Head {
@@ -171,6 +142,32 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
         }
 
+        .photo-more-trigger {
+            position: absolute;
+            inset: 0;
+            border: 0;
+            background: rgba(15, 23, 42, 0.45);
+            color: #fff;
+            font-weight: 700;
+            font-size: 2.4rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+        }
+
+        .photo-more-trigger:hover,
+        .photo-more-trigger:focus {
+            background: rgba(15, 23, 42, 0.58);
+        }
+
+        .photo-more-count {
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
         .details-section-title {
             font-weight: 700;
             color: #1f4fd6;
@@ -196,6 +193,7 @@
             border: 0 !important;
             background: transparent !important;
             color: #16a34a !important;
+            font-weight: 700;
             text-decoration: underline;
             text-decoration-thickness: 4px;
             text-underline-offset: 2px;
@@ -249,10 +247,80 @@
 
         .social-text-link {
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             text-decoration: none;
             line-height: 1;
             transition: color .15s ease, text-decoration-thickness .15s ease;
+        }
+
+        .btn-whatsapp-plain {
+            font-weight: 700;
+        }
+
+        .top-rating-badge {
+            font-size: 1.25rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .top-summary-line .top-rating-badge,
+        .top-summary-line .social-text-link,
+        .top-summary-line .btn-comment-link,
+        .top-summary-line .btn-whatsapp-plain {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .top-summary-line .top-summary-item {
+            font-size: 1.25rem;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .top-summary-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: .5rem;
+        }
+
+        .top-summary-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem .75rem;
+            max-width: 100%;
+            padding: .3rem .55rem;
+            border-radius: 10px;
+        }
+
+        .top-rating-toggle {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            border: 0;
+            background: transparent;
+            padding: 0;
+        }
+
+        .top-rating-toggle:hover,
+        .top-rating-toggle:focus {
+            text-decoration: none;
+            filter: brightness(1.08);
+        }
+
+        #destination-reviews .review-heading,
+        #destination-reviews .review-label {
+            color: #1f4fd6;
+            font-weight: 700;
+        }
+
+        .top-summary-line .btn-whatsapp-plain {
+            white-space: normal;
+            text-align: left;
+            line-height: 1.2;
         }
 
         .social-text-link.instagram-link {
@@ -288,6 +356,24 @@
             .mobile-three-cards > [class*="col-"] {
                 flex: 0 0 50%;
                 max-width: 50%;
+            }
+
+            .top-summary-wrap {
+                justify-content: center;
+            }
+
+            .top-summary-line {
+                justify-content: center;
+                text-align: center;
+                width: 100%;
+            }
+
+            .top-summary-line .top-summary-item,
+            .top-summary-line .top-rating-badge,
+            .top-summary-line .social-text-link,
+            .top-summary-line .btn-comment-link,
+            .top-summary-line .btn-whatsapp-plain {
+                font-size: 1rem;
             }
         }
 
@@ -325,12 +411,10 @@
     var currentPhotoDetailsUrl = $"/Destinations/PhotoDetails/{Model.Destination.Id}";
     var destinationApprovedReviews = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
         .SelectMany(a => (a.Reviews ?? new List<Roma.Models.Review>())
-            .Where(r => r.IsApproved && !r.IsRejected)
-            .Select(r => new { Review = r, AttractionName = a.Name }))
-        .OrderByDescending(x => x.Review.CreatedAt)
+            .Where(r => r.IsApproved && !r.IsRejected))
         .ToList();
     var destinationAverageRating = destinationApprovedReviews.Any()
-        ? destinationApprovedReviews.Average(x => x.Review.Rating)
+        ? destinationApprovedReviews.Average(x => x.Rating)
         : 0;
 
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
@@ -375,22 +459,124 @@
                 window.open('https://wa.me/?text=' + encodeURIComponent(shareText), '_blank', 'noopener');
             });
         })();
+
+        (function () {
+            const container = document.getElementById('destinationPhotoGrid');
+            const moreBtn = document.getElementById('photoMoreBtn');
+            const moreCount = document.getElementById('photoMoreCount');
+            if (!container || !moreBtn || !moreCount) return;
+
+            function hydrateDeferredMedia(scope) {
+                const target = scope || container;
+                const deferredImages = target.querySelectorAll('img.js-deferred-photo');
+                deferredImages.forEach(function (img) {
+                    const dataSrc = img.getAttribute('data-src');
+                    const dataSrcSet = img.getAttribute('data-srcset');
+                    const dataSizes = img.getAttribute('data-sizes');
+
+                    if (dataSrc) {
+                        img.setAttribute('src', dataSrc);
+                        img.removeAttribute('data-src');
+                    }
+
+                    if (dataSrcSet) {
+                        img.setAttribute('srcset', dataSrcSet);
+                        img.removeAttribute('data-srcset');
+                    }
+
+                    if (dataSizes) {
+                        img.setAttribute('sizes', dataSizes);
+                        img.removeAttribute('data-sizes');
+                    }
+
+                    img.classList.remove('js-deferred-photo');
+                });
+
+                const deferredSources = target.querySelectorAll('source.js-deferred-photo-source');
+                deferredSources.forEach(function (source) {
+                    const dataSrcSet = source.getAttribute('data-srcset');
+                    const dataSizes = source.getAttribute('data-sizes');
+
+                    if (dataSrcSet) {
+                        source.setAttribute('srcset', dataSrcSet);
+                        source.removeAttribute('data-srcset');
+                    }
+
+                    if (dataSizes) {
+                        source.setAttribute('sizes', dataSizes);
+                        source.removeAttribute('data-sizes');
+                    }
+
+                    source.classList.remove('js-deferred-photo-source');
+                });
+            }
+
+            function updateCount() {
+                const hiddenItems = container.querySelectorAll('.js-destination-photo-item.d-none');
+                const remaining = hiddenItems.length;
+
+                if (remaining <= 0) {
+                    moreBtn.classList.add('d-none');
+                    return;
+                }
+
+                moreBtn.classList.remove('d-none');
+                moreCount.textContent = '+' + remaining;
+            }
+
+            moreBtn.addEventListener('click', function () {
+                const hiddenItems = container.querySelectorAll('.js-destination-photo-item.d-none');
+                if (!hiddenItems.length) {
+                    updateCount();
+                    return;
+                }
+
+                hiddenItems.forEach(function (item) {
+                    item.classList.remove('d-none');
+                });
+
+                updateCount();
+            });
+
+            const preloadDeferred = function () {
+                hydrateDeferredMedia(container);
+            };
+
+            if (document.readyState === 'complete') {
+                setTimeout(preloadDeferred, 200);
+            } else {
+                window.addEventListener('load', function () {
+                    setTimeout(preloadDeferred, 200);
+                }, { once: true });
+            }
+
+            updateCount();
+        })();
+
+        (function () {
+            const toggleByRatingBtn = document.getElementById('togglePhotosByRatingBtn');
+            const photoGrid = document.getElementById('destinationPhotoGrid');
+
+            if (!toggleByRatingBtn || !photoGrid) return;
+
+            toggleByRatingBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                photoGrid.classList.add('d-none');
+            });
+        })();
     </script>
 }
         </div>
     </div>
 
-    <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
-        <div class="d-flex align-items-center gap-1">
-            <span class="small text-muted me-2">Destinasyon: @Model.Destination.Name</span>
-            <span class="small text-muted me-2">Puan Ortalaması: @destinationAverageRating.ToString("0.00")/5</span>
-            <span class="me-2">@Html.RatingBadge(destinationAverageRating)</span>
-            <a class="btn btn-sm btn-comment-link"
-               data-bs-toggle="collapse"
-               href="#destination-reviews"
-               role="button"
-               aria-expanded="false"
-               aria-controls="destination-reviews">Yorum Listesi (@destinationApprovedReviews.Count)</a>
+    <div class="top-summary-wrap">
+        <div class="top-summary-line">
+            <span class="text-muted me-2 top-summary-item">Ortalama Puan</span>
+            <button type="button"
+                    id="togglePhotosByRatingBtn"
+                    class="me-2 top-rating-badge top-rating-toggle"
+                    aria-label="Fotoğrafları gizle ve başlıklara geç">@Html.RatingBadge(destinationAverageRating)</button>
+            <span class="btn btn-sm btn-comment-link">Yorumlar (@destinationApprovedReviews.Count)</span>
             @if (!string.IsNullOrWhiteSpace(instagramUrl))
             {
                 <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="social-text-link instagram-link" title="Instagram" aria-label="Instagram">
@@ -410,7 +596,7 @@
                     data-image-url="@imageUrlAbsolute"
                     data-image-alt="@firstImageAltText"
                     title="WhatsApp ile paylaş">
-                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> WhatsApp ile paylaş
+                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>Paylaş
             </button>
             @if (canAdd)
             {
@@ -419,53 +605,45 @@
         </div>
     </div>
 
-    <div class="collapse mb-3" id="destination-reviews">
-        @if (destinationApprovedReviews.Count == 0)
-        {
-            <div class="small text-muted">Bu destinasyon için henüz onaylı yorum bulunmuyor.</div>
-        }
-        else
-        {
-            <div class="list-group list-group-flush">
-                @foreach (var item in destinationApprovedReviews)
-                {
-                    <div class="list-group-item px-0">
-                        <div class="small fw-semibold">@item.AttractionName</div>
-                        <div class="small"><strong>Yorum:</strong> @item.Review.Comment</div>
-                        <div class="small">@Html.RatingBadge(item.Review.Rating)</div>
-                        <div class="small text-muted"><strong>E-posta:</strong> @MaskEmail(item.Review.User?.Email)</div>
-                        <div class="small text-muted"><strong>Tarih:</strong> @FormatTurkeyTime(item.Review.CreatedAt)</div>
-                    </div>
-                }
-            </div>
-        }
-    </div>
-
     @if (Model.Destination.Images != null && Model.Destination.Images.Count > 0)
     {
         var orderedImages = Model.Destination.Images.OrderBy(x => x.Order).ToList();
-        <div class="row g-3">
+        var hiddenCount = Math.Max(0, orderedImages.Count - 3);
+        <div class="row g-3" id="destinationPhotoGrid">
             @for (var i = 0; i < orderedImages.Count; i++)
             {
                 var img = orderedImages[i];
+                var smallestImgUrl = Model.GetSmallestImageUrl(img.Url);
+                if (string.IsNullOrWhiteSpace(smallestImgUrl)) { smallestImgUrl = img.Url; }
                 var srcSet = Model.BuildSrcSet(img.Url);
-                var isPriorityImage = i < 2;
+                var isPriorityImage = i < 3;
+                var hiddenClass = i >= 3 ? "d-none" : string.Empty;
                 <!-- Mobilde tam ekran (col-12), tablet ve üstünde 3'lü dizilim (col-md-4) -->
-                <div class="col-12 col-sm-6 col-md-4">
+                <div class="col-12 col-sm-6 col-md-4 js-destination-photo-item @hiddenClass">
                     <div class="card shadow-sm photo-card destination-card border-0 reveal-up">
                         <div class="photo-frame">
                             <picture>
-                                @if (!string.IsNullOrEmpty(srcSet))
+                                @if (i < 3)
                                 {
-                                    <source srcset="@srcSet" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                    @if (!string.IsNullOrEmpty(srcSet))
+                                    {
+                                        <source srcset="@srcSet" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                    }
                                 }
-                                <img src="@img.Url"
-                                     srcset="@srcSet"
-                                     sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+                                else if (!string.IsNullOrEmpty(srcSet))
+                                {
+                                    <source class="js-deferred-photo-source" data-srcset="@srcSet" data-sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                }
+                                <img src="@(i < 3 ? smallestImgUrl : "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==")"
+                                     srcset="@(i < 3 ? srcSet : null)"
+                                     sizes="@(i < 3 ? "(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" : null)"
+                                     data-src="@(i >= 3 ? smallestImgUrl : null)"
+                                     data-srcset="@(i >= 3 ? srcSet : null)"
+                                     data-sizes="@(i >= 3 ? "(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" : null)"
                                      alt="@(string.IsNullOrWhiteSpace(img.AltText) ? Model.Destination.Name : img.AltText)"
                                      width="600"
                                      height="400"
-                                     class="card-img-top"
+                                     class="card-img-top @(i >= 3 ? "js-deferred-photo" : null)"
                                      loading="@(isPriorityImage ? "eager" : "lazy")"
                                      fetchpriority="@(isPriorityImage ? "high" : "auto")"
                                      decoding="async" />
@@ -473,6 +651,12 @@
                             @if (!string.IsNullOrWhiteSpace(img.AltText))
                             {
                                 <span class="photo-alt-overlay">@img.AltText.Trim()</span>
+                            }
+                            @if (i == 2 && hiddenCount > 0)
+                            {
+                                <button type="button" id="photoMoreBtn" class="photo-more-trigger" aria-label="Diğer fotoğrafları göster">
+                                    <span id="photoMoreCount" class="photo-more-count">+@hiddenCount</span>
+                                </button>
                             }
                         </div>
 
@@ -487,6 +671,8 @@
     {
         <div class="alert alert-light border">Bu destinasyon için henüz fotoğraf bulunmuyor.</div>
     }
+
+    <div id="afterPhotosHeadingAnchor"></div>
 
     @if (Model.Destination.Attractions?.Any() == true)
     {
@@ -551,10 +737,10 @@
                                         @foreach (var review in approvedReviews)
                                         {
                                             <div class="list-group-item px-0">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
-                                                    <span>@Html.RatingBadge(review.Rating)</span>
-                                                </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
+                                                <span class="small text-muted">@review.Rating/5</span>
+                                            </div>
                                                 <div class="small">@review.Comment</div>
                                             </div>
                                         }
@@ -613,6 +799,8 @@
                                     <span>-</span>
                                 }
                             </div>
+                            <div class="small text-muted"><strong>Başlangıç Fiyatı:</strong> @(item.PriceFrom.HasValue ? $"{item.PriceFrom.Value:0.##} TL" : "-")</div>
+                            <div class="small text-muted"><strong>Üst Fiyat:</strong> @(item.PriceTo.HasValue ? $"{item.PriceTo.Value:0.##} TL" : "-")</div>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
                             <a class="btn btn-sm btn-comment-link"
@@ -639,7 +827,7 @@
                                         <div class="list-group-item px-0">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
-                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                                <span class="small text-muted">@review.Rating/5</span>
                                             </div>
                                             <div class="small">@review.Comment</div>
                                         </div>
@@ -681,6 +869,7 @@
                                 <a href="@mealMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @mealQuery" aria-label="Haritada aç: @mealQuery">📍</a>
                                 <a href="@mealSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @mealQuery">@item.Name</a>
                             </div>
+                            <div class="small text-muted"><strong>Fiyat:</strong> @(item.Price.HasValue ? $"{item.Price.Value:0.##} TL" : "-")</div>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
                             <a class="btn btn-sm btn-comment-link"
@@ -707,7 +896,7 @@
                                         <div class="list-group-item px-0">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
-                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                                <span class="small text-muted">@review.Rating/5</span>
                                             </div>
                                             <div class="small">@review.Comment</div>
                                         </div>
@@ -776,7 +965,7 @@
                                         <div class="list-group-item px-0">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
-                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                                <span class="small text-muted">@review.Rating/5</span>
                                             </div>
                                             <div class="small">@review.Comment</div>
                                         </div>
@@ -821,6 +1010,8 @@
                                 <a href="@parkingSearchUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-reset attraction-name-link card-link-hover" title="Google'da ara: @parkingQuery">@item.Name</a>
                                 <a href="@parkingMapsUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none card-link-hover" title="Haritada aç: @parkingQuery" aria-label="Haritada aç: @parkingQuery">📍</a>
                             </div>
+                            <div class="small text-muted"><strong>Sabit Ücret:</strong> @(item.Fee.HasValue ? $"{item.Fee.Value:0.##} TL" : "-")</div>
+                            <div class="small text-muted"><strong>Saatlik Ücret:</strong> @(item.HourlyRate.HasValue ? $"{item.HourlyRate.Value:0.##} TL" : "-")</div>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
                             <a class="btn btn-sm btn-comment-link"
@@ -847,7 +1038,7 @@
                                         <div class="list-group-item px-0">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small text-muted">@MaskEmail(review.User?.Email)</span>
-                                                <span>@Html.RatingBadge(review.Rating)</span>
+                                                <span class="small text-muted">@review.Rating/5</span>
                                             </div>
                                             <div class="small">@review.Comment</div>
                                         </div>

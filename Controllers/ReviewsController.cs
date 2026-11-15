@@ -100,13 +100,13 @@ namespace Roma.Controllers
             ViewBag.ReturnAttractionId = selectedAttractionId;
             ViewBag.ReturnUrl = localReturnUrl;
             ViewBag.BulkReviews = attractions
-                .Select(a => new ReviewBulkInput { AttractionId = a.Id, IsSelected = true, Rating = 5, Comment = string.Empty })
+                .Select(a => new ReviewBulkInput { AttractionId = a.Id, IsSelected = true, Rating = 0, Comment = string.Empty })
                 .ToList();
 
             return View(new Review
             {
                 Comment = string.Empty,
-                Rating = 5,
+                Rating = 0,
                 UserId = currentUserId ?? string.Empty,
                 AttractionId = selectedAttractionId ?? 0,
                 User = null!,
@@ -153,9 +153,17 @@ namespace Roma.Controllers
                 {
                     var guestEmailTrimmed = guestEmail.Trim();
                     var normalizedEmail = guestEmailTrimmed.ToUpperInvariant();
-                    var confirmedSubscriberExists = await _context.Subscribers!
+
+                    // Türkçe/i-I gibi kültür farklılıklarından etkilenmemek için
+                    // abonelik e-postası kontrolünü uygulama tarafında OrdinalIgnoreCase ile yapıyoruz.
+                    var confirmedSubscriberEmails = await _context.Subscribers!
                         .AsNoTracking()
-                        .AnyAsync(s => s.IsConfirmed && s.ConsentGiven && s.Email.ToUpper() == normalizedEmail);
+                        .Where(s => s.IsConfirmed && s.ConsentGiven)
+                        .Select(s => s.Email)
+                        .ToListAsync();
+
+                    var confirmedSubscriberExists = confirmedSubscriberEmails.Any(email =>
+                        string.Equals(email?.Trim(), guestEmailTrimmed, StringComparison.OrdinalIgnoreCase));
 
                     if (!confirmedSubscriberExists)
                     {
@@ -365,7 +373,7 @@ namespace Roma.Controllers
                         AttractionId = a.Id,
                         IsSelected = existing?.IsSelected ?? selectedIdsForRetry.Contains(a.Id),
                         Comment = existing?.Comment ?? string.Empty,
-                        Rating = existing?.Rating is >= 1 and <= 5 ? existing.Rating : 5
+                        Rating = existing?.Rating is >= 1 and <= 5 ? existing.Rating : 0
                     };
                 })
                 .ToList();

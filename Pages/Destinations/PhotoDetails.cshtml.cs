@@ -45,12 +45,22 @@ namespace Roma.Pages.Destinations
 
         public string BuildSrcSet(string? imageUrl)
         {
-            if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
+            var smallestImageUrl = GetSmallestImageUrl(imageUrl);
+            if (string.IsNullOrEmpty(smallestImageUrl)) return string.Empty;
 
-            if (_srcSetCache.TryGetValue(imageUrl, out var cachedSrcSet))
+            if (_srcSetCache.TryGetValue(smallestImageUrl, out var cachedSrcSet))
             {
                 return cachedSrcSet;
             }
+
+            var srcSet = $"{smallestImageUrl} 320w";
+            _srcSetCache[smallestImageUrl] = srcSet;
+            return srcSet;
+        }
+
+        public string GetSmallestImageUrl(string? imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
 
             try
             {
@@ -60,32 +70,43 @@ namespace Roma.Pages.Destinations
                 var dir = Path.GetDirectoryName(full) ?? webRoot;
                 var name = Path.GetFileNameWithoutExtension(full);
 
-                var sizes = new[] { 320, 640, 1024 };
-                var parts = new List<string>();
-
-                foreach (var s in sizes)
+                var baseName = name;
+                var sizeSuffixes = new[] { "-320", "-640", "-1024" };
+                foreach (var suffix in sizeSuffixes)
                 {
-                    var candidate = Path.Combine(dir, name + $"-{s}.webp");
-                    if (System.IO.File.Exists(candidate))
+                    if (baseName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                     {
-                        var relPath = "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\', '/');
-                        parts.Add($"{relPath} {s}w");
+                        baseName = baseName[..^suffix.Length];
+                        break;
                     }
                 }
 
-                if (parts.Count == 0 && System.IO.File.Exists(full))
+                var candidates = new[]
                 {
-                    var relPath = "/" + Path.GetRelativePath(webRoot, full).Replace('\\', '/');
-                    parts.Add($"{relPath} 640w");
+                    Path.Combine(dir, baseName + "-320.webp"),
+                    Path.Combine(dir, baseName + "-640.webp"),
+                    Path.Combine(dir, baseName + "-1024.webp"),
+                    Path.Combine(dir, baseName + ".webp")
+                };
+
+                foreach (var candidate in candidates)
+                {
+                    if (System.IO.File.Exists(candidate))
+                    {
+                        return "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\', '/');
+                    }
                 }
 
-                var srcSet = string.Join(", ", parts);
-                _srcSetCache[imageUrl] = srcSet;
-                return srcSet;
+                if (System.IO.File.Exists(full))
+                {
+                    return "/" + Path.GetRelativePath(webRoot, full).Replace('\\', '/');
+                }
+
+                return imageUrl;
             }
             catch
             {
-                return string.Empty;
+                return imageUrl;
             }
         }
     }

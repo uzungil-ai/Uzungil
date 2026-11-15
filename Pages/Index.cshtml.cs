@@ -35,10 +35,14 @@ namespace Roma.Pages
         [BindProperty(SupportsGet = true)]
         public string? Conutry { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? Category { get; set; }
+
         public bool HasActiveSearch =>
             !string.IsNullOrWhiteSpace(Search) ||
             !string.IsNullOrWhiteSpace(Name) ||
-            !string.IsNullOrWhiteSpace(Country);
+            !string.IsNullOrWhiteSpace(Country) ||
+            !string.IsNullOrWhiteSpace(Category);
 
         public async Task OnGetAsync()
         {
@@ -49,6 +53,7 @@ namespace Roma.Pages
             Search = string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();
             Country = string.IsNullOrWhiteSpace(Country) ? null : Country.Trim();
             Conutry = string.IsNullOrWhiteSpace(Conutry) ? null : Conutry.Trim();
+            Category = string.IsNullOrWhiteSpace(Category) ? null : Category.Trim();
 
             if (Country is null && Conutry is not null)
             {
@@ -57,6 +62,7 @@ namespace Roma.Pages
 
             var baseQuery = _db.Destinations!
                 .Include(d => d.Images)
+                .Include(d => d.Attractions)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -80,6 +86,12 @@ namespace Roma.Pages
                 baseQuery = baseQuery.Where(d => d.Country != null && EF.Functions.Like(d.Country, pattern));
             }
 
+            if (Category is not null)
+            {
+                var pattern = $"%{Category}%";
+                baseQuery = baseQuery.Where(d => d.Attractions.Any(a => a.Category != null && EF.Functions.Like(a.Category, pattern)));
+            }
+
             Featured = await baseQuery
                 .OrderBy(_ => Guid.NewGuid())
                 .Take(24)
@@ -93,12 +105,22 @@ namespace Roma.Pages
 
         public string BuildSrcSet(string? imageUrl)
         {
-            if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
+            var smallestImageUrl = GetSmallestImageUrl(imageUrl);
+            if (string.IsNullOrEmpty(smallestImageUrl)) return string.Empty;
 
-            if (_srcSetCache.TryGetValue(imageUrl, out var cachedSrcSet))
+            if (_srcSetCache.TryGetValue(smallestImageUrl, out var cachedSrcSet))
             {
                 return cachedSrcSet;
             }
+
+            var srcSet = $"{smallestImageUrl} 320w";
+            _srcSetCache[smallestImageUrl] = srcSet;
+            return srcSet;
+        }
+
+        public string GetSmallestImageUrl(string? imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
 
             // imageUrl like /uploads/destinations/{id}/{file}
             try
@@ -108,34 +130,43 @@ namespace Roma.Pages
                 var full = Path.Combine(webRoot, rel);
                 var dir = Path.GetDirectoryName(full) ?? webRoot;
                 var name = Path.GetFileNameWithoutExtension(full);
-                var exts = new[] { ".webp", ".jpg", ".jpeg", ".png" };
-
-                var sizes = new[] { 320, 640, 1024 };
-                var parts = new List<string>();
-                foreach (var s in sizes)
+                var baseName = name;
+                var sizeSuffixes = new[] { "-320", "-640", "-1024" };
+                foreach (var suffix in sizeSuffixes)
                 {
-                    var candidate = Path.Combine(dir, name + $"-{s}.webp");
-                    if (System.IO.File.Exists(candidate))
+                    if (baseName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                     {
-                        var relPath = "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\','/');
-                        parts.Add($"{relPath} {s}w");
+                        baseName = baseName[..^suffix.Length];
+                        break;
                     }
                 }
 
-                // fallback to original
-                if (parts.Count == 0 && System.IO.File.Exists(full))
+                var candidates = new[]
                 {
-                    var relPath = "/" + Path.GetRelativePath(webRoot, full).Replace('\\','/');
-                    parts.Add($"{relPath} 640w");
+                    Path.Combine(dir, baseName + "-320.webp"),
+                    Path.Combine(dir, baseName + "-640.webp"),
+                    Path.Combine(dir, baseName + "-1024.webp"),
+                    Path.Combine(dir, baseName + ".webp")
+                };
+
+                foreach (var candidate in candidates)
+                {
+                    if (System.IO.File.Exists(candidate))
+                    {
+                        return "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\', '/');
+                    }
                 }
 
-                var srcSet = string.Join(", ", parts);
-                _srcSetCache[imageUrl] = srcSet;
-                return srcSet;
+                if (System.IO.File.Exists(full))
+                {
+                    return "/" + Path.GetRelativePath(webRoot, full).Replace('\\', '/');
+                }
+
+                return imageUrl;
             }
             catch
             {
-                return string.Empty;
+                return imageUrl;
             }
         }
     }

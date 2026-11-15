@@ -38,14 +38,38 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Fee"></label>
-                        <input asp-for="Fee" class="form-control" />
+                        <label asp-for="Fee">Sabit Ücret</label>
+                        <div class="input-group">
+                            <input asp-for="Fee" class="form-control" />
+                            <span id="feeCurrencySuffix" class="input-group-text">TL</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="feeCurrencySelect" class="form-label">Para Türü</label>
+                            <select id="feeCurrencySelect" class="form-select">
+                                <option value="TL" selected>TL</option>
+                                <option value="USD">Dolar</option>
+                                <option value="SAR">Riyal</option>
+                                <option value="EUR">Euro</option>
+                            </select>
+                        </div>
                         <span asp-validation-for="Fee" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="HourlyRate"></label>
-                        <input asp-for="HourlyRate" class="form-control" />
+                        <label asp-for="HourlyRate">Saatlik Ücret</label>
+                        <div class="input-group">
+                            <input asp-for="HourlyRate" class="form-control" />
+                            <span id="hourlyCurrencySuffix" class="input-group-text">TL</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="hourlyCurrencySelect" class="form-label">Para Türü</label>
+                            <select id="hourlyCurrencySelect" class="form-select">
+                                <option value="TL" selected>TL</option>
+                                <option value="USD">Dolar</option>
+                                <option value="SAR">Riyal</option>
+                                <option value="EUR">Euro</option>
+                            </select>
+                        </div>
                         <span asp-validation-for="HourlyRate" class="text-danger"></span>
                     </div>
 
@@ -61,4 +85,31 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const feeCurrencySelect = document.getElementById('feeCurrencySelect');
+            const feeCurrencySuffix = document.getElementById('feeCurrencySuffix');
+            const hourlyCurrencySelect = document.getElementById('hourlyCurrencySelect');
+            const hourlyCurrencySuffix = document.getElementById('hourlyCurrencySuffix');
+
+            function updateSuffix(selectEl, suffixEl) {
+                if (!selectEl || !suffixEl) return;
+                suffixEl.textContent = selectEl.value;
+            }
+
+            if (feeCurrencySelect && feeCurrencySuffix) {
+                feeCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(feeCurrencySelect, feeCurrencySuffix);
+                });
+                updateSuffix(feeCurrencySelect, feeCurrencySuffix);
+            }
+
+            if (hourlyCurrencySelect && hourlyCurrencySuffix) {
+                hourlyCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(hourlyCurrencySelect, hourlyCurrencySuffix);
+                });
+                updateSuffix(hourlyCurrencySelect, hourlyCurrencySuffix);
+            }
+        })();
+    </script>
 }

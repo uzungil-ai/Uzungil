@@ -2,16 +2,35 @@
     ViewData["Title"] = "Site Hakkında";
 }
 
-<section class="about-page-section">
-    <div class="card shadow-sm border-0 about-card">
+<br />
+<br />
+
+<section class="about-hero-section mb-3">
+    <div class="card shadow-sm border-0 about-hero-card">
+        <div class="card-body p-4 p-md-5">
+            <div class="about-hero-badge mb-2">Fotografia</div>
+            <h1 class="h3 h2-md mb-2">Seyahati keşfetmenin en pratik yolu</h1>
+            <p class="mb-3 text-muted">Destinasyon içerikleri, yapay zekâ destekli arama ve güncel öneriler tek bir deneyimde birleşir.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-sm">Ana Sayfa</a>
+                <a asp-controller="Home" asp-action="Ekibimiz" class="btn btn-outline-primary btn-sm">Ekibimiz</a>
+                <a asp-controller="Home" asp-action="Privacy" class="btn btn-outline-secondary btn-sm">Gizlilik</a>
+                <a href="#site-ozellikleri" class="btn btn-outline-dark btn-sm">Site Özellikleri</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-page-section" id="hakkinda-detay">
+    <div class="card shadow-sm border-0 about-detail-jumbotron">
         <div class="row g-0 align-items-stretch">
             <div class="col-12 col-md-5">
-                <div class="about-image-wrap">
-                    <img src="/images/italya.jpg" alt="Hakkında" class="about-image" />
+                <div class="about-image-wrap about-detail-image-wrap">
+                    <img src="/images/recep.webp" alt="Hakkında" class="about-image" />
                 </div>
             </div>
             <div class="col-12 col-md-7">
-                <div class="card-body about-card-body">
+                <div class="card-body about-card-body about-detail-body">
                     <h4 class="about-page-title">@ViewData["Title"]</h4>
                     <p>Fotografia, sitesinde yurt içinde ve yurt dışındaki destinasyon bilgileri yer almaktadır.</p>
                     <p>Site üzerinden yer alan Chat-Bot ve OpenAI-Chat ile arama yapabilirsiniz.</p>
@@ -20,7 +39,7 @@
                         erişilebilir bir seyahat rehberi sunmaktır.
                     </p>
                     <p>Fotografia’nın tüm hakları Recep Uzungil'e aittir.</p>
-                    <div class="about-social-block mt-3" aria-label="Sosyal medya bağlantıları">
+                    <div class="about-social-block about-detail-social mt-3" aria-label="Sosyal medya bağlantıları" id="sosyal-medya">
                         <h5 class="h6 mb-2">Sosyal Medya</h5>
                         <div class="social-links">
                             <a href="https://www.linkedin.com/in/recep-uzungil-477a2935?originalSubdomain=tr/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
@@ -42,6 +61,56 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-page-section" id="site-ozellikleri">
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-4">
+            <a asp-page="/OpenAiSoruCevap/Index" class="quick-stat-box text-center h-100 d-block text-decoration-none" aria-label="OpenAI soru cevap sayfasına git">
+                <div class="small text-muted">Akıllı Deneyim</div>
+                <div class="h4 mb-1">AI Destekli</div>
+                <div class="h6 mb-0">Chat-Bot + OpenAI Soru-Cevap</div>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a asp-controller="Home" asp-action="Index" class="quick-stat-box text-center h-100 d-block text-decoration-none" aria-label="Ana sayfaya git">
+                <div class="small text-muted">İçerik Kapsamı</div>
+                <div class="h4 mb-1">Global</div>
+                <div class="h6 mb-0">Yurt içi ve yurt dışı rotalar</div>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a asp-page="/Subscribe" class="quick-stat-box text-center h-100 d-block text-decoration-none" aria-label="Abonelik sayfasına git">
+                <div class="small text-muted">Güncel Bildirim</div>
+                <div class="h4 mb-1">E-Posta</div>
+                <div class="h6 mb-0">Yeni içerikleri anında takip edin</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-4">
+            <article class="feature-box feature-step-card h-100">
+                <div class="feature-step-icon"><i class="bi bi-stars"></i></div>
+                <h3 class="h5">Kişiselleştirilmiş Keşif</h3>
+                <p class="text-muted mb-0">Ziyaretçilere ilham veren destinasyonları hızlı, sade ve etkileyici bir akışla sunar.</p>
+            </article>
+        </div>
+        <div class="col-12 col-lg-4">
+            <article class="feature-box feature-step-card h-100">
+                <div class="feature-step-icon"><i class="bi bi-lightning-charge"></i></div>
+                <h3 class="h5">Hızlı Erişim</h3>
+                <p class="text-muted mb-0">Arama, filtreleme ve içerik gezinme adımları minimum eforla maksimum bilgiye ulaşmayı hedefler.</p>
+            </article>
+        </div>
+        <div class="col-12 col-lg-4">
+            <article class="feature-box feature-step-card h-100">
+                <div class="feature-step-icon"><i class="bi bi-shield-check"></i></div>
+                <h3 class="h5">Güvenli ve Sürdürülebilir</h3>
+                <p class="text-muted mb-0">Modern altyapı, düzenli içerik güncellemeleri ve kullanıcı odaklı yaklaşım ile sürekli gelişir.</p>
+            </article>
         </div>
     </div>
 </section>

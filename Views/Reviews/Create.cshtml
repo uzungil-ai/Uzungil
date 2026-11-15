@@ -105,7 +105,7 @@
                         var existing = bulkReviews.FirstOrDefault(x => x.AttractionId == attraction.Id);
                         var isChecked = existing?.IsSelected ?? (selectedAttractionIds.Count == 0 || selectedAttractionIds.Contains(attraction.Id));
                         var itemComment = existing?.Comment ?? string.Empty;
-                        var itemRating = existing?.Rating is >= 1 and <= 5 ? existing.Rating : 5;
+                        var itemRating = existing?.Rating is >= 1 and <= 5 ? existing.Rating : 0;
 
                         <div class="list-group-item">
                             <input type="hidden" name="bulkReviews[@i].AttractionId" value="@attraction.Id" />

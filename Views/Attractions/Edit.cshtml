@@ -20,8 +20,14 @@
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
     <div class="mb-3">
-        <label asp-for="Category" class="control-label"></label>
+        <label asp-for="Category" class="control-label">Kategori</label>
         <input asp-for="Category" class="form-control" />
+        <div class="mt-2">
+            <label for="categoryPresetSelect" class="form-label">Hazır Kategori Seç</label>
+            <select id="categoryPresetSelect" class="form-select">
+                <option value="">Seçiniz</option>
+            </select>
+        </div>
         <span asp-validation-for="Category" class="text-danger"></span>
     </div>
     <div class="mb-3">
@@ -56,4 +62,47 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const categoryInput = document.getElementById('Category');
+            const categoryPresetSelect = document.getElementById('categoryPresetSelect');
+            if (!categoryInput || !categoryPresetSelect) return;
+
+            const categories = [
+                'Anıtlar',
+                'Cami',
+                'Destinasyon',
+                'Doğa',
+                'Hanlar',
+                'Havra',
+                'Kervansaray',
+                'Kilise',
+                'Külliye',
+                'Mozole',
+                'Müzeler',
+                'Parklar',
+                'Piknik Alanı',
+                'Saraylar',
+                'Sinegog',
+                'Tapınak'
+            ];
+
+            categories.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                categoryPresetSelect.appendChild(option);
+            });
+
+            const currentValue = (categoryInput.value || '').trim();
+            if (currentValue && categories.includes(currentValue)) {
+                categoryPresetSelect.value = currentValue;
+            }
+
+            categoryPresetSelect.addEventListener('change', function () {
+                if (!categoryPresetSelect.value) return;
+                categoryInput.value = categoryPresetSelect.value;
+            });
+        })();
+    </script>
 }

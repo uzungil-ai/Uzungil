@@ -3,8 +3,14 @@
 @{
     ViewData["Title"] = "Fotografia ile - Keşfet";
     var firstFeatured = Model.Featured.FirstOrDefault();
-    var firstFeaturedImage = firstFeatured?.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+    var firstFeaturedImage = Model.GetSmallestImageUrl(firstFeatured?.Images.FirstOrDefault()?.Url);
+    if (string.IsNullOrWhiteSpace(firstFeaturedImage))
+    {
+        firstFeaturedImage = "/images/italya.jpg";
+    }
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
+    var categoryOptions = new[] { "Anıtlar", "Cami", "Destinasyon", "Doğa", "Hanlar", "Havra", "Kervansaray", "Kilise", "Külliye", "Mozole", "Müzeler", "Parklar", "Piknik Alanı", "Saraylar", "Sinegog", "Tapınak" };
+    var selectedCategory = Model.Category ?? string.Empty;
 }
 
 @section Head {
@@ -256,6 +262,11 @@
                 <a class="home-tab-btn home-action-link home-action-yellow home-top-soft-btn" href="/OpenAiSoruCevap">Aİ-Sor</a>
                 <a class="home-tab-btn home-action-link home-action-yellow home-top-soft-btn" href="/SeyahatPlanla">Seyahat Planı</a>
             </div>
+            <div id="topExploreTabs" class="home-tabs home-actions d-none js-explore-tabs" role="tablist" aria-label="Destinasyon sekmeleri üst">
+                <button type="button" class="home-tab-btn home-tab-soft home-tab-featured" data-target="featured-list" aria-selected="false">Öne Çıkanlar</button>
+                <button type="button" class="home-tab-btn home-tab-soft home-tab-latest active" data-target="latest-list" aria-selected="true">En Yeniler</button>
+                <button type="button" class="home-tab-btn home-tab-soft" data-target="categories-list" aria-selected="false">Kategoriler</button>
+            </div>
             <div class="home-plan-stats-wrap" aria-label="Özet bilgiler">
                 <span class="home-plan-stat-box">Destinasyon @Model.TotalDestinationCount</span>
                 <span class="home-plan-stat-box">Fotoğraf @Model.TotalPhotoCount</span>
@@ -273,10 +284,11 @@
             <div id="heroFeaturedStrip" class="hero-featured-strip" role="region" aria-label="Öne çıkan destinasyon görselleri">
                 @if (Model.Featured.Any())
                 {
-                    @for (var i = 0; i < Math.Min(8, Model.Featured.Count); i++)
+                    @for (var i = 0; i < Math.Min(6, Model.Featured.Count); i++)
                     {
                         var d = Model.Featured[i];
-                        var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                        var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
+                        if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
                         var heroSrcSet = Model.BuildSrcSet(img);
                         var isFirstSlideImage = i == 0;
                         <a class="hero-featured-item" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" aria-label="@d.Name detaylarını görüntüle">
@@ -316,9 +328,10 @@
 
 <section id="explore" class="container mt-0 mb-5 home-explore-section">
 
-    <div class="home-tabs mb-3" role="tablist" aria-label="Destinasyon sekmeleri">
+    <div id="lowerExploreTabs" class="home-tabs mb-3 js-explore-tabs" role="tablist" aria-label="Destinasyon sekmeleri">
         <button type="button" class="home-tab-btn home-tab-soft home-tab-featured" data-target="featured-list" aria-selected="false">Öne Çıkanlar</button>
         <button type="button" class="home-tab-btn home-tab-soft home-tab-latest active" data-target="latest-list" aria-selected="true">En Yeniler</button>
+        <button type="button" class="home-tab-btn home-tab-soft" data-target="categories-list" aria-selected="false">Kategoriler</button>
     </div>
 
     <div id="featured-list" class="home-tab-panel d-none">
@@ -326,7 +339,8 @@
             @for (var i = 0; i < Model.Featured.Count; i++)
             {
                 var d = Model.Featured[i];
-                var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
+                if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
                 var srcset = Model.BuildSrcSet(img);
                 var isPriorityImage = i < 2;
                 var hiddenClass = i >= 6 ? "d-none" : string.Empty;
@@ -344,6 +358,7 @@
                     </div>
                 </div>
             }
+            }
             @if(!Model.Featured.Any())
             {
                 <div class="col-12">
@@ -353,12 +368,75 @@
         </div>
     </div>
 
+    <div id="categories-list" class="home-tab-panel d-none">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-12 col-md-6">
+                        <select id="categorySelect" name="Category" class="form-select">
+                            <option value="">Kategori seçiniz</option>
+                            @foreach (var category in categoryOptions)
+                            {
+                                <option value="@category" selected="@(selectedCategory == category ? "selected" : null)">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <button type="submit" class="btn btn-soft-yellow-action">Sorgula</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @{
+            var categoryResults = string.IsNullOrWhiteSpace(selectedCategory)
+                ? Model.Latest
+                : Model.Latest.Where(d => (d.Attractions ?? new List<Roma.Models.Attraction>())
+                    .Any(a => string.Equals((a.Category ?? string.Empty).Trim(), selectedCategory.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+        }
+
+        @if (categoryResults.Any())
+        {
+            <div class="row g-2" id="categoryResultsGrid">
+                @for (var ci = 0; ci < categoryResults.Count; ci++)
+                {
+                    var cd = categoryResults[ci];
+                    var cimg = Model.GetSmallestImageUrl(cd.Images.FirstOrDefault()?.Url);
+                    if (string.IsNullOrWhiteSpace(cimg)) { cimg = "/images/italya.jpg"; }
+                    var csrcset = Model.BuildSrcSet(cimg);
+                    var cIsPriorityImage = ci < 2;
+                    var hiddenClass = ci >= 6 ? "d-none" : string.Empty;
+                    <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
+                        <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
+                            <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@cd.Id">
+                                <picture>
+                                    @if (!string.IsNullOrEmpty(csrcset))
+                                    {
+                                        <source srcset="@csrcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" type="image/webp" />
+                                    }
+                                    <img class="card-img-top destination-image" src="@cimg" srcset="@csrcset" sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw" loading="@(cIsPriorityImage ? "eager" : "lazy")" fetchpriority="@(cIsPriorityImage ? "high" : "auto")" decoding="async" alt="@cd.Name" />
+                                </picture>
+                                <span class="destination-image-title">@cd.Name</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border">Seçilen kategori için sonuç bulunamadı.</div>
+        }
+    </div>
+
     <div id="latest-list" class="home-tab-panel">
         <div class="row g-2">
             @for (var i = 0; i < Model.Latest.Count; i++)
             {
                 var d = Model.Latest[i];
-                var img = d.Images.FirstOrDefault()?.Url ?? "/images/italya.jpg";
+                var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
+                if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
                 var srcset = Model.BuildSrcSet(img);
                 var isPriorityImage = i < 2;
                 var hiddenClass = i >= 6 ? "d-none" : string.Empty;
@@ -386,8 +464,8 @@
     </div>
 
     <div class="text-center mt-2 mb-3">
-        <button type="button" id="bottomLoadMoreBtn" class="btn btn-soft-yellow-action d-none" data-step="9">
-            +9 Daha Fazla
+        <button type="button" id="bottomLoadMoreBtn" class="btn btn-soft-yellow-action d-none" data-step="6">
+            +6 Daha Fazla
         </button>
     </div>
 
@@ -402,36 +480,22 @@
 @section Scripts {
     <script>
         (function(){
-            var tabButtons = document.querySelectorAll('.home-tabs[role="tablist"] .home-tab-btn');
-            var loadMoreButtons = document.querySelectorAll('.js-load-more[data-target-panel]');
+            var tabButtons = document.querySelectorAll('.js-explore-tabs .home-tab-btn');
             var heroScrollButtons = document.querySelectorAll('.js-hero-scroll');
             var heroFeaturedStrip = document.getElementById('heroFeaturedStrip');
             var heroSliderArea = document.getElementById('heroSliderArea');
             var homeEndActions = document.getElementById('homeEndActions');
             var bottomLoadMoreBtn = document.getElementById('bottomLoadMoreBtn');
+            var destinationLinks = document.querySelectorAll('.destination-image-link');
+            var selectedCategory = '@selectedCategory';
+            var topExploreTabs = document.getElementById('topExploreTabs');
+            var lowerExploreTabs = document.getElementById('lowerExploreTabs');
 
             function getActivePanel() {
                 return document.querySelector('.home-tab-panel:not(.d-none)');
             }
 
             function updateLoadMoreButtons() {
-                loadMoreButtons.forEach(function (button) {
-                    var panelId = button.getAttribute('data-target-panel');
-                    var panel = panelId ? document.getElementById(panelId) : null;
-
-                    if (!panel || panel.classList.contains('d-none')) {
-                        button.classList.add('d-none');
-                        return;
-                    }
-
-                    var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
-                    if (hiddenItems.length === 0) {
-                        button.classList.add('d-none');
-                    } else {
-                        button.classList.remove('d-none');
-                    }
-                });
-
                 updateEndActions();
             }
 
@@ -456,7 +520,7 @@
                 if (!bottomLoadMoreBtn) return;
 
                 if (hiddenItems > 0) {
-                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '9', 10);
+                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '6', 10);
                     var revealCount = Math.min(step, hiddenItems);
                     bottomLoadMoreBtn.textContent = "+" + revealCount + " Daha Fazla";
                     bottomLoadMoreBtn.classList.remove('d-none');
@@ -470,7 +534,7 @@
                     var panel = getActivePanel();
                     if (!panel) return;
 
-                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '9', 10);
+                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '6', 10);
                     var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
                     for (var i = 0; i < Math.min(step, hiddenItems.length); i++) {
                         hiddenItems[i].classList.remove('d-none');
@@ -484,19 +548,11 @@
                 });
             }
 
-            loadMoreButtons.forEach(function (button) {
-                button.addEventListener('click', function () {
-                    var panelId = button.getAttribute('data-target-panel');
-                    var panel = panelId ? document.getElementById(panelId) : null;
-                    if (!panel) return;
-
-                    var step = parseInt(button.getAttribute('data-step') || '6', 10);
-                    var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none');
-                    for (var i = 0; i < Math.min(step, hiddenItems.length); i++) {
-                        hiddenItems[i].classList.remove('d-none');
+            destinationLinks.forEach(function (link) {
+                link.addEventListener('click', function () {
+                    if (heroSliderArea) {
+                        heroSliderArea.classList.add('d-none');
                     }
-
-                    updateLoadMoreButtons();
                 });
             });
 
@@ -511,16 +567,26 @@
                         panel.classList.add('d-none');
                     });
 
-                    tab.classList.add('active');
-                    tab.setAttribute('aria-selected', 'true');
-
                     var targetId = tab.getAttribute('data-target');
+                    document.querySelectorAll('.js-explore-tabs .home-tab-btn[data-target="' + targetId + '"]').forEach(function (btn) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-selected', 'true');
+                    });
+
                     var target = document.getElementById(targetId);
                     if (target) {
                         target.classList.remove('d-none');
                     }
 
-                    if (heroSliderArea && (targetId === 'featured-list' || targetId === 'latest-list')) {
+                    if (targetId === 'categories-list') {
+                        if (topExploreTabs) topExploreTabs.classList.remove('d-none');
+                        if (lowerExploreTabs) lowerExploreTabs.classList.add('d-none');
+                    } else {
+                        if (topExploreTabs) topExploreTabs.classList.add('d-none');
+                        if (lowerExploreTabs) lowerExploreTabs.classList.remove('d-none');
+                    }
+
+                    if (heroSliderArea && (targetId === 'featured-list' || targetId === 'latest-list' || targetId === 'categories-list')) {
                         heroSliderArea.classList.add('d-none');
                     }
 
@@ -543,6 +609,12 @@
             });
 
             updateLoadMoreButtons();
+            if (selectedCategory) {
+                var categoryTab = document.querySelector('.home-tab-btn[data-target="categories-list"]');
+                if (categoryTab) {
+                    categoryTab.click();
+                }
+            }
 
             var hasSeenSplash = false;
             try {
