@@ -494,6 +494,15 @@ body {
   max-width: 680px;
 }
 
+.team-intro-card,
+.team-contact-card {
+  border-radius: var(--radius-md);
+}
+
+.team-link-stack .btn {
+  min-width: 170px;
+}
+
 .team-role-card {
   border-radius: var(--radius-md);
 }
@@ -549,6 +558,10 @@ body {
   .team-page-section .card-body {
     padding: 1rem;
   }
+
+  .team-link-stack .btn {
+    width: 100%;
+  }
 }
 
 .hero-search-slider-wrap {
@@ -561,7 +574,7 @@ body {
 .hero-search-card {
   background: transparent;
   border-radius: 1.2rem;
-  border: 1px solid #e5e7eb;
+  border: 0;
   padding: 1rem;
 }
 
@@ -611,9 +624,25 @@ body {
   background: transparent;
 }
 
+.home-actions-search-wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto 0.9rem;
+}
+
+.home-actions-search-inline {
+  flex: 1 1 420px;
+  max-width: 560px;
+  margin: 0;
+}
+
+.home-actions-search-wrap .destination-top-search-form {
+  width: 100%;
+}
+
 .destination-top-search-form {
   background: transparent;
-  border: 1px solid #e5e7eb;
+  border: 0;
   border-radius: 1rem;
   padding: 0.75rem;
 }
@@ -1368,6 +1397,26 @@ form input[type="button"] {
   box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
 }
 
+.about-summary-stat {
+  text-align: center;
+  color: #ffffff;
+  background: var(--navbar-theme-gradient);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.about-summary-stat .small,
+.about-summary-stat .h4 {
+  color: #ffffff !important;
+}
+
+.about-summary-stat .small {
+  font-size: 2.15rem;
+}
+
+.about-summary-stat .h4 {
+  font-size: 3.6rem;
+}
+
 .search-disabled-section {
   display: none !important;
 }
@@ -1599,6 +1648,13 @@ form input[type="button"] {
     flex-wrap: wrap;
   }
 
+  .home-actions-search-inline {
+    order: 3;
+    max-width: 100%;
+    width: 100%;
+    margin-top: 0.35rem;
+  }
+
   .home-plan-stats-wrap {
     width: 100%;
     justify-content: flex-end;
@@ -1780,6 +1836,10 @@ form input[type="button"] {
   .navbar-turquoise .nav-link {
     text-align: left;
     width: 100%;
+  }
+
+  .navbar-turquoise .nav-item-about + .nav-item-about {
+    margin-top: 5px;
   }
 
   .home-hero::after {

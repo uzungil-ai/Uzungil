@@ -9,6 +9,118 @@
     <div class="small text-muted">Tüm başlıklar tek yerden yönetilir.</div>
 </div>
 
+@section Scripts {
+    <script>
+        (function () {
+            const sectionConfig = {
+                collapseImages: { section: 'images', bodyId: 'imagesRows', type: 'named' },
+                collapseAttractions: { section: 'attractions', bodyId: 'attractionsRows', type: 'named' },
+                collapseFlavors: { section: 'flavors', bodyId: 'flavorsRows', type: 'named' },
+                collapseParkings: { section: 'parkings', bodyId: 'parkingsRows', type: 'named' },
+                collapseHotels: { section: 'hotels', bodyId: 'hotelsRows', type: 'named' },
+                collapseMeals: { section: 'meals', bodyId: 'mealsRows', type: 'named' },
+                collapseChatTexts: { section: 'chattexts', bodyId: 'chattextsRows', type: 'chat' }
+            };
+
+            const sectionUrlBase = '@Url.Page("/Admin/ContentEditor", "Section")';
+
+            function truncate(text, max) {
+                const value = text || '';
+                return value.length > max ? value.substring(0, max) + '...' : value;
+            }
+
+            function renderNamedRows(items) {
+                return items.map(function (item) {
+                    return '<tr>' +
+                        '<td>' + (item.id ?? '') + '</td>' +
+                        '<td>' + (item.name ?? '') + '</td>' +
+                        '<td>' + (item.destinationName ?? '') + '</td>' +
+                        '<td class="text-end">' +
+                        '<a class="btn btn-sm btn-dark" href="' + (item.editUrl ?? '#') + '">Düzenle</a> ' +
+                        '<a class="btn btn-sm btn-outline-danger" href="' + (item.deleteUrl ?? '#') + '">Sil</a>' +
+                        '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            function renderImagesRows(items) {
+                return items.map(function (item) {
+                    return '<tr>' +
+                        '<td>' + (item.id ?? '') + '</td>' +
+                        '<td>' + (item.destinationName ?? '') + '</td>' +
+                        '<td>' + (item.altText ?? '') + '</td>' +
+                        '<td class="text-end">' +
+                        '<a class="btn btn-sm btn-dark" href="' + (item.editUrl ?? '#') + '">Düzenle</a> ' +
+                        '<a class="btn btn-sm btn-outline-danger" href="' + (item.deleteUrl ?? '#') + '">Sil</a>' +
+                        '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            function renderChatRows(items) {
+                return items.map(function (item) {
+                    return '<tr>' +
+                        '<td>' + (item.id ?? '') + '</td>' +
+                        '<td>' + truncate(item.input, 80) + '</td>' +
+                        '<td>' + truncate(item.reply, 80) + '</td>' +
+                        '<td class="text-end">' +
+                        '<a class="btn btn-sm btn-dark" href="' + (item.editUrl ?? '#') + '">Düzenle</a> ' +
+                        '<a class="btn btn-sm btn-outline-danger" href="' + (item.deleteUrl ?? '#') + '">Sil</a>' +
+                        '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            async function loadSection(config) {
+                const tbody = document.getElementById(config.bodyId);
+                if (!tbody || tbody.dataset.loaded === '1') return;
+
+                tbody.innerHTML = '<tr><td colspan="4" class="text-muted small">Yükleniyor...</td></tr>';
+
+                try {
+                    const response = await fetch(sectionUrlBase + '&section=' + encodeURIComponent(config.section), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Bölüm yüklenemedi');
+                    }
+
+                    const data = await response.json();
+                    const items = Array.isArray(data.items) ? data.items : [];
+
+                    if (!items.length) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-muted small">Kayıt bulunamadı.</td></tr>';
+                        tbody.dataset.loaded = '1';
+                        return;
+                    }
+
+                    if (config.section === 'images') {
+                        tbody.innerHTML = renderImagesRows(items);
+                    } else if (config.type === 'chat') {
+                        tbody.innerHTML = renderChatRows(items);
+                    } else {
+                        tbody.innerHTML = renderNamedRows(items);
+                    }
+
+                    tbody.dataset.loaded = '1';
+                } catch {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-danger small">Yükleme sırasında hata oluştu.</td></tr>';
+                }
+            }
+
+            Object.keys(sectionConfig).forEach(function (collapseId) {
+                const collapseElement = document.getElementById(collapseId);
+                if (!collapseElement) return;
+
+                collapseElement.addEventListener('show.bs.collapse', function () {
+                    loadSection(sectionConfig[collapseId]);
+                });
+            });
+        })();
+    </script>
+}
+
 <div class="accordion" id="contentEditorAccordion">
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingDestinations">
@@ -43,7 +155,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingImages">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImages" aria-expanded="false" aria-controls="collapseImages">
-                Fotoğraflar (@Model.DestinationImages.Count)
+                Fotoğraflar (@Model.DestinationImagesCount)
             </button>
         </h2>
         <div id="collapseImages" class="accordion-collapse collapse" aria-labelledby="headingImages" data-bs-parent="#contentEditorAccordion">
@@ -51,19 +163,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="DestinationImages" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Destinasyon</th><th>Alt Metin</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.DestinationImages)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Destination?.Name</td>
-                            <td>@item.AltText</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="DestinationImages" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="DestinationImages" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="imagesRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -73,7 +174,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingAttractions">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAttractions" aria-expanded="false" aria-controls="collapseAttractions">
-                Cazibe Merkezleri (@Model.Attractions.Count)
+                Cazibe Merkezleri (@Model.AttractionsCount)
             </button>
         </h2>
         <div id="collapseAttractions" class="accordion-collapse collapse" aria-labelledby="headingAttractions" data-bs-parent="#contentEditorAccordion">
@@ -81,19 +182,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="Attractions" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Ad</th><th>Destinasyon</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.Attractions)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Name</td>
-                            <td>@item.Destination?.Name</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="Attractions" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="Attractions" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="attractionsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -103,7 +193,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingFlavors">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFlavors" aria-expanded="false" aria-controls="collapseFlavors">
-                Lezzetler (@Model.Flavors.Count)
+                Lezzetler (@Model.FlavorsCount)
             </button>
         </h2>
         <div id="collapseFlavors" class="accordion-collapse collapse" aria-labelledby="headingFlavors" data-bs-parent="#contentEditorAccordion">
@@ -111,19 +201,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="Flavors" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Ad</th><th>Destinasyon</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.Flavors)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Name</td>
-                            <td>@item.Destination?.Name</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="Flavors" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="Flavors" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="flavorsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -133,7 +212,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingParkings">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseParkings" aria-expanded="false" aria-controls="collapseParkings">
-                Otoparklar (@Model.Parkings.Count)
+                Otoparklar (@Model.ParkingsCount)
             </button>
         </h2>
         <div id="collapseParkings" class="accordion-collapse collapse" aria-labelledby="headingParkings" data-bs-parent="#contentEditorAccordion">
@@ -141,19 +220,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="Parkings" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Ad</th><th>Destinasyon</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.Parkings)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Name</td>
-                            <td>@item.Destination?.Name</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="Parkings" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="Parkings" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="parkingsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -163,7 +231,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingHotels">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHotels" aria-expanded="false" aria-controls="collapseHotels">
-                Konaklama Yerleri (@Model.Hotels.Count)
+                Konaklama Yerleri (@Model.HotelsCount)
             </button>
         </h2>
         <div id="collapseHotels" class="accordion-collapse collapse" aria-labelledby="headingHotels" data-bs-parent="#contentEditorAccordion">
@@ -171,19 +239,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="Hotels" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Ad</th><th>Destinasyon</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.Hotels)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Name</td>
-                            <td>@item.Destination?.Name</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="Hotels" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="Hotels" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="hotelsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -193,7 +250,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingMeals">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMeals" aria-expanded="false" aria-controls="collapseMeals">
-                Yemekler (@Model.Meals.Count)
+                Yemekler (@Model.MealsCount)
             </button>
         </h2>
         <div id="collapseMeals" class="accordion-collapse collapse" aria-labelledby="headingMeals" data-bs-parent="#contentEditorAccordion">
@@ -201,19 +258,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="Meals" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Ad</th><th>Destinasyon</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.Meals)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@item.Name</td>
-                            <td>@item.Destination?.Name</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="Meals" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="Meals" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="mealsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -223,7 +269,7 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingChatTexts">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChatTexts" aria-expanded="false" aria-controls="collapseChatTexts">
-                Chat Metinleri (@Model.ChatTexts.Count)
+                Chat Metinleri (@Model.ChatTextsCount)
             </button>
         </h2>
         <div id="collapseChatTexts" class="accordion-collapse collapse" aria-labelledby="headingChatTexts" data-bs-parent="#contentEditorAccordion">
@@ -231,19 +277,8 @@
                 <a class="btn btn-sm btn-primary mb-2" asp-controller="DemoChatServices" asp-action="Create">Yeni Ekle</a>
                 <table class="table table-sm table-striped align-middle">
                     <thead><tr><th>Id</th><th>Girdi</th><th>Yanıt</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in Model.ChatTexts)
-                    {
-                        <tr>
-                            <td>@item.Id</td>
-                            <td>@(item.Input.Length > 80 ? item.Input[..80] + "..." : item.Input)</td>
-                            <td>@(item.Reply.Length > 80 ? item.Reply[..80] + "..." : item.Reply)</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-dark" asp-controller="DemoChatServices" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                                <a class="btn btn-sm btn-outline-danger" asp-controller="DemoChatServices" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                            </td>
-                        </tr>
-                    }
+                    <tbody id="chattextsRows">
+                        <tr><td colspan="4" class="text-muted small">Bölümü açınca yüklenecek.</td></tr>
                     </tbody>
                 </table>
             </div>

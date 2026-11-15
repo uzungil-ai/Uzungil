@@ -47,10 +47,10 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
+                        <li class="nav-item nav-item-about">
                             <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item nav-item-about">
                             <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Ekibimiz">Ekibimiz</a>
                         </li>
                         @if (User?.Identity?.IsAuthenticated == true)
@@ -132,8 +132,8 @@
                     <a asp-area="" asp-controller="Home" asp-action="Hakkında" class="simple-footer-link">Hakkında</a>
                     <a asp-area="" asp-controller="Home" asp-action="Ekibimiz" class="simple-footer-link">Ekibimiz</a>
                     <a asp-area="" asp-controller="Home" asp-action="Privacy" class="simple-footer-link">Gizlilik</a>
-                    <a href="mailto:info@fotografia.com.tr" class="simple-footer-link">İletişim</a>
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Bültene Katıl</button>
+                    <a id="footer-contact-link" href="mailto:info@fotografia.com.tr" class="simple-footer-link">İletişim</a>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
                 </div>
             </div>
             <div class="social-links justify-content-center mt-2" aria-label="Sosyal medya bağlantıları">

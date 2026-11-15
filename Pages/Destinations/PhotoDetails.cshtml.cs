@@ -13,6 +13,7 @@ namespace Roma.Pages.Destinations
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
         private readonly Dictionary<string, string> _srcSetCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _smallestImageCache = new(StringComparer.OrdinalIgnoreCase);
 
         public PhotoDetailsModel(ApplicationDbContext db, IWebHostEnvironment env)
         {
@@ -25,6 +26,7 @@ namespace Roma.Pages.Destinations
         public async Task<IActionResult> OnGetAsync(int id)
         {
             Destination = await _db.Destinations!
+                .AsNoTracking()
                 .Include(d => d.Images)
                 .Include(d => d.Attractions)
                     .ThenInclude(a => a.Reviews)
@@ -33,6 +35,7 @@ namespace Roma.Pages.Destinations
                 .Include(d => d.Meals)
                 .Include(d => d.Flavors)
                 .Include(d => d.Parkings)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (Destination == null)
@@ -61,6 +64,11 @@ namespace Roma.Pages.Destinations
         public string GetSmallestImageUrl(string? imageUrl)
         {
             if (string.IsNullOrEmpty(imageUrl)) return string.Empty;
+
+            if (_smallestImageCache.TryGetValue(imageUrl, out var cachedImageUrl))
+            {
+                return cachedImageUrl;
+            }
 
             try
             {
@@ -93,19 +101,25 @@ namespace Roma.Pages.Destinations
                 {
                     if (System.IO.File.Exists(candidate))
                     {
-                        return "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\', '/');
+                        var resolvedCandidate = "/" + Path.GetRelativePath(webRoot, candidate).Replace('\\', '/');
+                        _smallestImageCache[imageUrl] = resolvedCandidate;
+                        return resolvedCandidate;
                     }
                 }
 
                 if (System.IO.File.Exists(full))
                 {
-                    return "/" + Path.GetRelativePath(webRoot, full).Replace('\\', '/');
+                    var resolvedFull = "/" + Path.GetRelativePath(webRoot, full).Replace('\\', '/');
+                    _smallestImageCache[imageUrl] = resolvedFull;
+                    return resolvedFull;
                 }
 
+                _smallestImageCache[imageUrl] = imageUrl;
                 return imageUrl;
             }
             catch
             {
+                _smallestImageCache[imageUrl] = imageUrl;
                 return imageUrl;
             }
         }
