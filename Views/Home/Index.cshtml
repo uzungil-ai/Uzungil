@@ -26,7 +26,7 @@
     <div class="card-body">
         <h5 class="card-title mb-3">Arama</h5>
 
-        <form asp-controller="Home" asp-action="Index" method="get" class="row g-3 align-items-end">
+        <form id="homeSearchForm" action="@Url.Action("Index", "Home")" method="get" class="row g-3 align-items-end">
             <div class="col-12 col-lg-4">
                 <label for="name" class="form-label">Destinasyon Adı</label>
                 <input id="name" name="name" value="@nameFilter" class="form-control" placeholder="Örn: Kapadokya" />

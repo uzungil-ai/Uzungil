@@ -48,7 +48,7 @@
 
 <div class="mt-4">
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h3 class="mb-0">@Model.Name</h3>
+    <h3 class="h5 mb-0">@Model.Name</h3>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-secondary" asp-action="Index">Listeye Dön</a>
         @if (canManage)
@@ -74,16 +74,16 @@
     <div class="card-header"><strong>Destinasyon Bilgisi</strong></div>
     <div class="card-body">
         <dl class="row mb-0">
-            <dt class="col-sm-3">Ülke</dt>
+            <dt class="col-sm-3 visually-hidden">Ülke</dt>
             <dd class="col-sm-9">@Model.Country</dd>
 
-            <dt class="col-sm-3">Açıklama</dt>
+            <dt class="col-sm-3 visually-hidden">Açıklama</dt>
             <dd class="col-sm-9">@Model.Description</dd>
 
-            <dt class="col-sm-3">Giriş Ücreti</dt>
+            <dt class="col-sm-3 visually-hidden">Giriş Ücreti</dt>
             <dd class="col-sm-9">@(Model.EntranceFee.HasValue ? Model.EntranceFee.Value.ToString("C") : "-")</dd>
 
-            <dt class="col-sm-3">Sosyal Medya</dt>
+            <dt class="col-sm-3 visually-hidden">Sosyal Medya</dt>
             <dd class="col-sm-9 d-flex align-items-center gap-3">
                 @if (!string.IsNullOrWhiteSpace(Model.InstagramUrl))
                 {
@@ -114,7 +114,7 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Görseller (@(Model.Images?.Count ?? 0))</h3>
+    <h3 class="h5 mb-0">Görseller (@(Model.Images?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="DestinationImages" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -147,7 +147,7 @@ else
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
+    <h4 class="h5 mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -254,11 +254,11 @@ else
 }
 else
 {
-    <div class="text-muted mb-4">Henüz cazibe noktası yok.</div>
+    <div class="h5 text-muted mb-4">Henüz cazibe noktası yok.</div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
+    <h3 class="h5 mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -315,11 +315,11 @@ else
 }
 else
 {
-    <div class="text-muted mb-4">Henüz otel yok.</div>
+    <div class="h5 text-muted mb-4">Henüz otel yok.</div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
+    <h4 class="h5 mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -359,11 +359,11 @@ else
 }
 else
 {
-    <div class="text-muted mb-4">Henüz otopark yok.</div>
+    <div class="h5 text-muted mb-4">Henüz otopark yok.</div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
+    <h3 class="h5 mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -399,11 +399,11 @@ else
 }
 else
 {
-    <div class="text-muted mb-4">Henüz lezzet yok.</div>
+    <div class="h5 text-muted mb-4">Henüz lezzet yok.</div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
+    <h3 class="h5 mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
     @if (canAdd)
     {
         <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
@@ -442,7 +442,7 @@ else
 }
 else
 {
-    <div class="text-muted">Henüz yemek mekanı yok.</div>
+    <div class="h5 text-muted">Henüz yemek mekanı yok.</div>
 }
 
 </div>

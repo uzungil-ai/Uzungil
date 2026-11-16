@@ -784,7 +784,7 @@
                                 </h5>
                             </div>
                             <div class="card-footer bg-transparent border-0 pt-0">
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
                                     <div>@Html.RatingBadge(item.AverageRating)</div>
                                     <a class="btn btn-sm btn-comment-link"
                                        data-bs-toggle="collapse"
@@ -793,7 +793,7 @@
                                        aria-expanded="false"
                                        aria-controls="attraction-reviews-@item.Id">Yorumlar (@(item.Reviews?.Count(r => r.IsApproved && !r.IsRejected) ?? 0))</a>
                                     <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@item.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex flex-wrap gap-2">
                                         @if (isAdmin)
                                         {
                                             <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>

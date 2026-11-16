@@ -53,11 +53,14 @@
                         <li class="nav-item nav-item-about">
                             <a class="nav-link navbar-about-link" asp-area="" asp-controller="Home" asp-action="Ekibimiz">Ekibimiz</a>
                         </li>
-                        @if (User?.Identity?.IsAuthenticated == true)
+                        @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Subscribers" asp-action="Index">Abonelik</a>
                             </li>
+                        }
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Destinations" asp-action="Index">Index</a>
                             </li>
