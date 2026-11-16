@@ -157,7 +157,7 @@ namespace Roma.Data
                             {
                                 try
                                 {
-                                    body = await _emailComposer.ComposeNewDestinationHtmlAsync(dest.Name, dest.Description ?? string.Empty, destLink);
+                                    body = await _emailComposer.ComposeNewDestinationHtmlAsync(dest.Name ?? string.Empty, dest.Description ?? string.Empty, destLink);
                                 }
                                 catch
                                 {

@@ -1725,6 +1725,11 @@ form input[type="button"] {
   box-shadow: 0 0 0 2px rgba(138, 95, 0, 0.22), 0 8px 18px rgba(138, 95, 0, 0.32);
 }
 
+#bottomLoadMoreBtn:hover,
+#bottomLoadMoreBtn:focus {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 55%, #f59e0b 100%) !important;
+}
+
 .btn-navbar-alt-theme {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 52%, #15803d 100%);
   color: #fff;
@@ -1839,7 +1844,7 @@ form input[type="button"] {
   }
 
   .navbar-turquoise .nav-item-about + .nav-item-about {
-    margin-top: 5px;
+    margin-top: 1rem;
   }
 
   .home-hero::after {

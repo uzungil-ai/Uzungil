@@ -1,7 +1,6 @@
 @model Roma.Models.Destination
 
 @{
-    ViewData["Title"] = "Destinasyon Detayı";
     var canManage = User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
     var canAdd = User?.Identity?.IsAuthenticated == true;
     var isAuthenticated = User?.Identity?.IsAuthenticated == true;
@@ -146,21 +145,27 @@ else
     <div class="text-muted mb-4">Henüz görsel yok.</div>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="h5 mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
-    @if (canAdd)
-    {
-        <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-    }
-</div>
-@if (Model.Attractions != null && Model.Attractions.Count > 0)
+@{
+    var attractions = Model.Attractions ?? new List<Roma.Models.Attraction>();
+}
+
+@if (attractions.Count > 0)
 {
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
-        @foreach (var a in Model.Attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="h5 mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
+        @if (canAdd)
         {
+            <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+        }
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
+        @foreach (var a in attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
+        {
+            var attractionName = a.Name ?? string.Empty;
             var attractionPhoto = Model.Images?
                 .OrderBy(i => i.Order)
-                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.AltText) && i.AltText.Contains(a.Name, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.AltText) && i.AltText.Contains(attractionName, StringComparison.OrdinalIgnoreCase))
                 ?? Model.Images?.OrderBy(i => i.Order).FirstOrDefault();
             var approvedReviews = a.Reviews?
                 .Where(r => r.IsApproved && !r.IsRejected)
@@ -172,12 +177,12 @@ else
                     @if (attractionPhoto != null)
                     {
                         <img src="@attractionPhoto.Url"
-                             alt="@(string.IsNullOrWhiteSpace(attractionPhoto.AltText) ? a.Name : attractionPhoto.AltText)"
+                             alt="@(string.IsNullOrWhiteSpace(attractionPhoto.AltText) ? attractionName : attractionPhoto.AltText)"
                              class="card-img-top destination-image"
                              style="height:180px;object-fit:cover;" />
                     }
                     <div class="card-body">
-                        <h4 class="card-title mb-2">@a.Name</h4>
+                        <h4 class="card-title mb-2">@attractionName</h4>
                         <div class="small text-muted mb-1">Kategori: @(string.IsNullOrWhiteSpace(a.Category) ? "-" : a.Category)</div>
                         <div class="small">
                             @Html.RatingBadge(a.AverageRating)
@@ -252,22 +257,23 @@ else
         }
     </div>
 }
-else
-{
-    <div class="h5 text-muted mb-4">Henüz cazibe noktası yok.</div>
+
+@{
+    var hotels = Model.Hotels ?? new List<Roma.Models.Hotel>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="h5 mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
-    @if (canAdd)
-    {
-        <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-    }
-</div>
-@if (Model.Hotels != null && Model.Hotels.Count > 0)
+@if (hotels.Count > 0)
 {
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h5 mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
+        @if (canAdd)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+        }
+    </div>
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
-        @foreach (var h in Model.Hotels)
+        @foreach (var h in hotels)
         {
             <div class="col">
                 <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
@@ -313,22 +319,23 @@ else
         }
     </div>
 }
-else
-{
-    <div class="h5 text-muted mb-4">Henüz otel yok.</div>
+
+@{
+    var parkings = Model.Parkings ?? new List<Roma.Models.Parking>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="h5 mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
-    @if (canAdd)
-    {
-        <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-    }
-</div>
-@if (Model.Parkings != null && Model.Parkings.Count > 0)
+@if (parkings.Count > 0)
 {
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="h5 mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
+        @if (canAdd)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+        }
+    </div>
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
-        @foreach (var p in Model.Parkings)
+        @foreach (var p in parkings)
         {
             <div class="col">
                 <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
@@ -357,22 +364,23 @@ else
         }
     </div>
 }
-else
-{
-    <div class="h5 text-muted mb-4">Henüz otopark yok.</div>
+
+@{
+    var flavors = Model.Flavors ?? new List<Roma.Models.Flavor>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="h5 mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
-    @if (canAdd)
-    {
-        <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-    }
-</div>
-@if (Model.Flavors != null && Model.Flavors.Count > 0)
+@if (flavors.Count > 0)
 {
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h5 mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
+        @if (canAdd)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+        }
+    </div>
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
-        @foreach (var f in Model.Flavors)
+        @foreach (var f in flavors)
         {
             <div class="col">
                 <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
@@ -397,22 +405,23 @@ else
         }
     </div>
 }
-else
-{
-    <div class="h5 text-muted mb-4">Henüz lezzet yok.</div>
+
+@{
+    var meals = Model.Meals ?? new List<Roma.Models.Meal>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="h5 mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
-    @if (canAdd)
-    {
-        <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-    }
-</div>
-@if (Model.Meals != null && Model.Meals.Count > 0)
+@if (meals.Count > 0)
 {
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h5 mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
+        @if (canAdd)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+        }
+    </div>
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
-        @foreach (var m in Model.Meals)
+        @foreach (var m in meals)
         {
             <div class="col">
                 <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
@@ -439,10 +448,6 @@ else
             </div>
         }
     </div>
-}
-else
-{
-    <div class="h5 text-muted">Henüz yemek mekanı yok.</div>
 }
 
 </div>
