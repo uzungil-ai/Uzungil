@@ -117,9 +117,32 @@ namespace Roma.Pages
             if (Search is not null)
             {
                 var pattern = $"%{Search}%";
-                baseQuery = baseQuery.Where(d =>
-                    (d.Name != null && EF.Functions.Like(d.Name, pattern)) ||
-                    (d.Country != null && EF.Functions.Like(d.Country, pattern)));
+                var nameMatchedIds = await _db.Destinations!
+                    .AsNoTracking()
+                    .Where(d => d.Name != null && EF.Functions.Like(d.Name, pattern))
+                    .Select(d => d.Id)
+                    .ToListAsync();
+
+                if (nameMatchedIds.Count > 0)
+                {
+                    baseQuery = baseQuery.Where(d => nameMatchedIds.Contains(d.Id));
+                }
+                else
+                {
+                    var prefixLength = Math.Min(3, Search.Length);
+                    var prefix = Search[..prefixLength];
+
+                    var descriptionMatchedIds = (await _db.Destinations!
+                        .AsNoTracking()
+                        .Where(d => d.Description != null)
+                        .Select(d => new { d.Id, d.Description })
+                        .ToListAsync())
+                        .Where(d => ContainsWordStartingWith(d.Description, prefix))
+                        .Select(d => d.Id)
+                        .ToList();
+
+                    baseQuery = baseQuery.Where(d => descriptionMatchedIds.Contains(d.Id));
+                }
             }
 
             if (Name is not null)
@@ -216,6 +239,23 @@ namespace Roma.Pages
             {
                 return imageUrl;
             }
+        }
+
+        private static bool ContainsWordStartingWith(string? text, string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(prefix))
+            {
+                return false;
+            }
+
+            var separators = new[]
+            {
+                ' ', '\t', '\r', '\n', ',', '.', ';', ':', '!', '?',
+                '(', ')', '[', ']', '{', '}', '"', '\'', '-', '/', '\\', '|', '_'
+            };
+
+            var words = text.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            return words.Any(w => w.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase));
         }
     }
 }

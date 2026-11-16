@@ -224,10 +224,10 @@
 
 <div id="homeSplash" aria-hidden="true">
     <img src="@firstFeaturedImage" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
-    <div class="home-splash-search" aria-label="Ana sayfa arama">
+    <form method="get" class="home-splash-search js-home-search-form" aria-label="Ana sayfa arama">
         <input name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
-        <button type="button" class="btn fw-semibold btn-soft-yellow-action">Ara</button>
-    </div>
+        <button type="submit" class="btn fw-semibold btn-soft-yellow-action">Ara</button>
+    </form>
     <div class="home-splash-actions" aria-label="Hızlı işlemler">
         <a class="splash-cta splash-cta-chat" href="/Chat">Nereye gitmek istersiniz</a>
         <a class="splash-cta splash-cta-ai" href="/OpenAiSoruCevap">Yapay zekaya sor</a>
@@ -248,18 +248,18 @@
                 <a class="home-tab-btn home-action-link home-action-yellow home-top-soft-btn" href="/SeyahatPlanla">Seyahat Planı</a>
             </div>
             <div class="destination-top-search-wrap home-actions-search-wrap home-actions-search-inline" aria-label="Destinasyon arama">
-                <div class="destination-top-search-form">
+                <form method="get" class="destination-top-search-form js-home-search-form">
                     <div class="hero-search-grid destination-top-search-grid">
                         <div class="hero-search-field">
                             <input id="hero-search" name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
                         </div>
                         <div class="hero-search-action destination-top-search-action">
-                            <button type="button" class="home-tab-btn home-action-link btn-soft-yellow-action" aria-label="Ara">
+                            <button type="submit" class="home-tab-btn home-action-link btn-soft-yellow-action" aria-label="Ara">
                                 Ara
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -477,7 +477,30 @@
             var homeEndActions = document.getElementById('homeEndActions');
             var bottomLoadMoreBtn = document.getElementById('bottomLoadMoreBtn');
             var destinationLinks = document.querySelectorAll('.destination-image-link');
+            var homeSearchForms = document.querySelectorAll('.js-home-search-form');
             var selectedCategory = '@selectedCategory';
+
+            homeSearchForms.forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    var input = form.querySelector('input[name="search"]');
+                    if (!input) return;
+
+                    var trimmed = (input.value || '').trim();
+                    input.value = trimmed;
+
+                    if (trimmed.length > 0) return;
+
+                    e.preventDefault();
+
+                    var url = new URL(window.location.href);
+                    url.searchParams.delete('search');
+                    url.searchParams.delete('Search');
+
+                    var query = url.searchParams.toString();
+                    var nextUrl = url.pathname + (query ? '?' + query : '') + url.hash;
+                    window.location.href = nextUrl;
+                });
+            });
 
             function hydrateFeaturedDeferredMedia() {
                 if (!featuredPanel) return;
