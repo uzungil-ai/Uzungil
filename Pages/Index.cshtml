@@ -11,6 +11,8 @@
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
     var categoryOptions = Model.CategoryOptions;
     var selectedCategory = Model.Category ?? string.Empty;
+    var initialVisibleCount = Model.IsSubscriberMode ? 2 : 6;
+    var loadMoreStep = Model.IsSubscriberMode ? 4 : 6;
 }
 
 @section Head {
@@ -326,9 +328,9 @@
                 var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
                 if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
                 var srcset = Model.BuildSrcSet(img);
-                var isPriorityImage = i < 6;
-                var isDeferredFeaturedImage = i >= 6;
-                var hiddenClass = i >= 6 ? "d-none" : string.Empty;
+                var isPriorityImage = i < initialVisibleCount;
+                var isDeferredFeaturedImage = i >= initialVisibleCount;
+                var hiddenClass = i >= initialVisibleCount ? "d-none" : string.Empty;
                 <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
                     <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                         <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
@@ -395,7 +397,7 @@
                     if (string.IsNullOrWhiteSpace(cimg)) { cimg = "/images/italya.jpg"; }
                     var csrcset = Model.BuildSrcSet(cimg);
                     var cIsPriorityImage = ci < 2;
-                    var hiddenClass = ci >= 6 ? "d-none" : string.Empty;
+                    var hiddenClass = ci >= initialVisibleCount ? "d-none" : string.Empty;
                     <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
                         <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                             <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@cd.Id">
@@ -428,7 +430,7 @@
                 if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
                 var srcset = Model.BuildSrcSet(img);
                 var isPriorityImage = i < 2;
-                var hiddenClass = i >= 6 ? "d-none" : string.Empty;
+                var hiddenClass = i >= initialVisibleCount ? "d-none" : string.Empty;
                 <div class="col-12 col-sm-6 col-md-4 mb-2 js-destination-item @hiddenClass">
                     <div class="card h-100 shadow-sm destination-card border-0 reveal-up">
                         <a class="destination-image-link" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id">
@@ -453,8 +455,8 @@
     </div>
 
     <div class="text-center mt-2 mb-3">
-        <button type="button" id="bottomLoadMoreBtn" class="btn btn-soft-yellow-action d-none" data-step="6">
-            +6 Daha Fazla
+        <button type="button" id="bottomLoadMoreBtn" class="btn btn-soft-yellow-action d-none" data-step="@loadMoreStep">
+            +@loadMoreStep Daha Fazla
         </button>
     </div>
 
@@ -588,7 +590,7 @@
                 if (!bottomLoadMoreBtn) return;
 
                 if (hiddenItems > 0) {
-                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '6', 10);
+                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '@loadMoreStep', 10);
                     var revealCount = Math.min(step, hiddenItems);
                     bottomLoadMoreBtn.textContent = "+" + revealCount + " Daha Fazla";
                     bottomLoadMoreBtn.classList.remove('d-none');
@@ -602,7 +604,7 @@
                     var panel = getActivePanel();
                     if (!panel) return;
 
-                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '6', 10);
+                    var step = parseInt(bottomLoadMoreBtn.getAttribute('data-step') || '@loadMoreStep', 10);
                     var visibleItems = panel.querySelectorAll('.js-destination-item:not(.d-none):not(.js-passed-item)');
                     var hiddenItems = panel.querySelectorAll('.js-destination-item.d-none:not(.js-passed-item)');
 

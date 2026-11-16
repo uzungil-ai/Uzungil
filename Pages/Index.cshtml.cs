@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Roma.Data;
 using Roma.Models;
+using System.Text.RegularExpressions;
 
 namespace Roma.Pages
 {
@@ -73,6 +74,11 @@ namespace Roma.Pages
         [BindProperty(SupportsGet = true)]
         public string? Category { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? Subscriber { get; set; }
+
+        public bool IsSubscriberMode { get; private set; }
+
         public bool HasActiveSearch =>
             !string.IsNullOrWhiteSpace(Search) ||
             !string.IsNullOrWhiteSpace(Name) ||
@@ -102,6 +108,11 @@ namespace Roma.Pages
             Country = string.IsNullOrWhiteSpace(Country) ? null : Country.Trim();
             Conutry = string.IsNullOrWhiteSpace(Conutry) ? null : Conutry.Trim();
             Category = string.IsNullOrWhiteSpace(Category) ? null : Category.Trim();
+            Subscriber = string.IsNullOrWhiteSpace(Subscriber) ? null : Subscriber.Trim();
+
+            IsSubscriberMode = string.Equals(Subscriber, "1", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Subscriber, "true", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Subscriber, "yes", StringComparison.OrdinalIgnoreCase);
 
             if (Country is null && Conutry is not null)
             {
@@ -109,8 +120,6 @@ namespace Roma.Pages
             }
 
             var baseQuery = _db.Destinations!
-                .Include(d => d.Images)
-                .Include(d => d.Attractions)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -129,10 +138,23 @@ namespace Roma.Pages
                 }
                 else
                 {
+                    var descriptionPattern = $"%{Search}%";
+                    var descriptionMatchedIds = await _db.Destinations!
+                        .AsNoTracking()
+                        .Where(d => d.Description != null && EF.Functions.Like(d.Description, descriptionPattern))
+                        .Select(d => d.Id)
+                        .ToListAsync();
+
+                    if (descriptionMatchedIds.Count > 0)
+                    {
+                        baseQuery = baseQuery.Where(d => descriptionMatchedIds.Contains(d.Id));
+                        goto SkipDescriptionPrefixFallback;
+                    }
+
                     var prefixLength = Math.Min(3, Search.Length);
                     var prefix = Search[..prefixLength];
 
-                    var descriptionMatchedIds = (await _db.Destinations!
+                    var descriptionPrefixMatchedIds = (await _db.Destinations!
                         .AsNoTracking()
                         .Where(d => d.Description != null)
                         .Select(d => new { d.Id, d.Description })
@@ -141,7 +163,9 @@ namespace Roma.Pages
                         .Select(d => d.Id)
                         .ToList();
 
-                    baseQuery = baseQuery.Where(d => descriptionMatchedIds.Contains(d.Id));
+                    baseQuery = baseQuery.Where(d => descriptionPrefixMatchedIds.Contains(d.Id));
+
+                SkipDescriptionPrefixFallback:;
                 }
             }
 
@@ -163,15 +187,43 @@ namespace Roma.Pages
                 baseQuery = baseQuery.Where(d => d.Attractions.Any(a => a.Category != null && EF.Functions.Like(a.Category, pattern)));
             }
 
-            Featured = await baseQuery
-                .OrderBy(_ => Guid.NewGuid())
+            var latestIds = await baseQuery
+                .OrderByDescending(d => d.Id)
+                .Select(d => d.Id)
                 .Take(24)
                 .ToListAsync();
 
-            Latest = await baseQuery
+            var featuredCandidateIds = await baseQuery
                 .OrderByDescending(d => d.Id)
-                .Take(24)
+                .Select(d => d.Id)
+                .Take(300)
                 .ToListAsync();
+
+            var featuredIds = TakeRandom(featuredCandidateIds, 10);
+
+            var allNeededIds = latestIds
+                .Concat(featuredIds)
+                .Distinct()
+                .ToList();
+
+            var hydratedDestinations = await _db.Destinations!
+                .AsNoTracking()
+                .Include(d => d.Images)
+                .Include(d => d.Attractions)
+                .Where(d => allNeededIds.Contains(d.Id))
+                .ToListAsync();
+
+            var destinationById = hydratedDestinations.ToDictionary(d => d.Id);
+
+            Latest = latestIds
+                .Where(id => destinationById.ContainsKey(id))
+                .Select(id => destinationById[id])
+                .ToList();
+
+            Featured = featuredIds
+                .Where(id => destinationById.ContainsKey(id))
+                .Select(id => destinationById[id])
+                .ToList();
         }
 
         public string BuildSrcSet(string? imageUrl)
@@ -248,14 +300,33 @@ namespace Roma.Pages
                 return false;
             }
 
+            text = Regex.Replace(text, "<[^>]*>", " ");
+
             var separators = new[]
             {
                 ' ', '\t', '\r', '\n', ',', '.', ';', ':', '!', '?',
-                '(', ')', '[', ']', '{', '}', '"', '\'', '-', '/', '\\', '|', '_'
+                '(', ')', '[', ']', '{', '}', '"', '\'', '-', '/', '\\', '|', '_', '<', '>', '=', '&'
             };
 
             var words = text.Split(separators, StringSplitOptions.RemoveEmptyEntries);
             return words.Any(w => w.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        private static List<int> TakeRandom(List<int> source, int count)
+        {
+            if (source.Count <= count)
+            {
+                return source;
+            }
+
+            var copy = source.ToList();
+            for (var i = copy.Count - 1; i > 0; i--)
+            {
+                var j = Random.Shared.Next(i + 1);
+                (copy[i], copy[j]) = (copy[j], copy[i]);
+            }
+
+            return copy.Take(count).ToList();
         }
     }
 }

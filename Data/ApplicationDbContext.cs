@@ -146,9 +146,10 @@ namespace Roma.Data
                                 ? $"/Unsubscribe?email={System.Uri.EscapeDataString(sub.Email)}&token={sub.UnsubscribeToken}"
                                 : $"{baseUrl}/Unsubscribe?email={System.Uri.EscapeDataString(sub.Email)}&token={sub.UnsubscribeToken}";
 
+                            var searchQuery = System.Uri.EscapeDataString(dest.Name ?? string.Empty);
                             var destLink = string.IsNullOrEmpty(baseUrl)
-                                ? $"/Destinations/Details/{dest.Id}"
-                                : $"{baseUrl}/Destinations/Details/{dest.Id}";
+                                ? $"/?subscriber=1&search={searchQuery}"
+                                : $"{baseUrl}/?subscriber=1&search={searchQuery}";
 
                             // Compose email: prefer IEmailComposer when available, otherwise use template or fallback HTML/plain text
                             string? body = null;
