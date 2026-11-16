@@ -1,28 +1,28 @@
 @model Roma.Models.Parking
 
 @{
-    ViewData["Title"] = "Parking Details";
+    ViewData["Title"] = "Otopark Detayı";
 }
 
-<h1>Parking Details</h1>
+<h1>Otopark Detayı</h1>
 
 <div>
     <h4>@Model.Name</h4>
     <dl class="row">
-        <dt class="col-sm-2">Destination</dt>
+        <dt class="col-sm-2">Destinasyon</dt>
         <dd class="col-sm-10">@Model.Destination?.Name</dd>
 
-        <dt class="col-sm-2">Capacity</dt>
+        <dt class="col-sm-2">Kapasite</dt>
         <dd class="col-sm-10">@Model.Capacity</dd>
 
-        <dt class="col-sm-2">Is Paid</dt>
+        <dt class="col-sm-2">Ücretli mi?</dt>
         <dd class="col-sm-10">@Model.IsPaid</dd>
 
-        <dt class="col-sm-2">Fee</dt>
-        <dd class="col-sm-10">@Model.Fee</dd>
+        <dt class="col-sm-2">Sabit Ücret</dt>
+        <dd class="col-sm-10">@(Model.Fee.HasValue ? $"{Model.Fee.Value:0.##} TL" : "-")</dd>
 
-        <dt class="col-sm-2">Hourly Rate</dt>
-        <dd class="col-sm-10">@Model.HourlyRate</dd>
+        <dt class="col-sm-2">Saatlik Ücret</dt>
+        <dd class="col-sm-10">@(Model.HourlyRate.HasValue ? $"{Model.HourlyRate.Value:0.##} TL" : "-")</dd>
     </dl>
 </div>
 

@@ -1,0 +1,81 @@
+@page "/Admin/Imagies"
+@model Roma.Pages.Admin.ImagiesModel
+@{
+    ViewData["Title"] = "Images";
+}
+
+<h2>Images</h2>
+<p class="text-muted">/uploads/destinations altındaki WebP dosyaları (sayfa başına 12).</p>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-12 col-md-4">
+        <label for="destinationId" class="form-label">Destinasyon</label>
+        <select id="destinationId" name="destinationId" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var destination in Model.DestinationOptions)
+            {
+                <option value="@destination.Id" selected="@(Model.DestinationId == destination.Id ? "selected" : null)">@destination.Name (@destination.Id)</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-auto">
+        <button type="submit" class="btn btn-primary">Getir</button>
+    </div>
+</form>
+
+@if (Model.TotalCount == 0)
+{
+    <div class="alert alert-info">/uploads/destinations altında WebP görsel bulunamadı.</div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div><strong>Toplam:</strong> @Model.TotalCount</div>
+        <div><strong>Sayfa:</strong> @Model.CurrentPage / @Model.TotalPages</div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+        @foreach (var image in Model.Images)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="@image.Url"
+                         alt="@image.Name"
+                         width="150"
+                         height="100"
+                         loading="lazy"
+                         class="card-img-top"
+                         style="width: 150px; height: 100px; object-fit: cover; margin: .75rem auto 0 auto;" />
+                    <div class="card-body">
+                        <div><strong>Ad:</strong> @image.Name</div>
+                        <div><strong>Boyut:</strong> @image.SizeText</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <nav class="mt-4" aria-label="Sayfalama">
+        <ul class="pagination flex-wrap mb-0">
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : null)">
+                <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@(Model.CurrentPage - 1)" asp-route-destinationId="@Model.DestinationId">Önceki</a>
+            </li>
+
+            @{
+                var startPage = Math.Max(1, Model.CurrentPage - 2);
+                var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+            }
+
+            @for (var p = startPage; p <= endPage; p++)
+            {
+                <li class="page-item @(p == Model.CurrentPage ? "active" : null)">
+                    <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@p" asp-route-destinationId="@Model.DestinationId">@p</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : null)">
+                <a class="page-link" asp-page="/Admin/Imagies" asp-route-currentPage="@(Model.CurrentPage + 1)" asp-route-destinationId="@Model.DestinationId">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+}

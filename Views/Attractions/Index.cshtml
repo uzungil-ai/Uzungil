@@ -2,18 +2,22 @@
 
 @{
     ViewData["Title"] = "Attractions";
+    var canManage = User?.Identity?.IsAuthenticated == true;
 }
 
-<h1>Attractions</h1>
+<h3 class="attractions-title">Gezilecek Yerler</h3>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
-<p>
-    <a class="btn btn-primary" asp-action="Create">Create New</a>
-</p>
+@if (canManage)
+{
+    <p>
+        <a class="btn btn-primary hover-blue-shadow" asp-action="Create">Create New</a>
+    </p>
+}
 
 @if (Model.Any())
 {
@@ -21,7 +25,7 @@
         @foreach (var item in Model)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm hover-blue-shadow">
                     <div class="card-body">
                         <h5 class="card-title mb-2">@item.Name</h5>
                         <div class="small text-muted mb-1">Kategori: @item.Category</div>
@@ -36,14 +40,17 @@
                                 ? item.Address
                                 : $"https://{item.Address}";
 
-                            <a class="btn btn-sm btn-info" href="@addressUrl" target="_blank" rel="noopener noreferrer">Detay</a>
+                            <a class="btn btn-sm btn-info hover-blue-shadow" href="@addressUrl" target="_blank" rel="noopener noreferrer">Detay</a>
                         }
                         else
                         {
                             <button type="button" class="btn btn-sm btn-info" disabled>Detay</button>
                         }
-                        <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                        <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        @if (canManage)
+                        {
+                            <a class="btn btn-sm btn-secondary hover-blue-shadow" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
+                            <a class="btn btn-sm btn-danger hover-blue-shadow" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
+                        }
                     </div>
                 </div>
             </div>

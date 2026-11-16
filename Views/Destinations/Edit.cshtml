@@ -9,9 +9,12 @@
     <a class="btn btn-outline-secondary" asp-action="Index">Listeye Dön</a>
 </div>
 
-<div class="row">
-    <div class="col-12 col-lg-9 col-xl-8">
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-9">
         <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <strong>Destinasyon Bilgileri</strong>
+            </div>
             <div class="card-body">
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="Id" />
@@ -45,21 +48,25 @@
                         <div class="col-12 col-md-3">
                             <label asp-for="Latitude" class="form-label">Enlem</label>
                             <input asp-for="Latitude" class="form-control" type="number" step="0.000001" placeholder="41.902782" />
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
                         </div>
 
                         <div class="col-12 col-md-3">
                             <label asp-for="Longitude" class="form-label">Boylam</label>
                             <input asp-for="Longitude" class="form-control" type="number" step="0.000001" placeholder="12.496366" />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label asp-for="InstagramUrl" class="form-label">Instagram URL</label>
                             <input asp-for="InstagramUrl" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="InstagramUrl" class="text-danger"></span>
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label asp-for="FacebookUrl" class="form-label">Facebook URL</label>
                             <input asp-for="FacebookUrl" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="FacebookUrl" class="text-danger"></span>
                         </div>
                     </div>
 

@@ -40,6 +40,7 @@ namespace Roma.Pages
             if (sub != null)
             {
                 sub.ConsentGiven = false;
+                sub.IsConfirmed = false;
                 await _db.SaveChangesAsync();
                 Success = true;
 

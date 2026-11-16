@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
 using Roma.Data;
 using Roma.Models;
 using Roma.Services;
@@ -26,15 +27,17 @@ namespace Roma.Pages
         [BindProperty]
         public bool Consent { get; set; }
 
-        public void OnGet()
+        public void OnGet(string? email = null)
         {
+            Email = NormalizeEmail(email);
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
             var isAjax = HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            var normalizedEmail = NormalizeEmail(Email);
 
-            if (string.IsNullOrWhiteSpace(Email) || !Consent)
+            if (string.IsNullOrWhiteSpace(normalizedEmail) || !Consent)
             {
                 ModelState.AddModelError("", "E-posta ve rıza gereklidir.");
                 if (isAjax)
@@ -44,7 +47,18 @@ namespace Roma.Pages
                 return Page();
             }
 
-            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email == Email);
+            if (!IsValidEmail(normalizedEmail))
+            {
+                ModelState.AddModelError("", "Geçerli bir e-posta adresi giriniz.");
+                if (isAjax)
+                {
+                    return BadRequest(new { success = false, message = "Geçerli bir e-posta adresi giriniz." });
+                }
+
+                return Page();
+            }
+
+            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email.ToLower() == normalizedEmail.ToLower());
             if (existing != null)
             {
                 var resentConfirmation = false;
@@ -77,16 +91,19 @@ namespace Roma.Pages
                     return new JsonResult(new { success = true, message = resentConfirmation ? "Bu e-posta zaten kayıtlı. Onay e-postasını tekrar gönderdik." : "Bu e-posta zaten onaylı şekilde kayıtlı." });
                 }
 
-                return RedirectToPage("/Index");
+                TempData["SubscribeAlert"] = resentConfirmation
+                    ? "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz."
+                    : "Bu e-posta zaten onaylı abonedir. Yorum ekleyebilirsiniz.";
+                return RedirectToPage("/Subscribe");
             }
 
             var tokenNew = System.Guid.NewGuid().ToString("N");
             var expires = System.DateTime.UtcNow.AddDays(7);
-            var sub = new Subscriber { Email = Email, ConsentGiven = true, IsConfirmed = false, CreatedAt = System.DateTime.UtcNow, ConfirmationToken = tokenNew, ConfirmationExpiresAt = expires };
+            var sub = new Subscriber { Email = normalizedEmail, ConsentGiven = true, IsConfirmed = false, CreatedAt = System.DateTime.UtcNow, ConfirmationToken = tokenNew, ConfirmationExpiresAt = expires };
             _db.Subscribers!.Add(sub);
             await _db.SaveChangesAsync();
 
-            var queued = await TryQueueConfirmationEmailAsync(Email, tokenNew);
+            var queued = await TryQueueConfirmationEmailAsync(normalizedEmail, tokenNew);
             if (!queued)
             {
                 _logger.LogWarning("Abonelik onay e-postası kuyruğa alınamadı: {Email}", Email);
@@ -104,7 +121,59 @@ namespace Roma.Pages
                 return new JsonResult(new { success = true, message = "Abonelik isteğiniz alındı. Onay için e-postanızı kontrol edin." });
             }
 
-            return RedirectToPage("/Index");
+            TempData["SubscribeAlert"] = "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz.";
+            return RedirectToPage("/Subscribe");
+        }
+
+        public async Task<IActionResult> OnPostUnsubscribeAsync()
+        {
+            var isAjax = HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            var normalizedEmail = NormalizeEmail(Email);
+
+            if (string.IsNullOrWhiteSpace(normalizedEmail) || !IsValidEmail(normalizedEmail))
+            {
+                if (isAjax)
+                {
+                    return BadRequest(new { success = false, message = "Geçerli bir e-posta adresi giriniz." });
+                }
+
+                ModelState.AddModelError("", "Geçerli bir e-posta adresi giriniz.");
+                return Page();
+            }
+
+            var existing = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email.ToLower() == normalizedEmail.ToLower());
+            if (existing != null)
+            {
+                existing.ConsentGiven = false;
+                existing.IsConfirmed = false;
+                await _db.SaveChangesAsync();
+            }
+
+            if (isAjax)
+            {
+                return new JsonResult(new { success = true, message = "Abonelik kaydınız silindi." });
+            }
+
+            TempData["SubscribeAlert"] = "Aboneliğiniz iptal edildi.";
+            return RedirectToPage("/Subscribe");
+        }
+
+        private static string NormalizeEmail(string? email)
+        {
+            return (email ?? string.Empty).Trim();
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new MailAddress(email);
+                return addr.Address.Equals(email, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private async Task<bool> TryQueueConfirmationEmailAsync(string email, string token)

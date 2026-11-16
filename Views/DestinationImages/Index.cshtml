@@ -37,6 +37,10 @@
                 <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.Id">Details</a>
                 <a class="btn btn-sm btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                 <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-primary" />
+                        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                    </div>
             </td>
         </tr>
     }

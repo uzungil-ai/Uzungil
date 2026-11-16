@@ -33,6 +33,23 @@ namespace Roma.Services
                     try
                     {
                         await _emailSender.SendEmailAsync(msg.To, msg.Subject, msg.Body);
+                        try
+                        {
+                            using var scope = _scopeFactory.CreateScope();
+                            var db = scope.ServiceProvider.GetRequiredService<Roma.Data.ApplicationDbContext>();
+                            db.SentEmails!.Add(new Roma.Models.SentEmail
+                            {
+                                To = msg.To,
+                                Subject = msg.Subject,
+                                Body = msg.Body,
+                                SentAt = System.DateTime.UtcNow
+                            });
+                            db.SaveChanges();
+                        }
+                        catch (System.Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Email sent but could not persist SentEmails record for {Email}", msg.To);
+                        }
                         success = true;
                     }
                     catch (System.Exception ex)

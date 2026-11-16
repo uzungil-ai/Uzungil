@@ -6,6 +6,27 @@
 
 <h1>Upload Photos for @Model.Name</h1>
 
+<style>
+    .upload-image-card-sm {
+        width: 240px;
+    }
+
+    .upload-image-card-lg {
+        width: 300px;
+    }
+
+    .upload-image-preview-sm {
+        max-width: 100%;
+        max-height: 140px;
+        object-fit: cover;
+    }
+
+    .upload-image-preview-lg {
+        max-height: 160px;
+        object-fit: cover;
+    }
+</style>
+
 @if(TempData["UploadMessage"] != null)
 {
     <div class="alert alert-info">@TempData["UploadMessage"]</div>
@@ -22,8 +43,8 @@
                 <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%">0%</div>
             </div>
         </div>
-        <button id="uploadBtn" type="submit" class="btn btn-primary">Upload</button>
-        <a asp-area="Admin" asp-controller="DestinationImages" asp-action="Index" class="btn btn-secondary ms-2">Manage Images</a>
+        <button id="uploadBtn" type="submit" class="btn btn-dark">Upload</button>
+        <a asp-area="Admin" asp-controller="DestinationImages" asp-action="Index" class="btn btn-outline-dark ms-2">Manage Images</a>
     </form>
 </div>
 
@@ -116,20 +137,15 @@
                 items.forEach(function(it){
                     try {
                         var wrap = document.createElement('div');
-                        wrap.className = 'p-2 text-center';
-                        wrap.style.width = '200px';
+                        wrap.className = 'card shadow-sm p-2 upload-image-card-sm';
 
                         var img = document.createElement('img');
                         img.src = it.url;
                         img.alt = it.alt || '';
-                        img.style.maxWidth = '180px';
-                        img.style.maxHeight = '120px';
-                        img.style.objectFit = 'cover';
-                        img.style.border = '1px solid #ddd';
-                        img.style.padding = '3px';
+                        img.className = 'card-img-top upload-image-preview-sm';
 
                         var caption = document.createElement('div');
-                        caption.className = 'small text-muted mt-1';
+                        caption.className = 'card-body small text-muted p-2';
                         caption.textContent = it.alt || '';
 
                         wrap.appendChild(img);
@@ -145,12 +161,14 @@
 @if (Model.Images != null && Model.Images.Count > 0)
 {
     <h4>Existing Images</h4>
-            <div id="existingImages" class="d-flex flex-wrap">
+            <div id="existingImages" class="d-flex flex-wrap gap-3">
         @foreach(var img in Model.Images.OrderBy(i => i.Order))
         {
-            <div class="p-2 text-center" style="width:300px;">
-                <img src="@img.Url" alt="@img.AltText" style="max-width:280px;max-height:120px;object-fit:cover;border:1px solid #ddd;padding:3px;" />
-                <div class="small text-muted mt-1">@img.AltText</div>
+            <div class="card shadow-sm upload-image-card-lg">
+                <img src="@img.Url" alt="@img.AltText" class="card-img-top upload-image-preview-lg" />
+                <div class="card-body p-2">
+                    <div class="small text-muted">@img.AltText</div>
+                </div>
             </div>
         }
     </div>

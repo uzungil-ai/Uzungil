@@ -133,6 +133,37 @@
     }
 
     /// <summary>
+    /// Başarıyla gönderilen e-postaların kaydı.
+    /// </summary>
+    public class SentEmail
+    {
+        /// <summary>
+        /// Gönderilen e-posta kaydının benzersiz kimliğidir.
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Alıcı e-posta adresidir.
+        /// </summary>
+        public required string To { get; set; }
+
+        /// <summary>
+        /// E-posta konu başlığıdır.
+        /// </summary>
+        public required string Subject { get; set; }
+
+        /// <summary>
+        /// E-posta içeriğidir.
+        /// </summary>
+        public string? Body { get; set; }
+
+        /// <summary>
+        /// E-postanın gönderildiği tarih ve saattir (UTC).
+        /// </summary>
+        public DateTime SentAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Kullanıcı geri bildirimini temsil eder.
     /// </summary>
     public class Feedback
@@ -622,7 +653,7 @@
         public int Rating { get; set; }
 
         /// Yorumun oluşturulma zamanı.
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// Yorumun yönetici tarafından onaylanma durumu.
         public bool IsApproved { get; set; } = false;

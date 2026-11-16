@@ -4,36 +4,48 @@
     ViewData["Title"] = "Edit Destination Image (Admin)";
 }
 
-<h1>Edit Destination Image</h1>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h1 class="h5 mb-0">Edit Destination Image</h1>
+            </div>
+            <div class="card-body">
+                <form asp-area="Admin" asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<form asp-area="Admin" asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="Url"></label>
+                        <input asp-for="Url" class="form-control" />
+                        <span asp-validation-for="Url" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="Url"></label>
-        <input asp-for="Url" class="form-control" />
-        <span asp-validation-for="Url" class="text-danger"></span>
+                    <div class="mb-3">
+                        <label asp-for="DestinationId">Destination</label>
+                        <select asp-for="DestinationId" class="form-select" asp-items="ViewBag.DestinationId"></select>
+                        <span asp-validation-for="DestinationId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Order"></label>
+                        <input asp-for="Order" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AltText"></label>
+                        <input asp-for="AltText" class="form-control" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-dark">Save</button>
+                        <a asp-area="Admin" asp-action="Index" class="btn btn-outline-dark">Back to List</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <div class="form-group">
-        <label asp-for="DestinationId">Destination</label>
-        <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
-        <span asp-validation-for="DestinationId" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Order"></label>
-        <input asp-for="Order" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="AltText"></label>
-        <input asp-for="AltText" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a asp-area="Admin" asp-action="Index" class="btn btn-secondary">Back to List</a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

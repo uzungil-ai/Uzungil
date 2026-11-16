@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,7 @@ namespace Roma.Controllers
         }
 
         // GET: Flavors/Create
+        [Authorize]
         public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Roma.Models.Destination>()));
@@ -50,6 +52,7 @@ namespace Roma.Controllers
         // POST: Flavors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Name,DestinationId")] Flavor flavor)
         {
             ModelState.Remove("Destination");
@@ -71,6 +74,7 @@ namespace Roma.Controllers
         }
 
         // GET: Flavors/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -86,6 +90,7 @@ namespace Roma.Controllers
         // POST: Flavors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DestinationId")] Flavor flavor)
         {
             if (id != flavor.Id) return NotFound();
@@ -113,6 +118,7 @@ namespace Roma.Controllers
         }
 
         // GET: Flavors/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -128,6 +134,7 @@ namespace Roma.Controllers
         // POST: Flavors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var flavor = await _context.Flavors!.FindAsync(id);

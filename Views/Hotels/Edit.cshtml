@@ -4,52 +4,114 @@
     ViewData["Title"] = "Edit Hotel";
 }
 
-<h1>Edit Hotel</h1>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h1 class="h5 mb-0">Edit Hotel</h1>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" />
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="Name"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+                    <div class="mb-3">
+                        <label asp-for="DestinationId">Destination</label>
+                        <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
+                        <span asp-validation-for="DestinationId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address"></label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Phone"></label>
+                        <input asp-for="Phone" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Website"></label>
+                        <input asp-for="Website" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PriceFrom">Başlangıç Fiyatı</label>
+                        <div class="input-group">
+                            <input asp-for="PriceFrom" class="form-control" />
+                            <span id="priceFromCurrencySuffix" class="input-group-text">TL</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="priceFromCurrencySelect" class="form-label">Para Türü</label>
+                            <select id="priceFromCurrencySelect" class="form-select">
+                                <option value="TL" selected>TL</option>
+                                <option value="USD">Dolar</option>
+                                <option value="SAR">Riyal</option>
+                                <option value="EUR">Euro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PriceTo">Üst Fiyat</label>
+                        <div class="input-group">
+                            <input asp-for="PriceTo" class="form-control" />
+                            <span id="priceToCurrencySuffix" class="input-group-text">TL</span>
+                        </div>
+                        <div class="mt-2">
+                            <label for="priceToCurrencySelect" class="form-label">Para Türü</label>
+                            <select id="priceToCurrencySelect" class="form-select">
+                                <option value="TL" selected>TL</option>
+                                <option value="USD">Dolar</option>
+                                <option value="SAR">Riyal</option>
+                                <option value="EUR">Euro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-dark">Save</button>
+                        <a asp-action="Index" class="btn btn-outline-dark">Back to List</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <div class="form-group">
-        <label asp-for="DestinationId">Destination</label>
-        <select asp-for="DestinationId" class="form-control" asp-items="ViewBag.DestinationId"></select>
-        <span asp-validation-for="DestinationId" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Address"></label>
-        <input asp-for="Address" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Phone"></label>
-        <input asp-for="Phone" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Website"></label>
-        <input asp-for="Website" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="PriceFrom"></label>
-        <input asp-for="PriceFrom" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label asp-for="PriceTo"></label>
-        <input asp-for="PriceTo" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const priceFromCurrencySelect = document.getElementById('priceFromCurrencySelect');
+            const priceFromCurrencySuffix = document.getElementById('priceFromCurrencySuffix');
+            const priceToCurrencySelect = document.getElementById('priceToCurrencySelect');
+            const priceToCurrencySuffix = document.getElementById('priceToCurrencySuffix');
+
+            function updateSuffix(selectEl, suffixEl) {
+                if (!selectEl || !suffixEl) return;
+                suffixEl.textContent = selectEl.value;
+            }
+
+            if (priceFromCurrencySelect && priceFromCurrencySuffix) {
+                priceFromCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(priceFromCurrencySelect, priceFromCurrencySuffix);
+                });
+                updateSuffix(priceFromCurrencySelect, priceFromCurrencySuffix);
+            }
+
+            if (priceToCurrencySelect && priceToCurrencySuffix) {
+                priceToCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(priceToCurrencySelect, priceToCurrencySuffix);
+                });
+                updateSuffix(priceToCurrencySelect, priceToCurrencySuffix);
+            }
+        })();
+    </script>
 }

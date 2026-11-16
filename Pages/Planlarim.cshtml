@@ -1,0 +1,53 @@
+@page
+@model Roma.Pages.PlanlarimModel
+@{
+    ViewData["Title"] = "Seyahat Planı";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">Seyahat Planı</h1>
+        <a class="btn btn-primary" asp-page="/SeyahatPlanla">Create / Plan Oluştur</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+    {
+        <div class="alert alert-success">@Model.InfoMessage</div>
+    }
+
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="alert alert-warning">Planlarınızı görmek için giriş yapmalısınız.</div>
+    }
+    else if (!Model.Items.Any())
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>Henüz kayıtlı plan bulunmuyor.</span>
+            <a class="btn btn-sm btn-primary" asp-page="/SeyahatPlanla">Plan Oluştur</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="fw-semibold">@item.Title</div>
+                            <div class="small text-muted">@item.StartDate.ToString("dd.MM.yyyy") - @item.EndDate.ToString("dd.MM.yyyy")</div>
+                            <div class="small mt-1"><strong>Destinasyonlar:</strong> @item.DestinationsText</div>
+                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                                <a class="btn btn-sm btn-outline-primary" asp-page="/PlanDetay" asp-route-id="@item.Id">Detay</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-page="/PlanDuzenle" asp-route-id="@item.Id">Düzenle</a>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

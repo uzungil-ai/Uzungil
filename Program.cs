@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Roma.Data;
 using System.Threading.Channels;
 using Roma.Models;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Identity;
@@ -19,11 +20,32 @@ TaskScheduler.UnobservedTaskException += (_, e) =>
 };
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5188);
+});
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+var webServerConnection = builder.Configuration.GetConnectionString("WebServerConnection");
+var connectionString = builder.Environment.IsDevelopment()
+    ? defaultConnection
+    : (string.IsNullOrWhiteSpace(webServerConnection) ? defaultConnection : webServerConnection);
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string not found. Configure 'DefaultConnection' or 'WebServerConnection'.");
+}
+
+builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+        sqlOptions.CommandTimeout(60);
+    }));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
@@ -56,6 +78,7 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(opts => opts.Level 
 builder.Services.Configure<GzipCompressionProviderOptions>(opts => opts.Level = CompressionLevel.Fastest);
 // Image processing service
 builder.Services.AddSingleton<Roma.Services.ImageProcessingService>();
+builder.Services.AddSingleton<Roma.Services.ImageBatchOptimizerService>();
 // AI services (demo implementations)
 builder.Services.AddSingleton<Roma.Services.IAiService, Roma.Services.DemoAiService>();
 builder.Services.AddSingleton<Roma.Services.IVisionService, Roma.Services.DemoVisionService>();
@@ -73,23 +96,60 @@ builder.Services.AddSingleton<Roma.Services.IEmailQueue, Roma.Services.EmailQueu
 builder.Services.AddSingleton<Roma.Services.IEmailSenderService, Roma.Services.EmailSenderService>();
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Roma.Services.IdentityEmailSender>();
 builder.Services.AddHostedService<Roma.Services.BackgroundEmailSender>();
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<User>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+    options.Lockout.AllowedForNewUsers = true;
+})
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    builder.Services
+        .AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
+}
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+});
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options =>
+{
+    // Legacy /Account/LoginWith2fa URL'ine düşen yönlendirmeler için alias route.
+    options.Conventions.AddAreaPageRoute("Identity", "/Account/LoginWith2fa", "/Account/LoginWith2fa");
+});
 // Destination image saving service
 builder.Services.AddScoped<Roma.Services.IDestinationImageService, Roma.Services.DestinationImageService>();
 
 var app = builder.Build();
 
 app.Logger.LogInformation("Startup Environment: {EnvironmentName}", app.Environment.EnvironmentName);
+
+var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+    ?? Environment.GetEnvironmentVariable("OpenAI__ApiKey")
+    ?? app.Configuration["OpenAI:ApiKey"];
+
+if (string.IsNullOrWhiteSpace(openAiKey))
+{
+    app.Logger.LogWarning("OpenAI API key is missing. Set OPENAI_API_KEY or OpenAI__ApiKey in production environment.");
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -104,6 +164,21 @@ else
 }
 
 app.UseHttpsRedirection();
+
+// Türkçe klavye ile yanlışlıkla "ı/İ" içeren URL yazımlarını normalize et.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value;
+    if (!string.IsNullOrEmpty(path) && (path.Contains('ı') || path.Contains('İ')))
+    {
+        var normalizedPath = path.Replace('ı', 'i').Replace('İ', 'I');
+        context.Response.Redirect($"{normalizedPath}{context.Request.QueryString}", permanent: false);
+        return;
+    }
+
+    await next();
+});
+
 app.UseRouting();
 
 // Use response compression early
@@ -115,10 +190,15 @@ app.UseStaticFiles(new StaticFileOptions
     OnPrepareResponse = ctx =>
     {
         var path = ctx.Context.Request.Path.Value ?? string.Empty;
-        // Cache static assets for 30 days
-        if (path.StartsWith("/lib/") || path.StartsWith("/css/") || path.StartsWith("/js/") || path.StartsWith("/uploads/"))
+        // Cache static framework assets for 30 days
+        if (path.StartsWith("/lib/") || path.StartsWith("/css/") || path.StartsWith("/js/"))
         {
             ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=2592000"; // 30 days
+        }
+        // User uploaded files use GUID file names, so long immutable cache is safe.
+        else if (path.StartsWith("/uploads/"))
+        {
+            ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=31536000,immutable"; // 1 year
         }
         else
         {
@@ -149,6 +229,19 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
+app.MapPost("/api/chat", async (HttpContext context, Roma.Services.IOpenAiQaService qaService, ILogger<Program> logger, CancellationToken cancellationToken) =>
+{
+    var request = await context.Request.ReadFromJsonAsync<ApiChatRequest>(cancellationToken);
+    if (request is null || string.IsNullOrWhiteSpace(request.Message))
+    {
+        return Results.BadRequest(new { reply = "Mesaj boş olamaz." });
+    }
+
+    logger.LogInformation("/api/chat çağrısı alındı. Mesaj uzunluğu: {Length}", request.Message.Length);
+    var reply = await qaService.AskAsync(request.Message.Trim(), cancellationToken);
+    return Results.Ok(new { reply = string.IsNullOrWhiteSpace(reply) ? "Yanıt üretilemedi." : reply });
+});
+
 // Seed roles and optional admin user from configuration (App:AdminEmail, App:AdminPassword)
     using (var scope = app.Services.CreateScope())
     {
@@ -160,6 +253,9 @@ app.MapRazorPages()
             var userManager = services.GetRequiredService<UserManager<User>>();
             var configuration = services.GetRequiredService<IConfiguration>();
             var dbContext = services.GetRequiredService<ApplicationDbContext>();
+            var logger = services.GetService<ILogger<Program>>();
+
+            dbContext.Database.Migrate();
 
             var adminRole = "Admin";
             var editorRole = "Editor";
@@ -184,12 +280,45 @@ app.MapRazorPages()
                 {
                     adminUser = new User { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
                     var createResult = userManager.CreateAsync(adminUser, adminPassword).GetAwaiter().GetResult();
-                    // ignore failures here; they will be logged
+                    if (!createResult.Succeeded)
+                    {
+                        logger?.LogError("Admin user oluşturulamadı ({Email}): {Errors}", adminEmail, string.Join(" | ", createResult.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    // If configured admin password has changed, reset it to match configuration.
+                    var isCurrentPasswordValid = userManager.CheckPasswordAsync(adminUser, adminPassword).GetAwaiter().GetResult();
+                    if (!isCurrentPasswordValid)
+                    {
+                        var resetToken = userManager.GeneratePasswordResetTokenAsync(adminUser).GetAwaiter().GetResult();
+                        var resetResult = userManager.ResetPasswordAsync(adminUser, resetToken, adminPassword).GetAwaiter().GetResult();
+                        if (!resetResult.Succeeded)
+                        {
+                            logger?.LogError("Admin şifresi güncellenemedi ({Email}): {Errors}", adminEmail, string.Join(" | ", resetResult.Errors.Select(e => e.Description)));
+                        }
+                    }
+                }
+
+                if (adminUser != null)
+                {
+                    adminUser.EmailConfirmed = true;
+                    adminUser.LockoutEnd = null;
+                    adminUser.AccessFailedCount = 0;
+                    var updateResult = userManager.UpdateAsync(adminUser).GetAwaiter().GetResult();
+                    if (!updateResult.Succeeded)
+                    {
+                        logger?.LogError("Admin kullanıcı güncellemesi başarısız ({Email}): {Errors}", adminEmail, string.Join(" | ", updateResult.Errors.Select(e => e.Description)));
+                    }
                 }
 
                 if (adminUser != null && roleManager != null && !userManager.IsInRoleAsync(adminUser, adminRole).GetAwaiter().GetResult())
                 {
-                    userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                    var addRoleResult = userManager.AddToRoleAsync(adminUser, adminRole).GetAwaiter().GetResult();
+                    if (!addRoleResult.Succeeded)
+                    {
+                        logger?.LogError("Admin rol ataması başarısız ({Email}): {Errors}", adminEmail, string.Join(" | ", addRoleResult.Errors.Select(e => e.Description)));
+                    }
                 }
             }
 
@@ -211,8 +340,8 @@ app.MapRazorPages()
                 }
             }
 
-            // Seed demo chat replies (add only missing inputs)
-            var samples = new (string Input, string Reply)[]
+        // Seed demo chat replies (add only missing inputs)
+        var samples = new (string Input, string Reply)[]
             {
                 // Selamlama
                 ("merhaba", "Merhaba! Roma gezi planın için yardımcı olabilirim."),
@@ -432,7 +561,7 @@ app.MapRazorPages()
                 ("brüksel için konaklama önerisi", "Merkez gezi için Grand Place çevresi, iş ve ulaşım için Avrupa bölgesi, daha sakin konaklama için Ixelles değerlendirilebilir."),
 
                 // Suudi Arabistan şehir önerileri
-                ("mekke için gezilecek yerler", "Mekke'de ziyaret odaklı başlıca noktalar: Mescid-i Haram çevresi, Cebel-i Nur ve Hira Mağarası hattıdır."),
+                ("mekke için gezilecek yerler", "Mekke'de ziyaret odaklı başlıca noktalar: Mescid-i Haram çevresi, Cebel-i Nur ve Hira Mağarası hattır."),
                 ("mekkede ne yenir", "Mekke'de Arap mutfağından kabsa, mutabbaq, hurma çeşitleri ve yöresel çorba yemekleri öne çıkar."),
                 ("mekke akşam ne yapılır", "Akşam saatlerinde ibadet programı, çevre çarşılarda kısa alışveriş ve dinlenme odaklı plan tercih edilebilir."),
                 ("mekke için konaklama önerisi", "Mescid-i Haram'a yürüme mesafesindeki oteller ibadet odaklı seyahatlerde zaman avantajı sağlar."),
@@ -653,3 +782,5 @@ app.MapRazorPages()
     }
 
 app.Run();
+
+internal record ApiChatRequest(string Message);

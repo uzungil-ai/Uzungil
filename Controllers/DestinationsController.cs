@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Roma.Data;
@@ -38,6 +39,8 @@ namespace Roma.Controllers
             var destination = await _context.Destinations!
                 .Include(d => d.Images)
                 .Include(d => d.Attractions)
+                    .ThenInclude(a => a.Reviews)
+                        .ThenInclude(r => r.User)
                 .Include(d => d.Hotels)
                 .Include(d => d.Meals)
                 .Include(d => d.Flavors)
@@ -49,6 +52,7 @@ namespace Roma.Controllers
         }
 
         // GET: Destinations/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -57,6 +61,7 @@ namespace Roma.Controllers
         // POST: Destinations/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Name,Country,Description,InstagramUrl,FacebookUrl,Latitude,Longitude,EntranceFee")] Destination destination)
         {
             if (ModelState.IsValid)
@@ -69,6 +74,7 @@ namespace Roma.Controllers
         }
 
         // GET: Destinations/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -81,6 +87,7 @@ namespace Roma.Controllers
         // POST: Destinations/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Country,Description,InstagramUrl,FacebookUrl,Latitude,Longitude,EntranceFee")] Destination destination)
         {
             if (id != destination.Id) return NotFound();
@@ -103,6 +110,7 @@ namespace Roma.Controllers
         }
 
         // GET: Destinations/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -117,6 +125,7 @@ namespace Roma.Controllers
         // POST: Destinations/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var destination = await _context.Destinations!.FindAsync(id);

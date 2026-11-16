@@ -53,13 +53,37 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="PriceFrom"></label>
-        <input asp-for="PriceFrom" class="form-control" />
+        <label asp-for="PriceFrom">Başlangıç Fiyatı</label>
+        <div class="input-group">
+            <input asp-for="PriceFrom" class="form-control" />
+            <span id="priceFromCurrencySuffix" class="input-group-text">TL</span>
+        </div>
+        <div class="mt-2">
+            <label for="priceFromCurrencySelect" class="form-label">Para Türü</label>
+            <select id="priceFromCurrencySelect" class="form-select">
+                <option value="TL" selected>TL</option>
+                <option value="USD">Dolar</option>
+                <option value="SAR">Riyal</option>
+                <option value="EUR">Euro</option>
+            </select>
+        </div>
     </div>
 
     <div class="form-group">
-        <label asp-for="PriceTo"></label>
-        <input asp-for="PriceTo" class="form-control" />
+        <label asp-for="PriceTo">Üst Fiyat</label>
+        <div class="input-group">
+            <input asp-for="PriceTo" class="form-control" />
+            <span id="priceToCurrencySuffix" class="input-group-text">TL</span>
+        </div>
+        <div class="mt-2">
+            <label for="priceToCurrencySelect" class="form-label">Para Türü</label>
+            <select id="priceToCurrencySelect" class="form-select">
+                <option value="TL" selected>TL</option>
+                <option value="USD">Dolar</option>
+                <option value="SAR">Riyal</option>
+                <option value="EUR">Euro</option>
+            </select>
+        </div>
     </div>
 
     <button type="submit" class="btn btn-primary">Create</button>
@@ -68,4 +92,31 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const priceFromCurrencySelect = document.getElementById('priceFromCurrencySelect');
+            const priceFromCurrencySuffix = document.getElementById('priceFromCurrencySuffix');
+            const priceToCurrencySelect = document.getElementById('priceToCurrencySelect');
+            const priceToCurrencySuffix = document.getElementById('priceToCurrencySuffix');
+
+            function updateSuffix(selectEl, suffixEl) {
+                if (!selectEl || !suffixEl) return;
+                suffixEl.textContent = selectEl.value;
+            }
+
+            if (priceFromCurrencySelect && priceFromCurrencySuffix) {
+                priceFromCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(priceFromCurrencySelect, priceFromCurrencySuffix);
+                });
+                updateSuffix(priceFromCurrencySelect, priceFromCurrencySuffix);
+            }
+
+            if (priceToCurrencySelect && priceToCurrencySuffix) {
+                priceToCurrencySelect.addEventListener('change', function () {
+                    updateSuffix(priceToCurrencySelect, priceToCurrencySuffix);
+                });
+                updateSuffix(priceToCurrencySelect, priceToCurrencySuffix);
+            }
+        })();
+    </script>
 }

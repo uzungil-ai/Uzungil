@@ -16,6 +16,7 @@ namespace Roma.Pages
         }
 
         public bool Success { get; set; }
+        public DateTime? RequestedAt { get; set; }
 
         public async Task OnGetAsync(string email, string token)
         {
@@ -25,6 +26,8 @@ namespace Roma.Pages
             var sub = await _db.Subscribers!.FirstOrDefaultAsync(s => s.Email == email && s.ConfirmationToken == token);
             if (sub != null && !sub.IsConfirmed)
             {
+                RequestedAt = sub.CreatedAt;
+
                 if (sub.ConfirmationExpiresAt != null && sub.ConfirmationExpiresAt < System.DateTime.UtcNow)
                 {
                     // token expired
@@ -42,6 +45,10 @@ namespace Roma.Pages
                 }
                 await _db.SaveChangesAsync();
                 Success = true;
+            }
+            else if (sub != null)
+            {
+                RequestedAt = sub.CreatedAt;
             }
         }
     }

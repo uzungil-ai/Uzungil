@@ -1,5 +1,32 @@
 @model Roma.ViewComponents.PendingReviewsPopupViewModel
 
+@functions {
+    private static string FormatTurkeyTime(DateTime dateTime)
+    {
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        }
+
+        if (dateTime.Kind == DateTimeKind.Utc)
+        {
+            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, tz).ToString("dd.MM.yyyy HH:mm");
+        }
+
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            return TimeZoneInfo.ConvertTime(dateTime, tz).ToString("dd.MM.yyyy HH:mm");
+        }
+
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc), tz).ToString("dd.MM.yyyy HH:mm");
+    }
+}
+
 <div class="modal fade" id="pendingReviewsModal" tabindex="-1" aria-labelledby="pendingReviewsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -28,7 +55,7 @@
                                     <td>@review.Attraction?.Name</td>
                                     <td>@review.Comment</td>
                                     <td>@review.Rating</td>
-                                    <td>@review.CreatedAt.ToString("g")</td>
+                                    <td>@FormatTurkeyTime(review.CreatedAt)</td>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-2">
                                             <form asp-controller="Reviews" asp-action="Approve" method="post" class="d-inline">

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ namespace Roma.Controllers
         }
 
         // GET: DestinationImages/Create
+        [Authorize]
         public async Task<IActionResult> Create(int? destinationId)
         {
             var destinations = await (_context.Destinations?.OrderBy(d => d.Name).ToListAsync() ?? Task.FromResult(new System.Collections.Generic.List<Destination>()));
@@ -51,6 +53,7 @@ namespace Roma.Controllers
         // POST: DestinationImages/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Url,DestinationId,Order,AltText")] DestinationImage destinationImage)
         {
             ModelState.Remove("Destination");
@@ -75,6 +78,7 @@ namespace Roma.Controllers
         }
 
         // GET: DestinationImages/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -89,6 +93,7 @@ namespace Roma.Controllers
         // POST: DestinationImages/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Url,DestinationId,Order,AltText")] DestinationImage destinationImage)
         {
             if (id != destinationImage.Id) return NotFound();
@@ -113,6 +118,7 @@ namespace Roma.Controllers
         }
 
         // GET: DestinationImages/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -128,6 +134,7 @@ namespace Roma.Controllers
         // POST: DestinationImages/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var destinationImage = await _context.DestinationImages!.FindAsync(id);
