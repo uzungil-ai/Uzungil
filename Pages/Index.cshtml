@@ -1,12 +1,12 @@
 @page
 @model Roma.Pages.IndexModel
 @{
-    ViewData["Title"] = "Fotografia ile - Keşfet";
+    ViewData["Title"] = "Fotografia ile Keşfet";
     var firstFeatured = Model.Featured.FirstOrDefault();
     var firstFeaturedImage = Model.GetSmallestImageUrl(firstFeatured?.Images.FirstOrDefault()?.Url);
     if (string.IsNullOrWhiteSpace(firstFeaturedImage))
     {
-        firstFeaturedImage = "/images/italya.jpg";
+        firstFeaturedImage = "/images/ekran.webp";
     }
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
     var categoryOptions = Model.CategoryOptions;
@@ -16,7 +16,7 @@
 }
 
 @section Head {
-    <link rel="preload" as="image" href="@firstFeaturedImage" fetchpriority="high" />
+    <link rel="preload" as="image" href="@Model.RandomSplashImage" fetchpriority="high" />
 
     <style>
         #homeSplash {
@@ -27,13 +27,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            height: 100svh;
+            min-height: 100dvh;
             opacity: 1;
             visibility: visible;
             transition: opacity .35s ease, visibility .35s ease;
+            cursor: pointer;
         }
 
-        html.home-splash-seen #homeSplash {
-            display: none !important;
+        #homeSplash picture {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         #homeSplash.is-hidden {
@@ -43,9 +50,11 @@
         }
 
         #homeSplash img {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            object-position: center;
+            display: block;
         }
 
         #homeSplash .home-splash-title {
@@ -99,6 +108,16 @@
             border-radius: 999px;
             white-space: nowrap;
             flex: 0 0 auto;
+            background: #fff;
+            border-color: #fff;
+            color: #111827;
+        }
+
+        #homeSplash .home-splash-search .btn:hover,
+        #homeSplash .home-splash-search .btn:focus {
+            background: #f8fafc;
+            border-color: #f8fafc;
+            color: #111827;
         }
 
         #homeSplash .home-splash-actions {
@@ -167,18 +186,10 @@
         }
 
         @@media (max-width: 768px) {
-            #homeSplash {
-                background: transparent;
-            }
-
             #homeSplash img {
-                width: auto;
-                height: auto;
-                max-width: none;
-                max-height: none;
-                object-fit: contain;
-                transform: scale(2);
-                transform-origin: center;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
             }
 
             #homeSplash .home-splash-subtitle {
@@ -213,19 +224,8 @@
     </style>
 }
 
-<script>
-    (function () {
-        try {
-            if (localStorage.getItem('homeSplashSeen') === '1') {
-                document.documentElement.classList.add('home-splash-seen');
-            }
-        } catch {
-        }
-    })();
-</script>
-
-<div id="homeSplash" aria-hidden="true">
-    <img src="@firstFeaturedImage" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
+<div id="homeSplash">
+    <img src="@Model.RandomSplashImage" alt="@firstFeaturedName" loading="eager" fetchpriority="high" decoding="async" />
     <form method="get" class="home-splash-search js-home-search-form" aria-label="Ana sayfa arama">
         <input name="search" value="@Model.Search" class="form-control form-control-sm" placeholder="Örn: Kapadokya veya Türkiye" />
         <button type="submit" class="btn fw-semibold btn-soft-yellow-action">Ara</button>
@@ -280,7 +280,7 @@
                     {
                         var d = Model.Featured[i];
                         var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
-                        if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
+                        if (string.IsNullOrWhiteSpace(img)) { img = "/images/ekran.webp"; }
                         var heroSrcSet = Model.BuildSrcSet(img);
                         var isFirstSlideImage = i == 0;
                         <a class="hero-featured-item" asp-page="/Destinations/PhotoDetails" asp-route-id="@d.Id" aria-label="@d.Name detaylarını görüntüle">
@@ -427,7 +427,7 @@
             {
                 var d = Model.Latest[i];
                 var img = Model.GetSmallestImageUrl(d.Images.FirstOrDefault()?.Url);
-                if (string.IsNullOrWhiteSpace(img)) { img = "/images/italya.jpg"; }
+                if (string.IsNullOrWhiteSpace(img)) { img = "/images/ekran.webp"; }
                 var srcset = Model.BuildSrcSet(img);
                 var isPriorityImage = i < 2;
                 var hiddenClass = i >= initialVisibleCount ? "d-none" : string.Empty;
@@ -691,48 +691,54 @@
                 }
             }
 
+            var splashSeenKey = 'homeSplashSeen';
             var hasSeenSplash = false;
             try {
-                hasSeenSplash = localStorage.getItem('homeSplashSeen') === '1';
+                hasSeenSplash = localStorage.getItem(splashSeenKey) === '1';
             } catch {
             }
 
+            var splash = document.getElementById('homeSplash');
+            if (!splash) {
+                return;
+            }
+
             if (hasSeenSplash) {
-                var existingSplash = document.getElementById('homeSplash');
-                if (existingSplash) {
-                    existingSplash.remove();
-                }
+                splash.remove();
                 return;
             }
 
             try {
-                localStorage.setItem('homeSplashSeen', '1');
+                localStorage.setItem(splashSeenKey, '1');
             } catch {
             }
 
             var splashHidden = false;
+            function onKeyboardPress(event) {
+                if (event.key) {
+                    hideSplash();
+                }
+            }
 
-            function hideSplashWithDelay() {
+            function onSplashClick(event) {
+                if (event.target.closest('a, button, input, form')) {
+                    return;
+                }
+                hideSplash();
+            }
+
+            function hideSplash() {
                 if (splashHidden) return;
 
-                var splash = document.getElementById('homeSplash');
-                if (!splash) return;
-
                 splashHidden = true;
-                setTimeout(function () {
-                    splash.classList.add('is-hidden');
-                    setTimeout(function () { splash.remove(); }, 450);
-                }, 6000);
+                splash.removeEventListener('click', onSplashClick);
+                document.removeEventListener('keydown', onKeyboardPress);
+                splash.classList.add('is-hidden');
+                setTimeout(function () { splash.remove(); }, 450);
             }
 
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                hideSplashWithDelay();
-            } else {
-                document.addEventListener('DOMContentLoaded', hideSplashWithDelay, { once: true });
-                window.addEventListener('load', hideSplashWithDelay, { once: true });
-            }
-
-            setTimeout(hideSplashWithDelay, 6000);
+            splash.addEventListener('click', onSplashClick);
+            document.addEventListener('keydown', onKeyboardPress);
 
         })();
     </script>

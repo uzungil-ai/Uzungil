@@ -82,6 +82,44 @@
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
+
+    <div class="modal fade" id="kvkkModal" tabindex="-1" aria-labelledby="kvkkModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content subscribe-modal-card">
+                <div class="modal-header">
+                    <h2 class="modal-title h5 mb-0 subscribe-title-accent" id="kvkkModalLabel">Gizlilik Politikası</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body small">
+                    <p class="mb-2"><strong>Son güncelleme:</strong> 18.11.2026</p>
+                    <ol class="mb-3 ps-3">
+                        <li class="mb-2"><strong>Toplanan Veriler</strong><br />Fotografia üzerinde yalnızca abonelik işlemi için e-posta adresi alınır.</li>
+                        <li class="mb-2"><strong>Verilerin Kullanım Amacı</strong><br />Alınan e-posta adresi sadece bülten/abonelik kapsamında bilgilendirme iletileri göndermek amacıyla kullanılır. Bunun dışında farklı bir amaçla kullanılmaz.</li>
+                        <li class="mb-2"><strong>Çerezler (Cookies)</strong><br />Gizlilik politikası kapsamında kişisel veri olarak yalnızca abonelik e-posta adresi işlenir.</li>
+                        <li class="mb-2"><strong>Veri Paylaşımı</strong><br />E-posta adresiniz üçüncü taraflara satılmaz ve abonelik hizmeti dışında kullanılmaz.</li>
+                        <li class="mb-2"><strong>Veri Saklama ve Güvenlik</strong><br />E-posta adresi, abonelik devam ettiği sürece saklanır. Abonelikten çıkış talebinizde makul süre içinde silinir.</li>
+                        <li class="mb-2"><strong>Haklarınız</strong><br />İlgili mevzuat kapsamında; verilerinize erişme, düzeltme, silme, işleme itiraz etme ve bilgilendirilme haklarına sahipsiniz. Talepleriniz için bizimle iletişime geçebilirsiniz.</li>
+                        <li><strong>İletişim</strong><br />Gizlilik ile ilgili talepleriniz için: <a href="mailto:info@fotografia.com.tr" class="link-light">info@fotografia.com.tr</a></li>
+                    </ol>
+                    <div class="mt-3">
+                        <p class="mb-2 fw-semibold">Gizlilik Politikası Şartları</p>
+                        <ul class="mb-0 ps-3">
+                            <li>Abonelik için yalnızca e-posta adresi alınır.</li>
+                            <li>E-posta adresi sadece bülten/abonelik bilgilendirmeleri için kullanılır.</li>
+                            <li>E-posta adresi üçüncü taraflara satılmaz, abonelik hizmeti dışında kullanılmaz.</li>
+                            <li>E-posta adresi abonelik sürdüğü sürece saklanır; çıkış talebinde makul sürede silinir.</li>
+                            <li>Mevzuat kapsamında erişim, düzeltme, silme, itiraz ve bilgilendirilme hakları vardır.</li>
+                            <li>Gizlilik talepleri için iletişim: info@fotografia.com.tr.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="button" id="kvkkApproveBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Okudum, Abone Ol</button>
+                </div>
+            </div>
+        </div>
+    </div>
             </div>
         </nav>
     </header>
@@ -173,8 +211,15 @@
             var consent = document.getElementById('subConsent');
             var msg = document.getElementById('subMessage');
             var form = document.getElementById('subscribeForm');
+            var kvkkModalEl = document.getElementById('kvkkModal');
+            var kvkkApproveBtn = document.getElementById('kvkkApproveBtn');
+            var kvkkModal = null;
 
-            if (!btn || !deleteBtn || !email || !consent || !msg || !form) return;
+            if (!btn || !deleteBtn || !email || !consent || !msg || !form || !kvkkModalEl || !kvkkApproveBtn) return;
+
+            if (window.bootstrap && window.bootstrap.Modal) {
+                kvkkModal = new window.bootstrap.Modal(kvkkModalEl);
+            }
 
             function setMessage(text, type) {
                 msg.textContent = text || '';
@@ -261,6 +306,25 @@
             }
 
             btn.addEventListener('click', function () {
+                setMessage('', 'info');
+                if (!email.value) { setMessage('E-posta giriniz.', 'error'); return; }
+                if (!consent.checked) { setMessage('Lütfen rıza veriniz.', 'error'); return; }
+
+                if (kvkkModal) {
+                    kvkkModal.show();
+                    return;
+                }
+
+                var confirmed = window.confirm('Gizlilik Politikası Şartları\n• Abonelik için yalnızca e-posta adresi alınır.\n• E-posta adresi sadece bülten/abonelik bilgilendirmeleri için kullanılır.\n• E-posta adresi üçüncü taraflara satılmaz, abonelik hizmeti dışında kullanılmaz.\n• E-posta adresi abonelik sürdüğü sürece saklanır; çıkış talebinde makul sürede silinir.\n• Mevzuat kapsamında erişim, düzeltme, silme, itiraz ve bilgilendirilme hakları vardır.\n• Gizlilik talepleri için iletişim: info@fotografia.com.tr.');
+                if (confirmed) {
+                    submitSubscription();
+                }
+            });
+
+            kvkkApproveBtn.addEventListener('click', function () {
+                if (kvkkModal) {
+                    kvkkModal.hide();
+                }
                 submitSubscription();
             });
 

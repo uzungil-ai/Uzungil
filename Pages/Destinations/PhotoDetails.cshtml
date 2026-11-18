@@ -411,12 +411,18 @@
             ? Model.Destination.FacebookUrl
             : $"https://{Model.Destination.FacebookUrl}");
     var currentPhotoDetailsUrl = $"/Destinations/PhotoDetails/{Model.Destination.Id}";
-    var destinationApprovedReviews = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
+    var destinationApprovedReviewItems = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
         .SelectMany(a => (a.Reviews ?? new List<Roma.Models.Review>())
-            .Where(r => r.IsApproved && !r.IsRejected))
+            .Where(r => r.IsApproved && !r.IsRejected)
+            .Select(r => new
+            {
+                Title = string.IsNullOrWhiteSpace(a.Name) ? "Başlıksız" : a.Name,
+                Review = r
+            }))
+        .OrderByDescending(x => x.Review.CreatedAt)
         .ToList();
-    var destinationAverageRating = destinationApprovedReviews.Any()
-        ? destinationApprovedReviews.Average(x => x.Rating)
+    var destinationAverageRating = destinationApprovedReviewItems.Any()
+        ? destinationApprovedReviewItems.Average(x => x.Review.Rating)
         : 0;
 
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
@@ -655,7 +661,12 @@
                     id="togglePhotosByRatingBtn"
                     class="me-2 top-rating-badge top-rating-toggle"
                     aria-label="Fotoğrafları gizle ve başlıklara geç">@Html.RatingBadge(destinationAverageRating)</button>
-            <span class="btn btn-sm btn-comment-link">Yorumlar (@destinationApprovedReviews.Count)</span>
+            <a class="btn btn-sm btn-comment-link"
+               data-bs-toggle="collapse"
+               href="#destination-all-reviews"
+               role="button"
+               aria-expanded="false"
+               aria-controls="destination-all-reviews">Yorum listesi (@destinationApprovedReviewItems.Count)</a>
             @if (!string.IsNullOrWhiteSpace(instagramUrl))
             {
                 <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="social-text-link instagram-link" title="Instagram" aria-label="Instagram">
@@ -681,6 +692,34 @@
             {
                 <a class="btn btn-sm btn-primary" asp-page="/Destinations/ManagePhotos" asp-route-id="@Model.Destination.Id" title="Ekle">+</a>
             }
+        </div>
+    </div>
+
+    <div class="collapse mb-3" id="destination-all-reviews">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="mb-3 details-section-title">Başlıklar</h5>
+                @if (!destinationApprovedReviewItems.Any())
+                {
+                    <div class="small text-muted">Bu sayfada listelenecek onaylı yorum bulunmuyor.</div>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in destinationApprovedReviewItems)
+                        {
+                            <div class="list-group-item px-0">
+                                <div class="fw-semibold">@item.Title</div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small text-muted">@MaskEmail(item.Review.User?.Email)</span>
+                                    <span>@Html.RatingBadge(item.Review.Rating)</span>
+                                </div>
+                                <div class="small">@item.Review.Comment</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
     </div>
 
@@ -911,6 +950,10 @@
                             {
                                 <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@hotelAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
                             }
+                            else
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
                         </div>
                         <div class="collapse mt-2 px-3 pb-3" id="hotel-reviews-@item.Id">
                             @if (hotelApprovedReviews.Count == 0)
@@ -983,6 +1026,10 @@
                             {
                                 <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@mealAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
                             }
+                            else
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
                         </div>
                         <div class="collapse mt-2 px-3 pb-3" id="meal-reviews-@item.Id">
                             @if (mealApprovedReviews.Count == 0)
@@ -1054,6 +1101,10 @@
                             @if (flavorAttraction != null)
                             {
                                 <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@flavorAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
                             }
                         </div>
                         <div class="collapse mt-2 px-3 pb-3" id="flavor-reviews-@item.Id">
@@ -1130,6 +1181,10 @@
                             @if (parkingAttraction != null)
                             {
                                 <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-attractionId="@parkingAttraction.Id" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-sm btn-comment-link" asp-controller="Reviews" asp-action="Create" asp-route-returnUrl="@currentPhotoDetailsUrl">Yorum Ekle</a>
                             }
                         </div>
                         <div class="collapse mt-2 px-3 pb-3" id="parking-reviews-@item.Id">

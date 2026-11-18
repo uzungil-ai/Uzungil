@@ -2,6 +2,17 @@
     ViewData["Title"] = "Ekibimiz";
 }
 
+<style>
+    .team-profile-photo {
+        width: 400px;
+        height: 400px;
+        max-width: 100%;
+        object-fit: cover;
+        display: block;
+        margin: 0 auto;
+    }
+</style>
+
 <section class="about-page-section team-page-section">
     <div class="card shadow-sm border-0 mb-4 team-intro-card">
         <div class="card-body">
@@ -22,7 +33,7 @@
         </div>
         <div class="row g-0 align-items-center">
             <div class="col-12 col-md-6">
-                <img src="/images/G&R.webp" alt="Recep Uzungil profil fotoðrafý" class="team-profile-photo" loading="eager" fetchpriority="high" decoding="async" />
+                <img src="/ekip/G&R.webp" alt="Recep Uzungil profil fotoðrafý" class="team-profile-photo" loading="eager" fetchpriority="high" decoding="async" />
             </div>
             <div class="col-12 col-md-6">
                 <div class="card-body">
@@ -41,54 +52,53 @@
         </div>
     </article>
 
-    <div class="row row-cols-1 row-cols-md-2 g-3 team-role-grid">
-        <div class="col">
-            <article class="card shadow-sm border-0 team-role-card h-100">
-                <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
-                    <i class="bi bi-diagram-3" aria-hidden="true"></i>
-                    <h3 class="h6 mb-0">Veri Mimarisi Danýþmaný</h3>
+    <div class="col">
+        <article class="card shadow-sm border-0 team-role-card h-100">
+            <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text" aria-hidden="true"></i>
+                <h3 class="h6 mb-0">Ýçerik Danýþmaný</h3>
+            </div>
+            <div class="row g-0 align-items-center">
+                <div class="col-12 col-md-6">
+                    <img src="/ekip/ezgi.webp" alt="Ýçerik Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
                 </div>
-                <div class="row g-0 align-items-center">
-                    <div class="col-12 col-md-6">
-                        <img src="/images/sena.webp" alt="Veri Mimarisi Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="card-body">
-                            <p class="mb-3">Sena Ece Uzungil, veri modelleme, ölçeklenebilirlik ve içerik iliþkilerinin doðru kurgulanmasý için rehberlik saðlar.</p>
-                            <div class="d-flex flex-column align-items-start gap-2 team-link-stack">
-                                <a href="https://it.linkedin.com/in/sena-ece-uzungil" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                                    <i class="bi bi-linkedin me-1" aria-hidden="true"></i>LinkedIn
-                                </a>
-                            </div>
+                <div class="col-12 col-md-6">
+                    <div class="card-body">
+                        <p class="mb-3">Ezgi Uzungil, metin dilini, bilgi doðruluðunu ve ziyaretçiye deðer katan içerik yaklaþýmýný denetler.</p>
+                        <div class="d-flex flex-column align-items-start gap-2 team-link-stack">
+                            <a href="https://tr.linkedin.com/in/ezgi-uzungil-5a0224182" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-linkedin me-1" aria-hidden="true"></i>LinkedIn
+                            </a>
                         </div>
                     </div>
                 </div>
-            </article>
-        </div>
+            </div>
+        </article>
+    </div>
 
-        <div class="col">
-            <article class="card shadow-sm border-0 team-role-card h-100">
-                <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
-                    <i class="bi bi-palette" aria-hidden="true"></i>
-                    <h3 class="h6 mb-0">Görsel Tasarým Danýþmaný</h3>
+    <div class="col">
+        <article class="card shadow-sm border-0 team-role-card h-100">
+            <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+                <i class="bi bi-palette" aria-hidden="true"></i>
+                <h3 class="h6 mb-0">Görsel Tasarým Danýþmaný</h3>
+            </div>
+            <div class="row g-0 align-items-center">
+                <div class="col-12 col-md-6">
+                    <img src="/ekip/melike.webp" alt="Görsel Tasarým Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
                 </div>
-                <div class="row g-0 align-items-center">
-                    <div class="col-12 col-md-6">
-                        <img src="/images/sena.webp" alt="Görsel Tasarým Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="card-body">
-                            <p class="mb-3">Melike Korkut, sayfa düzeni, görsel uyum ve marka bütünlüðünü güçlendiren tasarým kararlarýný yönlendirir.</p>
-                            <div class="d-flex flex-column align-items-start gap-2 team-link-stack">
-                                <a href="https://www.linkedin.com/in/melike-korkut-6627b91b6?originalSubdomain=tr" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                                    <i class="bi bi-linkedin me-1" aria-hidden="true"></i>LinkedIn
-                                </a>
-                            </div>
+                <div class="col-12 col-md-6">
+                    <div class="card-body">
+                        <p class="mb-3">Melike Korkut, sayfa düzeni, görsel uyum ve marka bütünlüðünü güçlendiren tasarým kararlarýný yönlendirir.</p>
+                        <div class="d-flex flex-column align-items-start gap-2 team-link-stack">
+                            <a href="https://www.linkedin.com/in/melike-korkut-6627b91b6?originalSubdomain=tr" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-linkedin me-1" aria-hidden="true"></i>LinkedIn
+                            </a>
                         </div>
                     </div>
                 </div>
-            </article>
-        </div>
+            </div>
+        </article>
+    </div>
 
         <div class="col">
             <article class="card shadow-sm border-0 team-role-card h-100">
@@ -98,13 +108,13 @@
                 </div>
                 <div class="row g-0 align-items-center">
                     <div class="col-12 col-md-6">
-                        <img src="/images/ezgi.webp" alt="Ýçerik Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
+                        <img src="/ekip/sena.webp" alt="Ýçerik Danýþmaný fotoðrafý" class="team-profile-photo" loading="lazy" decoding="async" />
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="card-body">
-                            <p class="mb-3">Ezgi Uzungil, metin dilini, bilgi doðruluðunu ve ziyaretçiye deðer katan içerik yaklaþýmýný denetler.</p>
+                        <p class="mb-3">Sena Ece Uzungil, veri modelleme, ölçeklenebilirlik ve içerik iliþkilerinin doðru kurgulanmasý için rehberlik saðlar.</p>
                             <div class="d-flex flex-column align-items-start gap-2 team-link-stack">
-                                <a href="https://tr.linkedin.com/in/ezgi-uzungil-5a0224182" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                            <a href="https://it.linkedin.com/in/sena-ece-uzungil" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">
                                     <i class="bi bi-linkedin me-1" aria-hidden="true"></i>LinkedIn
                                 </a>
                             </div>
@@ -113,7 +123,6 @@
                 </div>
             </article>
         </div>
-    </div>
 
     <div class="card shadow-sm border-0 mt-4 team-contact-card">
         <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">

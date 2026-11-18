@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Roma.Data;
 using Roma.Models;
 using System.Text.RegularExpressions;
@@ -11,7 +12,9 @@ namespace Roma.Pages
     {
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly IMemoryCache _cache;
         private readonly Dictionary<string, string> _srcSetCache = new(StringComparer.OrdinalIgnoreCase);
+        private const string SplashImageCacheKey = "IndexModel.SplashImages";
         private static readonly string[] ManualCategoryOptions =
         {
             "Anıtlar",
@@ -47,10 +50,11 @@ namespace Roma.Pages
             "Kiralık Evler"
         };
 
-        public IndexModel(ApplicationDbContext db, IWebHostEnvironment env)
+        public IndexModel(ApplicationDbContext db, IWebHostEnvironment env, IMemoryCache cache)
         {
             _db = db;
             _env = env;
+            _cache = cache;
         }
 
         public List<Destination> Featured { get; set; } = new List<Destination>();
@@ -58,6 +62,7 @@ namespace Roma.Pages
         public List<string> CategoryOptions { get; set; } = new List<string>();
         public int TotalDestinationCount { get; set; }
         public int TotalPhotoCount { get; set; }
+        public string RandomSplashImage { get; private set; } = "/images/italya.jpg";
 
         [BindProperty(SupportsGet = true)]
         public string? Name { get; set; }
@@ -224,6 +229,43 @@ namespace Roma.Pages
                 .Where(id => destinationById.ContainsKey(id))
                 .Select(id => destinationById[id])
                 .ToList();
+
+            var fallbackSplashImage = GetSmallestImageUrl(Featured.FirstOrDefault()?.Images.FirstOrDefault()?.Url);
+            if (string.IsNullOrWhiteSpace(fallbackSplashImage))
+            {
+                fallbackSplashImage = "/images/italya.jpg";
+            }
+
+            var splashImages = GetSplashImagesFromAppFiles();
+            RandomSplashImage = splashImages.Count > 0
+                ? splashImages[Random.Shared.Next(splashImages.Count)]
+                : fallbackSplashImage;
+        }
+
+        private IReadOnlyList<string> GetSplashImagesFromAppFiles()
+        {
+            return _cache.GetOrCreate(SplashImageCacheKey, entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+
+                var splashFolder = Path.Combine(_env.WebRootPath, "images", "splash");
+                if (!Directory.Exists(splashFolder))
+                {
+                    return Array.Empty<string>();
+                }
+
+                var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ".jpg", ".jpeg", ".png", ".webp"
+                };
+
+                return Directory
+                    .EnumerateFiles(splashFolder, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(file => allowedExtensions.Contains(Path.GetExtension(file)))
+                    .Select(file => $"/images/splash/{Path.GetFileName(file)}")
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }) ?? Array.Empty<string>();
         }
 
         public string BuildSrcSet(string? imageUrl)

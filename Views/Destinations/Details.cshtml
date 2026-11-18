@@ -149,16 +149,16 @@ else
     var attractions = Model.Attractions ?? new List<Roma.Models.Attraction>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="h5 mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+
 @if (attractions.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="h5 mb-0">Gezilecek Yerler (@(Model.Attractions?.Count ?? 0))</h4>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Attractions" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-        }
-    </div>
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
         @foreach (var a in attractions.OrderByDescending(x => x.AverageRating).ThenBy(x => x.Name))
         {
@@ -257,21 +257,25 @@ else
         }
     </div>
 }
+else
+{
+    <div class="text-muted mb-4">Henüz gezilecek yer eklenmemiş.</div>
+}
 
 @{
     var hotels = Model.Hotels ?? new List<Roma.Models.Hotel>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="h5 mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+
 @if (hotels.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h3 class="h5 mb-0">Otel, Pansiyon, Misafirhane (@(Model.Hotels?.Count ?? 0))</h3>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Hotels" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-        }
-    </div>
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
         @foreach (var h in hotels)
         {
@@ -319,21 +323,25 @@ else
         }
     </div>
 }
+else
+{
+    <div class="text-muted mb-4">Henüz otel veya misafirhane eklenmemiş.</div>
+}
 
 @{
     var parkings = Model.Parkings ?? new List<Roma.Models.Parking>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="h5 mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+
 @if (parkings.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="h5 mb-0">Otoparklar (@(Model.Parkings?.Count ?? 0))</h4>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Parkings" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-        }
-    </div>
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
         @foreach (var p in parkings)
         {
@@ -364,21 +372,25 @@ else
         }
     </div>
 }
+else
+{
+    <div class="text-muted mb-4">Henüz otopark eklenmemiş.</div>
+}
 
 @{
     var flavors = Model.Flavors ?? new List<Roma.Models.Flavor>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="h5 mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+
 @if (flavors.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h3 class="h5 mb-0">Yöresel Yemekler (@(Model.Flavors?.Count ?? 0))</h3>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Flavors" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-        }
-    </div>
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
         @foreach (var f in flavors)
         {
@@ -405,21 +417,25 @@ else
         }
     </div>
 }
+else
+{
+    <div class="text-muted mb-4">Henüz yöresel yemek eklenmemiş.</div>
+}
 
 @{
     var meals = Model.Meals ?? new List<Roma.Models.Meal>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="h5 mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
+    @if (canAdd)
+    {
+        <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
+    }
+</div>
+
 @if (meals.Count > 0)
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h3 class="h5 mb-0">Restoran, Cafe (@(Model.Meals?.Count ?? 0))</h3>
-        @if (canAdd)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Id" title="Ekle">+</a>
-        }
-    </div>
-
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
         @foreach (var m in meals)
         {
@@ -448,6 +464,10 @@ else
             </div>
         }
     </div>
+}
+else
+{
+    <div class="text-muted mb-4">Henüz restoran veya cafe eklenmemiş.</div>
 }
 
 </div>
