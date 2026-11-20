@@ -333,6 +333,24 @@
             color: #2563eb;
         }
 
+        .social-text-link.discount-link {
+            color: #fdd835;
+            font-weight: 800;
+            text-decoration: underline;
+            text-decoration-color: #2563eb;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 3px;
+        }
+
+        .social-text-link.discount-link:hover,
+        .social-text-link.discount-link:focus {
+            color: #fbc02d;
+            text-decoration-color: #2563eb;
+            background: #2563eb;
+            border-radius: 6px;
+            padding: .1rem .35rem;
+        }
+
         .social-text-link:hover,
         .social-text-link:focus {
             text-decoration: underline;
@@ -379,6 +397,35 @@
             }
         }
 
+        .coupon-toast {
+            position: fixed;
+            top: 88px;
+            right: 16px;
+            z-index: 1080;
+            min-width: 280px;
+            max-width: 420px;
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            color: #664d03;
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .15);
+            padding: .75rem .9rem;
+        }
+
+        .coupon-toast-title {
+            font-weight: 700;
+            margin-bottom: .15rem;
+        }
+
+        .coupon-toast-close {
+            border: 0;
+            background: transparent;
+            color: #664d03;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
     </style>
 }
 
@@ -387,6 +434,8 @@
 <br />
 @if (Model.Destination != null)
 {
+    var couponSuccess = TempData["CouponSuccess"] as string;
+    var couponError = TempData["CouponError"] as string;
     var firstImageItem = Model.Destination.Images?.OrderBy(x => x.Order).FirstOrDefault();
     var firstImage = firstImageItem?.Url ?? string.Empty;
     var firstImageAltText = string.IsNullOrWhiteSpace(firstImageItem?.AltText)
@@ -411,6 +460,24 @@
             ? Model.Destination.FacebookUrl
             : $"https://{Model.Destination.FacebookUrl}");
     var currentPhotoDetailsUrl = $"/Destinations/PhotoDetails/{Model.Destination.Id}";
+
+    if (!string.IsNullOrWhiteSpace(couponSuccess))
+    {
+        <div id="couponToast" class="coupon-toast" role="status" aria-live="polite">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                    <div class="coupon-toast-title">Bilgilendirme</div>
+                    <div>@couponSuccess</div>
+                </div>
+                <button type="button" class="coupon-toast-close" aria-label="Kapat" onclick="document.getElementById('couponToast')?.remove()">×</button>
+            </div>
+        </div>
+    }
+
+    if (!string.IsNullOrWhiteSpace(couponError))
+    {
+        <div class="alert alert-warning">@couponError</div>
+    }
     var destinationApprovedReviewItems = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
         .SelectMany(a => (a.Reviews ?? new List<Roma.Models.Review>())
             .Where(r => r.IsApproved && !r.IsRejected)
@@ -424,6 +491,8 @@
     var destinationAverageRating = destinationApprovedReviewItems.Any()
         ? destinationApprovedReviewItems.Average(x => x.Review.Rating)
         : 0;
+    var discountMealsCount = (Model.Destination.Meals ?? new List<Roma.Models.Meal>())
+        .Count(x => Model.HasSubscriberDiscount(x.Id));
 
     <div class="card mb-4 shadow-sm destination-card border-0 reveal-up">
         <div class="card-body">
@@ -434,6 +503,15 @@
 
 @section Scripts {
     <script>
+        (function () {
+            const couponToast = document.getElementById('couponToast');
+            if (couponToast) {
+                setTimeout(function () {
+                    couponToast.remove();
+                }, 6000);
+            }
+        })();
+
         (function () {
             const shareBtn = document.getElementById('whatsAppShareBtn');
             if (!shareBtn) return;
@@ -649,6 +727,76 @@
                 photoGrid.classList.add('d-none');
             });
         })();
+
+        (function () {
+            const filterLink = document.getElementById('discountMealsFilterLink');
+            const mealsSection = document.getElementById('mealsDeferredSection');
+            const mealsLoader = document.getElementById('mealsDeferredLoader');
+            const mealsGrid = document.getElementById('mealsGrid');
+            const emptyNotice = document.getElementById('discountMealsOnlyNotice');
+
+            if (!filterLink || !mealsSection || !mealsGrid) return;
+
+            filterLink.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                // Sadece restoran/cafe kartlarını bırak, diğer bölümleri gizle
+                const sectionsToHide = [
+                    'destinationPhotoGrid',
+                    'attractionsDeferredSection',
+                    'hotelsDeferredSection',
+                    'flavorsDeferredSection',
+                    'parkingsDeferredSection',
+                    'destination-all-reviews'
+                ];
+
+                sectionsToHide.forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.add('d-none');
+                    }
+                });
+
+                const loadersToHide = [
+                    'attractionsDeferredLoader',
+                    'hotelsDeferredLoader',
+                    'flavorsDeferredLoader',
+                    'parkingsDeferredLoader'
+                ];
+
+                loadersToHide.forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.add('d-none');
+                    }
+                });
+
+                mealsSection.classList.remove('d-none');
+                mealsSection.removeAttribute('aria-hidden');
+                if (mealsLoader) {
+                    mealsLoader.classList.add('d-none');
+                }
+
+                const mealCards = mealsGrid.querySelectorAll('.js-meal-item');
+                let visibleCount = 0;
+
+                mealCards.forEach(function (card) {
+                    const hasDiscount = card.getAttribute('data-discount') === '1';
+                    if (hasDiscount) {
+                        card.classList.remove('d-none');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('d-none');
+                    }
+                });
+
+                if (emptyNotice) {
+                    emptyNotice.classList.toggle('d-none', visibleCount > 0);
+                }
+
+                mealsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        })();
     </script>
 }
         </div>
@@ -667,6 +815,13 @@
                role="button"
                aria-expanded="false"
                aria-controls="destination-all-reviews">Yorum listesi (@destinationApprovedReviewItems.Count)</a>
+            <a href="#"
+               id="discountMealsFilterLink"
+               class="social-text-link discount-link"
+               title="Sadece indirimli restoran ve cafeleri göster"
+               aria-label="Sadece indirimli restoran ve cafeleri göster">
+                İndirimler (@discountMealsCount)
+            </a>
             @if (!string.IsNullOrWhiteSpace(instagramUrl))
             {
                 <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="social-text-link instagram-link" title="Instagram" aria-label="Instagram">
@@ -994,19 +1149,20 @@
                     <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination.Id" title="Ekle">+</a>
                 }
             </div>
-            <div class="row g-3 mb-4 mobile-three-cards">
+            <div class="row g-3 mb-4 mobile-three-cards" id="mealsGrid">
                 @foreach (var item in Model.Destination.Meals)
                 {
                 var mealQuery = $"{item.Name} {Model.Destination.Name}";
                 var mealSearchUrl = $"https://www.google.com/search?q={Uri.EscapeDataString(mealQuery)}";
                 var mealMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(mealQuery)}";
+                var hasSubscriberDiscount = Model.HasSubscriberDiscount(item.Id);
                 var mealAttraction = (Model.Destination.Attractions ?? new List<Roma.Models.Attraction>())
                     .FirstOrDefault(a => string.Equals(a.Name?.Trim(), item.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
                 var mealApprovedReviews = mealAttraction?.Reviews?
                     .Where(r => r.IsApproved && !r.IsRejected)
                     .OrderByDescending(r => r.CreatedAt)
                     .ToList() ?? new List<Roma.Models.Review>();
-                <div class="col-12 col-md-6 col-lg-3">
+                <div class="col-12 col-md-6 col-lg-3 js-meal-item" data-discount="@(hasSubscriberDiscount ? "1" : "0")">
                     <div class="card h-100 shadow-sm info-card destination-card border-0 reveal-up">
                         <div class="card-body">
                             <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
@@ -1016,6 +1172,15 @@
                             <div class="small text-muted">Fiyat: @(item.Price.HasValue ? $"{item.Price.Value:0.##} TL" : "-")</div>
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 d-flex flex-wrap gap-2">
+                            @if (hasSubscriberDiscount)
+                            {
+                                <form method="post" asp-page-handler="SendCoupon" asp-route-id="@Model.Destination.Id" class="d-flex flex-wrap gap-2 align-items-center w-100">
+                                    <input type="hidden" name="mealId" value="@item.Id" />
+                                    <input type="text" name="website" value="" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true" />
+                                    <input type="email" name="email" class="form-control form-control-sm" style="max-width: 220px;" placeholder="Abone e-posta" required />
+                                    <button type="submit" class="btn btn-sm btn-warning fw-semibold">%10 kupon gönder</button>
+                                </form>
+                            }
                             <a class="btn btn-sm btn-comment-link"
                                data-bs-toggle="collapse"
                                href="#meal-reviews-@item.Id"
@@ -1056,6 +1221,7 @@
                 </div>
                 }
             </div>
+            <div id="discountMealsOnlyNotice" class="alert alert-light border d-none">Bu destinasyonda indirimli restoran/cafe bulunmuyor.</div>
         </div>
     }
 

@@ -13,12 +13,19 @@ public class ContentEditorModel : PageModel
 {
     private readonly ApplicationDbContext _db;
 
+    public sealed class DestinationListItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+    }
+
     public ContentEditorModel(ApplicationDbContext db)
     {
         _db = db;
     }
 
-    public List<Destination> Destinations { get; set; } = new();
+    public List<DestinationListItem> Destinations { get; set; } = new();
     public int DestinationImagesCount { get; set; }
     public int AttractionsCount { get; set; }
     public int FlavorsCount { get; set; }
@@ -32,33 +39,21 @@ public class ContentEditorModel : PageModel
         Destinations = await _db.Destinations!
             .AsNoTracking()
             .OrderBy(x => x.Name)
+            .Select(x => new DestinationListItem
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Country = x.Country
+            })
             .ToListAsync();
 
-        var destinationImagesCountTask = _db.DestinationImages!.AsNoTracking().CountAsync();
-        var attractionsCountTask = _db.Attractions!.AsNoTracking().CountAsync();
-        var flavorsCountTask = _db.Flavors!.AsNoTracking().CountAsync();
-        var parkingsCountTask = _db.Parkings!.AsNoTracking().CountAsync();
-        var hotelsCountTask = _db.Hotels!.AsNoTracking().CountAsync();
-        var mealsCountTask = _db.Meals!.AsNoTracking().CountAsync();
-        var chatTextsCountTask = _db.DemoChatServices!.AsNoTracking().CountAsync();
-
-        await Task.WhenAll(
-            destinationImagesCountTask,
-            attractionsCountTask,
-            flavorsCountTask,
-            parkingsCountTask,
-            hotelsCountTask,
-            mealsCountTask,
-            chatTextsCountTask
-        );
-
-        DestinationImagesCount = destinationImagesCountTask.Result;
-        AttractionsCount = attractionsCountTask.Result;
-        FlavorsCount = flavorsCountTask.Result;
-        ParkingsCount = parkingsCountTask.Result;
-        HotelsCount = hotelsCountTask.Result;
-        MealsCount = mealsCountTask.Result;
-        ChatTextsCount = chatTextsCountTask.Result;
+        DestinationImagesCount = await _db.DestinationImages!.AsNoTracking().CountAsync();
+        AttractionsCount = await _db.Attractions!.AsNoTracking().CountAsync();
+        FlavorsCount = await _db.Flavors!.AsNoTracking().CountAsync();
+        ParkingsCount = await _db.Parkings!.AsNoTracking().CountAsync();
+        HotelsCount = await _db.Hotels!.AsNoTracking().CountAsync();
+        MealsCount = await _db.Meals!.AsNoTracking().CountAsync();
+        ChatTextsCount = await _db.DemoChatServices!.AsNoTracking().CountAsync();
     }
 
     public async Task<IActionResult> OnGetSectionAsync(string section)

@@ -1,0 +1,41 @@
+@page
+@model Roma.Pages.Admin.CouponEmailLogsModel
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">İndirim Kuponu Gönderim Listesi</h2>
+    <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/CampaignEmail">Kampanya E-postası</a>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-light border">Henüz indirim kuponu e-postası kaydı yok.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Gönderim Zamanı (UTC)</th>
+                    <th>E-posta</th>
+                    <th>Konu</th>
+                    <th>İçerik Önizleme</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Items)
+            {
+                var preview = string.IsNullOrWhiteSpace(item.Body)
+                    ? "-"
+                    : (item.Body.Length > 140 ? item.Body.Substring(0, 140) + "..." : item.Body);
+                <tr>
+                    <td>@item.SentAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@item.To</td>
+                    <td>@item.Subject</td>
+                    <td>@preview</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

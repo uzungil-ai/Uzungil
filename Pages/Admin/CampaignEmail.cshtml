@@ -1,0 +1,82 @@
+@page
+@model Roma.Pages.Admin.CampaignEmailModel
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Abonelere Kampanya E-postası</h2>
+            <a class="btn btn-sm btn-outline-secondary" asp-page="/Admin/CouponEmailLogs">Kupon Gönderim Listesi</a>
+        </div>
+        <p class="text-muted small">Kupon kodu ve seçili restoran/cafe konumlarını onaylı abonelere gönderir.</p>
+
+        <form method="post" class="border rounded p-4 bg-light">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="Input.CouponCode" class="form-label">Kupon Kodu</label>
+                    <input asp-for="Input.CouponCode" class="form-control" />
+                    <span asp-validation-for="Input.CouponCode" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Input.DiscountPercent" class="form-label">İndirim (%)</label>
+                    <input asp-for="Input.DiscountPercent" class="form-control" type="number" min="1" max="100" />
+                    <span asp-validation-for="Input.DiscountPercent" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Input.Subject" class="form-label">Konu</label>
+                    <input asp-for="Input.Subject" class="form-control" />
+                    <span asp-validation-for="Input.Subject" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Input.MealIdsCsv" class="form-label">Restoran/Cafe ID Listesi</label>
+                    <input asp-for="Input.MealIdsCsv" class="form-control" placeholder="Örn: 15,22,41" />
+                    <div class="form-text">Virgül ile ayırın. Varsayılan olarak appsettings içindeki Discounts:MealIds kullanılır.</div>
+                    <span asp-validation-for="Input.MealIdsCsv" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Input.ExtraMessage" class="form-label">Ek Mesaj (Opsiyonel)</label>
+                    <textarea asp-for="Input.ExtraMessage" class="form-control" rows="3" placeholder="Kampanya notu..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Abonelere Gönder</button>
+
+            @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+            {
+                <div class="alert alert-info mt-3 mb-0">@Model.StatusMessage</div>
+            }
+        </form>
+
+        @if (Model.PreviewMeals.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-header">E-postaya girecek mekanlar</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var meal in Model.PreviewMeals)
+                    {
+                        <li class="list-group-item">
+                            <strong>#@meal.Id</strong> @meal.Name
+                            @if (!string.IsNullOrWhiteSpace(meal.Address))
+                            {
+                                <span>- @meal.Address</span>
+                            }
+                            @if (meal.Destination != null)
+                            {
+                                <span class="text-muted">(@meal.Destination.Name)</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
