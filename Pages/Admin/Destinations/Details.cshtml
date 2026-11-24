@@ -139,18 +139,26 @@
     </section>
 }
 
-@if (Model.Destination?.Meals?.Any() == true)
-{
-    <section>
-        <h4>Yemek / Restoran Önerileri</h4>
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="mb-0">Yemek / Restoran Önerileri (@(Model.Destination?.Meals?.Count ?? 0))</h4>
+        <a class="btn btn-sm btn-primary" asp-controller="Meals" asp-action="Create" asp-route-destinationId="@Model.Destination?.Id" title="Yemek ekle">+ Yemek Ekle</a>
+    </div>
+
+    @if (Model.Destination?.Meals?.Any() == true)
+    {
         <ul>
         @foreach (var m in Model.Destination.Meals)
         {
             <li>@m.Name @if(!string.IsNullOrEmpty(m.Address)){<text>- @m.Address</text>} @if(m.Price!=null){<text> (Fiyat: @m.Price)</text>}</li>
         }
         </ul>
-    </section>
-}
+    }
+    else
+    {
+        <div class="text-muted">Henüz yemek/restoran önerisi eklenmemiş.</div>
+    }
+</section>
 
 @if (Model.Destination?.Hotels?.Any() == true)
 {

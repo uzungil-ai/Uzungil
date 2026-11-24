@@ -107,6 +107,8 @@ namespace Roma.Pages.Destinations
             if (subscriber == null || !subscriber.IsConfirmed || !subscriber.ConsentGiven)
             {
                 TempData["CouponError"] = "Bu e-posta onaylı abone değil. Önce aboneliği onaylayın.";
+                TempData["CouponPendingEmail"] = normalizedEmail;
+                TempData["CouponPendingOpenEmailUrl"] = BuildMailboxUrl(normalizedEmail);
                 return RedirectToPage(new { id });
             }
 
@@ -191,6 +193,32 @@ namespace Roma.Pages.Destinations
             {
                 return false;
             }
+        }
+
+        private static string? BuildMailboxUrl(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            var atIndex = email.LastIndexOf('@');
+            if (atIndex <= 0 || atIndex == email.Length - 1)
+            {
+                return null;
+            }
+
+            var domain = email[(atIndex + 1)..].Trim().ToLowerInvariant();
+            return domain switch
+            {
+                "gmail.com" or "googlemail.com" => "https://mail.google.com",
+                "outlook.com" or "hotmail.com" or "live.com" or "msn.com" => "https://outlook.live.com/mail/0/",
+                "yahoo.com" or "yahoo.com.tr" => "https://mail.yahoo.com",
+                "icloud.com" or "me.com" or "mac.com" => "https://www.icloud.com/mail",
+                "yandex.com" or "yandex.com.tr" or "yandex.ru" => "https://mail.yandex.com",
+                "proton.me" or "protonmail.com" => "https://mail.proton.me",
+                _ => null
+            };
         }
 
         public string GetSmallestImageUrl(string? imageUrl)

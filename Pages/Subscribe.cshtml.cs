@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Mail;
+using Microsoft.Extensions.Logging;
 using Roma.Data;
 using Roma.Models;
 using Roma.Services;
-using Microsoft.Extensions.Logging;
+using System.Net.Mail;
 
 namespace Roma.Pages
 {
@@ -24,6 +24,7 @@ namespace Roma.Pages
 
         [BindProperty]
         public string Email { get; set; } = null!;
+
         [BindProperty]
         public bool Consent { get; set; }
 
@@ -36,6 +37,7 @@ namespace Roma.Pages
         {
             var isAjax = HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var normalizedEmail = NormalizeEmail(Email);
+            var mailboxUrl = BuildMailboxUrl(normalizedEmail);
 
             if (string.IsNullOrWhiteSpace(normalizedEmail) || !Consent)
             {
@@ -44,6 +46,7 @@ namespace Roma.Pages
                 {
                     return BadRequest(new { success = false, message = "E-posta ve rıza gereklidir." });
                 }
+
                 return Page();
             }
 
@@ -65,9 +68,9 @@ namespace Roma.Pages
                 if (!existing.IsConfirmed)
                 {
                     existing.ConsentGiven = true;
-                    var token = System.Guid.NewGuid().ToString("N");
+                    var token = Guid.NewGuid().ToString("N");
                     existing.ConfirmationToken = token;
-                    existing.ConfirmationExpiresAt = System.DateTime.UtcNow.AddDays(7);
+                    existing.ConfirmationExpiresAt = DateTime.UtcNow.AddDays(7);
                     await _db.SaveChangesAsync();
 
                     var resent = await TryQueueConfirmationEmailAsync(existing.Email, token);
@@ -88,18 +91,35 @@ namespace Roma.Pages
 
                 if (isAjax)
                 {
-                    return new JsonResult(new { success = true, message = resentConfirmation ? "Bu e-posta zaten kayıtlı. Onay e-postasını tekrar gönderdik." : "Bu e-posta zaten onaylı şekilde kayıtlı." });
+                    return new JsonResult(new
+                    {
+                        success = true,
+                        message = resentConfirmation
+                            ? "Bu e-posta zaten kayıtlı. Onay bağlantısını tekrar gönderdik. Aboneliği tamamlamak için e-postanızı açıp onay vermeniz gerekiyor."
+                            : "Bu e-posta zaten onaylı şekilde kayıtlı.",
+                        openEmailUrl = resentConfirmation ? mailboxUrl : null
+                    });
                 }
 
                 TempData["SubscribeAlert"] = resentConfirmation
-                    ? "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz."
+                    ? "Onay e-postası tekrar gönderildi. Aboneliği tamamlamak için e-posta adresinizi açıp onay vermeniz gerekiyor."
                     : "Bu e-posta zaten onaylı abonedir. Yorum ekleyebilirsiniz.";
+                TempData["SubscribeEmailOpenUrl"] = resentConfirmation ? mailboxUrl : null;
                 return RedirectToPage("/Subscribe");
             }
 
-            var tokenNew = System.Guid.NewGuid().ToString("N");
-            var expires = System.DateTime.UtcNow.AddDays(7);
-            var sub = new Subscriber { Email = normalizedEmail, ConsentGiven = true, IsConfirmed = false, CreatedAt = System.DateTime.UtcNow, ConfirmationToken = tokenNew, ConfirmationExpiresAt = expires };
+            var tokenNew = Guid.NewGuid().ToString("N");
+            var expires = DateTime.UtcNow.AddDays(7);
+            var sub = new Subscriber
+            {
+                Email = normalizedEmail,
+                ConsentGiven = true,
+                IsConfirmed = false,
+                CreatedAt = DateTime.UtcNow,
+                ConfirmationToken = tokenNew,
+                ConfirmationExpiresAt = expires
+            };
+
             _db.Subscribers!.Add(sub);
             await _db.SaveChangesAsync();
 
@@ -118,10 +138,16 @@ namespace Roma.Pages
 
             if (isAjax)
             {
-                return new JsonResult(new { success = true, message = "Abonelik isteğiniz alındı. Onay için e-postanızı kontrol edin." });
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "Abonelik isteğiniz alındı. Onay bağlantısı e-posta adresinize gönderildi. Aboneliği tamamlamak için e-postanızı açıp onay vermeniz gerekiyor.",
+                    openEmailUrl = mailboxUrl
+                });
             }
 
-            TempData["SubscribeAlert"] = "Abonelik isteğiniz gönderildi. Admin onayından sonra yorum ekleyebilirsiniz.";
+            TempData["SubscribeAlert"] = "Onay bağlantısı e-posta adresinize gönderildi. Aboneliği tamamlamak için e-postanızı açıp onay vermeniz gerekiyor.";
+            TempData["SubscribeEmailOpenUrl"] = mailboxUrl;
             return RedirectToPage("/Subscribe");
         }
 
@@ -176,6 +202,27 @@ namespace Roma.Pages
             }
         }
 
+        private static string BuildMailboxUrl(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            {
+                return "https://mail.google.com";
+            }
+
+            var domain = email.Split('@').LastOrDefault()?.Trim().ToLowerInvariant() ?? string.Empty;
+
+            if (domain.Contains("gmail.com"))
+                return "https://mail.google.com";
+            if (domain.Contains("outlook.") || domain.Contains("hotmail.") || domain.Contains("live."))
+                return "https://outlook.live.com/mail/0/";
+            if (domain.Contains("yahoo."))
+                return "https://mail.yahoo.com";
+            if (domain.Contains("yandex."))
+                return "https://mail.yandex.com";
+
+            return "https://mail.google.com";
+        }
+
         private async Task<bool> TryQueueConfirmationEmailAsync(string email, string token)
         {
             if (_emailQueue == null)
@@ -196,7 +243,12 @@ namespace Roma.Pages
                 return false;
             }
 
-            var body = $"Lütfen aboneliğinizi onaylamak için şu linke tıklayın (7 gün içinde geçerlidir): {link}";
+            var body =
+                "Fotografia abonelik talebiniz alındı.\n\n" +
+                "Aboneliği tamamlamak için e-postanızdaki onay bağlantısına tıklamanız gerekiyor.\n" +
+                $"Onay bağlantısı (7 gün geçerli): {link}\n\n" +
+                "Bu işlemi siz yapmadıysanız bu e-postayı yok sayabilirsiniz.";
+
             await _emailQueue.EnqueueAsync(new EmailMessage(email, "Abonelik Onayı", body));
             return true;
         }

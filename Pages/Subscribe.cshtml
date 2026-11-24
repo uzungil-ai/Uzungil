@@ -13,7 +13,16 @@
 
                     @if (TempData["SubscribeAlert"] is string subscribeAlert && !string.IsNullOrWhiteSpace(subscribeAlert))
                     {
-                        <div class="alert alert-info" role="alert">@subscribeAlert</div>
+                        var openEmailUrl = TempData["SubscribeEmailOpenUrl"] as string;
+                        <div class="alert alert-info" role="alert">
+                            <div>@subscribeAlert</div>
+                            @if (!string.IsNullOrWhiteSpace(openEmailUrl))
+                            {
+                                <div class="mt-2 d-flex justify-content-end">
+                                    <a class="btn btn-sm btn-primary" href="@openEmailUrl" target="_blank" rel="noopener noreferrer">E-posta Aç</a>
+                                </div>
+                            }
+                        </div>
                     }
 
                     <form method="post">
