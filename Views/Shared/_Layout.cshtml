@@ -139,7 +139,6 @@
             <div class="modal-content subscribe-modal-card">
                 <div class="modal-header">
                     <h2 class="modal-title h5 mb-0 subscribe-title-accent" id="subscribeModalLabel">Yeni önerileri kaçırmayın</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small mb-3">E-posta ile siteye kayıt olun, yeni eklenen içeriklerden haberiniz olsun.</p>
@@ -154,12 +153,15 @@
                             <label class="form-check-label" for="subConsent">Bilgilendirme e-postaları almayı kabul ediyorum.</label>
                         </div>
                     </form>
+                    <div class="small text-muted">
+                        Abonelik iptali için
+                        <a asp-page="/Subscribe" class="link-primary">Abonelik Yönetimi</a>
+                        sayfasını kullanabilirsiniz.
+                    </div>
                     <div id="subMessage" class="mt-2"></div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
-                    <button type="button" id="subDeleteBtn" class="btn btn-danger">Abonelik Sil</button>
-                    <button type="button" id="subBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Abone Ol</button>
+                    <button type="button" id="subBtn" class="btn btn-warning text-dark fw-semibold app-yellow-cta">Onayla ve Abone Ol</button>
                 </div>
             </div>
         </div>
@@ -174,7 +176,7 @@
                     <a asp-area="" asp-controller="Home" asp-action="Ekibimiz" class="simple-footer-link">Ekibimiz</a>
                     <a asp-area="" asp-controller="Home" asp-action="Privacy" class="simple-footer-link">Gizlilik</a>
                     <a id="footer-contact-link" href="mailto:info@fotografia.com.tr" class="simple-footer-link">İletişim</a>
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abone Ol</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subscribeModal">Abonelik Onayı</button>
                 </div>
             </div>
             <div class="social-links justify-content-center mt-2" aria-label="Sosyal medya bağlantıları">
@@ -206,7 +208,6 @@
     <script>
         (function () {
             var btn = document.getElementById('subBtn');
-            var deleteBtn = document.getElementById('subDeleteBtn');
             var email = document.getElementById('subEmail');
             var consent = document.getElementById('subConsent');
             var msg = document.getElementById('subMessage');
@@ -215,7 +216,7 @@
             var kvkkApproveBtn = document.getElementById('kvkkApproveBtn');
             var kvkkModal = null;
 
-            if (!btn || !deleteBtn || !email || !consent || !msg || !form || !kvkkModalEl || !kvkkApproveBtn) return;
+            if (!btn || !email || !consent || !msg || !form || !kvkkModalEl || !kvkkApproveBtn) return;
 
             if (window.bootstrap && window.bootstrap.Modal) {
                 kvkkModal = new window.bootstrap.Modal(kvkkModalEl);
@@ -247,7 +248,7 @@
                 var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
                 if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
 
-                btn.disabled = true; deleteBtn.disabled = true; btn.textContent = 'Gönderiliyor...';
+                btn.disabled = true; btn.textContent = 'Gönderiliyor...';
 
                 fetch(form.action, {
                     method: 'POST',
@@ -268,41 +269,7 @@
                     setMessage((payload && payload.message) ? payload.message : 'Abonelik isteğiniz alındı. Lütfen e-postanızı kontrol edin.', 'success');
                     form.reset();
                 }).catch(function () { setMessage('Hata oluştu.', 'error'); })
-                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; btn.textContent = 'Abone Ol'; });
-            }
-
-            function submitUnsubscribe() {
-                setMessage('', 'info');
-                if (!email.value) { setMessage('Silmek için e-posta giriniz.', 'error'); return; }
-
-                var data = new FormData();
-                data.append('Email', email.value);
-
-                var tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
-                if (tokenEl) data.append('__RequestVerificationToken', tokenEl.value);
-
-                btn.disabled = true; deleteBtn.disabled = true; deleteBtn.textContent = 'Siliniyor...';
-
-                fetch(form.action + '?handler=Unsubscribe', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: data
-                }).then(async function (resp) {
-                    var payload = null;
-                    try { payload = await resp.json(); } catch {}
-
-                    if (!resp.ok) {
-                        setMessage((payload && payload.message) ? payload.message : 'Abonelik silme işlemi başarısız oldu.', 'error');
-                        return;
-                    }
-
-                    setMessage((payload && payload.message) ? payload.message : 'Abonelik kaydınız silindi.', 'success');
-                    form.reset();
-                }).catch(function () { setMessage('Hata oluştu.', 'error'); })
-                    .finally(function () { btn.disabled = false; deleteBtn.disabled = false; deleteBtn.textContent = 'Abonelik Sil'; });
+                    .finally(function () { btn.disabled = false; btn.textContent = 'Onayla ve Abone Ol'; });
             }
 
             btn.addEventListener('click', function () {
@@ -326,10 +293,6 @@
                     kvkkModal.hide();
                 }
                 submitSubscription();
-            });
-
-            deleteBtn.addEventListener('click', function () {
-                submitUnsubscribe();
             });
 
             form.addEventListener('submit', function (e) {

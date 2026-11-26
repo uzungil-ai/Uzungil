@@ -6,7 +6,15 @@
 <section class="chat-shell container py-3">
     <div class="chat-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Seyahat Asistanı</h2>
-        <span class="badge text-bg-light border">Canlı sohbet</span>
+        <span class="badge text-bg-light border">AI Destekli</span>
+    </div>
+
+    <p class="text-muted mb-3">Kısa sorularla başlayın. Örn: "Roma'da 3 günde ne gezilir?"</p>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-prompt="Roma'da 3 günde ne gezilir?">3 günlük rota</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-prompt="Roma için günlük ortalama bütçe ne kadar?">Günlük bütçe</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-prompt="Roma'da toplu taşıma nasıl kullanılır?">Ulaşım</button>
     </div>
 
     <div id="chatbox" class="chat-card destination-card border-0 shadow-sm">
@@ -20,7 +28,7 @@
             }
         </div>
         <div class="chat-composer input-group mt-2">
-            <input id="userInput" class="form-control" placeholder="Sorunuzu yazın..." />
+            <textarea id="userInput" class="form-control" rows="2" placeholder="Sorunuzu yazın..."></textarea>
             <button id="sendBtn" class="btn btn-primary btn-modern">Gönder</button>
         </div>
     </div>
@@ -31,16 +39,23 @@
         var input = document.getElementById('userInput');
         var sendBtn = document.getElementById('sendBtn');
         var messagesEl = document.getElementById('messages');
+        var quickPromptButtons = document.querySelectorAll('[data-prompt]');
 
         sendBtn.addEventListener('click', function () {
             sendMessage(input.value);
         });
 
         input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage(input.value);
             }
+        });
+
+        quickPromptButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                sendMessage(btn.getAttribute('data-prompt') || '');
+            });
         });
 
         async function sendMessage(rawText){
@@ -52,7 +67,7 @@
             appendMessage('user', text);
             input.value = '';
 
-            var res = await fetch('?handler=Send', {
+            var res = await fetch('?handler=Ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type':'application/json',

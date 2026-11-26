@@ -61,7 +61,12 @@ namespace Roma.Pages.Chat
             }
         }
 
-        public async Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
+        public Task<IActionResult> OnPostSendAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
+        {
+            return OnPostAskAsync(req, cancellationToken);
+        }
+
+        public async Task<IActionResult> OnPostAskAsync([FromBody] ChatRequest req, CancellationToken cancellationToken)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.Text)) return BadRequest();
 

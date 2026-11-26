@@ -78,13 +78,20 @@ namespace Roma.Controllers
                     .ToList();
             }
 
-            var categories = await _context.Attractions!
+            var categoryValues = await _context.Attractions!
                 .AsNoTracking()
                 .Select(a => a.Category)
                 .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Distinct()
-                .OrderBy(c => c)
                 .ToListAsync();
+
+            var categories = categoryValues
+                .Select(c => c!.Trim())
+                .GroupBy(c => c, StringComparer.CurrentCultureIgnoreCase)
+                .OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key, StringComparer.CurrentCulture)
+                .Take(12)
+                .Select(g => g.First())
+                .ToList();
 
             ViewBag.CountryFilter = country;
             ViewBag.CategoryFilter = category;

@@ -11,7 +11,7 @@
     var firstFeaturedName = firstFeatured?.Name ?? "Fotografia";
     var categoryOptions = Model.CategoryOptions;
     var selectedCategory = Model.Category ?? string.Empty;
-    var initialVisibleCount = Model.IsSubscriberMode ? 2 : 6;
+    var initialVisibleCount = Model.IsSubscriberMode ? 2 : 9;
     var loadMoreStep = Model.IsSubscriberMode ? 4 : 6;
 }
 
@@ -183,6 +183,19 @@
             color: #fff !important;
             border-color: #fff;
             background: rgba(0, 0, 0, .35);
+        }
+
+        #bottomLoadMoreBtn {
+            background-color: #9c6f00 !important;
+            border-color: #9c6f00 !important;
+            color: #fff !important;
+        }
+
+        #bottomLoadMoreBtn:hover,
+        #bottomLoadMoreBtn:focus {
+            background-color: #b8860b !important;
+            border-color: #b8860b !important;
+            color: #fff !important;
         }
 
         @@media (max-width: 768px) {
