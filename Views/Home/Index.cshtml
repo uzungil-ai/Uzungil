@@ -1,11 +1,34 @@
 ﻿@model IEnumerable<Roma.Models.Destination>
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Ana Sayfa";
+    ViewData["MetaDescription"] = "Destinasyonları ülke ve kategoriye göre filtreleyin, seyahat planınıza uygun rotaları Fotografia'da hızlıca keşfedin.";
+    ViewData["MetaKeywords"] = "destinasyon arama, gezi rotası, ülke filtreleme, seyahat önerileri";
+
+    var siteBaseUrl = $"{ViewContext.HttpContext.Request.Scheme}://{ViewContext.HttpContext.Request.Host}";
+    var homeListingSchema = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "CollectionPage",
+        ["name"] = "Destinasyon Listesi",
+        ["description"] = ViewData["MetaDescription"],
+        ["url"] = $"{siteBaseUrl}{ViewContext.HttpContext.Request.Path}{ViewContext.HttpContext.Request.QueryString}",
+        ["mainEntity"] = new Dictionary<string, object?>
+        {
+            ["@type"] = "ItemList",
+            ["numberOfItems"] = Model?.Count() ?? 0
+        }
+    };
+
     var nameFilter = ViewBag.NameFilter as string;
     var countryFilter = ViewBag.CountryFilter as string;
     var categoryFilter = ViewBag.CategoryFilter as string;
     var categoryOptions = ViewBag.CategoryOptions as List<string> ?? new List<string>();
+}
+
+@section Head {
+    <script type="application/ld+json">@Html.Raw(JsonSerializer.Serialize(homeListingSchema))</script>
 }
 
 <section class="p-4 p-md-5 mb-0 rounded-3 bg-light border">

@@ -1,7 +1,61 @@
 @page "{id:int}"
 @model Roma.Pages.Destinations.PhotoDetailsModel
+@using System.Text.Json
 @{
-    ViewData["Title"] = "Fotoğraf Detayı";
+    var destinationName = Model.Destination?.Name?.Trim();
+    var destinationCountry = Model.Destination?.Country?.Trim();
+    var destinationDescription = Model.Destination?.Description?.Trim();
+
+    ViewData["Title"] = string.IsNullOrWhiteSpace(destinationName)
+        ? "Fotoğraf Detayı"
+        : $"{destinationName} Fotoğraf ve Gezi Detayı";
+
+    var metaDescription = string.IsNullOrWhiteSpace(destinationDescription)
+        ? "Destinasyon fotoğrafları, gezi noktaları ve pratik seyahat bilgilerini inceleyin."
+        : destinationDescription.Length > 160
+            ? destinationDescription[..157] + "..."
+            : destinationDescription;
+
+    ViewData["MetaDescription"] = metaDescription;
+    ViewData["MetaKeywords"] = "destinasyon fotoğrafları, gezi detayı, seyahat önerileri, turistik yerler";
+
+    var siteBaseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    string ToAbsoluteUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        var normalized = url.StartsWith('/') ? url : "/" + url;
+        return $"{siteBaseUrl}{normalized}";
+    }
+
+    var imageUrls = (Model.Destination?.Images ?? new List<Roma.Models.DestinationImage>())
+        .OrderBy(i => i.Order)
+        .ThenBy(i => i.Id)
+        .Select(i => ToAbsoluteUrl(i.Url))
+        .Where(u => !string.IsNullOrWhiteSpace(u))
+        .Take(5)
+        .ToList();
+
+    var destinationSchema = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "TouristDestination",
+        ["name"] = destinationName,
+        ["description"] = metaDescription,
+        ["url"] = $"{siteBaseUrl}{HttpContext.Request.Path}",
+        ["address"] = new Dictionary<string, object?>
+        {
+            ["@type"] = "PostalAddress",
+            ["addressCountry"] = destinationCountry
+        },
+        ["image"] = imageUrls
+    };
+
     var canAdd = User?.Identity?.IsAuthenticated == true;
     var isAdmin = User?.IsInRole("Admin") == true;
 }
@@ -25,6 +79,8 @@
 }
 
 @section Head {
+    <script type="application/ld+json">@Html.Raw(JsonSerializer.Serialize(destinationSchema))</script>
+
     <style>
         .info-card {
             height: 100%;
@@ -948,7 +1004,7 @@
                     data-share-url="@sharePageUrl"
                     data-image-url="@imageUrlAbsolute"
                     data-image-alt="@firstImageAltText"
-                    title="WhatsApp ile paylaş">
+                    title="Paylaş">
                 <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>Paylaş
             </button>
             @if (canAdd)

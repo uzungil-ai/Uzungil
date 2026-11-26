@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using System.Xml.Linq;
 
 AppDomain.CurrentDomain.UnhandledException += (_, e) =>
 {
@@ -212,6 +213,77 @@ app.UseAuthorization();
 
 // Session middleware (after app is built and before endpoints)
 app.UseSession();
+
+app.MapGet("/robots.txt", (HttpContext context) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+    var robots = string.Join('\n', new[]
+    {
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /Admin/",
+        "Disallow: /Identity/",
+        "Disallow: /Account/",
+        "Disallow: /Subscribers/",
+        "Disallow: /api/",
+        $"Sitemap: {baseUrl}/sitemap.xml"
+    });
+
+    return Results.Text(robots, "text/plain; charset=utf-8");
+});
+
+app.MapGet("/sitemap.xml", async (ApplicationDbContext db, HttpContext context, CancellationToken cancellationToken) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+    static string ToIsoDate(DateTime value) => value.ToUniversalTime().ToString("yyyy-MM-dd");
+
+    string BuildAbsoluteUrl(string relativePath)
+    {
+        var normalized = relativePath.StartsWith('/') ? relativePath : $"/{relativePath}";
+        return $"{baseUrl}{normalized}";
+    }
+
+    var staticUrls = new (string Path, string ChangeFreq, string Priority)[]
+    {
+        ("/", "daily", "1.0"),
+        ("/Home/Hakkinda", "monthly", "0.7"),
+        ("/Home/Ekibimiz", "monthly", "0.5"),
+        ("/Home/Privacy", "yearly", "0.3"),
+        ("/Chat", "weekly", "0.6"),
+        ("/Subscribe", "monthly", "0.5")
+    };
+
+    var destinationIds = await db.Destinations!
+        .AsNoTracking()
+        .OrderBy(d => d.Name)
+        .Select(d => d.Id)
+        .ToListAsync(cancellationToken);
+
+    var ns = XNamespace.Get("http://www.sitemaps.org/schemas/sitemap/0.9");
+    var today = ToIsoDate(DateTime.UtcNow);
+
+    var urlElements = staticUrls.Select(item =>
+        new XElement(ns + "url",
+            new XElement(ns + "loc", BuildAbsoluteUrl(item.Path)),
+            new XElement(ns + "lastmod", today),
+            new XElement(ns + "changefreq", item.ChangeFreq),
+            new XElement(ns + "priority", item.Priority))
+    ).ToList();
+
+    urlElements.AddRange(destinationIds.Select(id =>
+        new XElement(ns + "url",
+            new XElement(ns + "loc", BuildAbsoluteUrl($"/Destinations/Details/{id}")),
+            new XElement(ns + "lastmod", today),
+            new XElement(ns + "changefreq", "weekly"),
+            new XElement(ns + "priority", "0.8"))
+    ));
+
+    var document = new XDocument(
+        new XDeclaration("1.0", "utf-8", "yes"),
+        new XElement(ns + "urlset", urlElements));
+
+    return Results.Content(document.ToString(SaveOptions.DisableFormatting), "application/xml; charset=utf-8");
+});
 
 app.MapStaticAssets();
 

@@ -1,7 +1,43 @@
 @page
 @model Roma.Pages.IndexModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Fotografia ile Keşfet";
+    ViewData["MetaDescription"] = "Fotografia ile destinasyonları keşfedin, fotoğraf detaylarına göz atın ve seyahat planınızı AI destekli önerilerle kolayca oluşturun.";
+    ViewData["MetaKeywords"] = "seyahat rehberi, destinasyon, gezi planı, fotoğraf, gezi önerileri";
+
+    var siteBaseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var homeSchema = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "WebSite",
+        ["name"] = "Fotografia",
+        ["url"] = $"{siteBaseUrl}/",
+        ["potentialAction"] = new Dictionary<string, object?>
+        {
+            ["@type"] = "SearchAction",
+            ["target"] = $"{siteBaseUrl}/?search={{search_term_string}}",
+            ["query-input"] = "required name=search_term_string"
+        }
+    };
+
+    var featuredItemListSchema = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "ItemList",
+        ["name"] = "Öne Çıkan Destinasyonlar",
+        ["itemListElement"] = Model.Featured
+            .Take(10)
+            .Select((d, index) => new Dictionary<string, object?>
+            {
+                ["@type"] = "ListItem",
+                ["position"] = index + 1,
+                ["url"] = $"{siteBaseUrl}/Destinations/PhotoDetails/{d.Id}",
+                ["name"] = d.Name
+            })
+            .ToList()
+    };
+
     var firstFeatured = Model.Featured.FirstOrDefault();
     var firstFeaturedImage = Model.GetSmallestImageUrl(firstFeatured?.Images.FirstOrDefault()?.Url);
     if (string.IsNullOrWhiteSpace(firstFeaturedImage))
@@ -16,6 +52,9 @@
 }
 
 @section Head {
+    <script type="application/ld+json">@Html.Raw(JsonSerializer.Serialize(homeSchema))</script>
+    <script type="application/ld+json">@Html.Raw(JsonSerializer.Serialize(featuredItemListSchema))</script>
+
     <link rel="preload" as="image" href="@Model.RandomSplashImage" fetchpriority="high" />
 
     <style>
@@ -247,7 +286,7 @@
         <a class="splash-cta splash-cta-chat" href="/Chat">Nereye gitmek istersiniz</a>
         <a class="splash-cta splash-cta-ai" href="/OpenAiSoruCevap">Yapay zekaya sor</a>
         <a class="splash-cta splash-cta-plan" href="/SeyahatPlanla">Seyahat planla</a>
-        <a class="splash-cta splash-cta-whatsapp" href="https://wa.me/?text=Fotografia%20-%20https%3A%2F%2Ffotografia.com.tr" target="_blank" rel="noopener noreferrer">What-up ile paylaş</a>
+        <a class="splash-cta splash-cta-whatsapp" href="https://wa.me/?text=Fotografia%20-%20https%3A%2F%2Ffotografia.com.tr" target="_blank" rel="noopener noreferrer">Paylaş</a>
         <a class="splash-cta splash-cta-about" asp-controller="Home" asp-action="Hakkında">Hakkında</a>
     </div>
 </div>
